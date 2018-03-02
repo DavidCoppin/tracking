@@ -1,14 +1,13 @@
 import numpy
-from box import Box
 
 class Blob:
 
-	def __init__(self, ndims, cells={}):
-		"""
-		Constructor 
+    def __init__(self, ndims, cells={}):
+        """
+        Constructor 
         @param ndims number of dimensions
         @param cells set of (i,j...) tuples
-		"""
+        """
         self.ndims = ndims
         self.cells = cells
         self.lo = []
@@ -26,7 +25,7 @@ class Blob:
         """
         # Shift this blob by one cell in every direction. If there is overlap
         # then this and the other blob can be merged. 
-        displ = numpy.zeros((ndims,), numpy.int32)
+        displ = numpy.zeros((self.ndims,), numpy.int32)
         for dim in range(self.ndims):
             for pm in (-1, 1):
                 offsetBlob = self.shift(dim, pm)
@@ -44,6 +43,7 @@ class Blob:
         """
         res = Blob(self.ndims)
         displ = numpy.zeros((self.ndims,), numpy.int32)
+        displ[dim] = pm
         # shift the cells up or down
         res.cells = {tuple(numpy.array(c) + displ) for c in self.cells}
         res.lo = self.lo + displ
@@ -62,7 +62,7 @@ class Blob:
         if numpy.all(self.lo > otherBlob.hi):
             return False
         # there is a chance of an overlap
-        s = self.cells.intersect(otherBlob.cells)
+        s = self.cells.intersection(otherBlob.cells)
         if len(s) > 0:
             return True
         return False
@@ -78,4 +78,21 @@ class Blob:
         self.cells = cells
         self.lo = lo
         self.hi = hi
+
+    def getNumCells(self):
+        return len(self.cells)
+
+#############################################################################################
+def test1():
+    b1 = Blob(1, {(1,)})
+    b2 = Blob(1, {(2,)})
+    assert(b1.overlaps(b1))
+    assert(not b1.overlaps(b2))
+    assert(b1.shift(0, 1).overlaps(b2))
+    assert(not b1.shift(0, -1).overlaps(b2))
+    assert(b1.merge(b2)) # yes can be merged
+    assert(b1.getNumCells() == 2)
+
+if __name__ == '__main__':
+    test1()
 
