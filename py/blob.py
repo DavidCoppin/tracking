@@ -3,16 +3,29 @@ from box import Box
 
 class Blob:
 
-	def __init__(self, ndims):
+	def __init__(self, ndims, cells={}):
 		"""
 		Constructor 
+        @param ndims number of dimensions
+        @param cells set of (i,j...) tuples
 		"""
         self.ndims = ndims
-        self.cells = {}
+        self.cells = cells
         self.lo = []
         self.hi = []
+        if len(cells) > 0:
+            list_cells = list(cells)
+            self.lo = reduce(lambda x,y: numpy.minimum(x, y), list_cells)
+            self.hi = reduce(lambda x,y: numpy.maximum(x, y), list_cells)
 
     def merge(self, otherBlob):
+        """
+        Merge a blob with another blob
+        @param otherBlob other blob
+        @return True if this and the other blob can be merged, False otherwise
+        """
+        # Shift this blob by one cell in every direction. If there is overlap
+        # then this and the other blob can be merged. 
         displ = numpy.zeros((ndims,), numpy.int32)
         for dim in range(self.ndims):
             for pm in (-1, 1):
@@ -23,14 +36,26 @@ class Blob:
         return False
 
     def shift(self, dim, pm):
+        """
+        Shift blob
+        @param dim dimension (axis)
+        @param pm either -1 or 1
+        @return new blob that is shifted along dimension "dim" and direction "pm"
+        """
         res = Blob(self.ndims)
         displ = numpy.zeros((self.ndims,), numpy.int32)
+        # shift the cells up or down
         res.cells = {tuple(numpy.array(c) + displ) for c in self.cells}
         res.lo = self.lo + displ
         res.hi = self.hi + displ
         return res
 
     def overlaps(self, otherBlob):
+        """
+        Check if two blobs overlap (share at least one cell)
+        @param otherBlob other blob
+        @return True if there is an overlap, False otherwise
+        """
         # quick test
         if numpy.all(self.hi < otherBlob.lo):
             return False
@@ -43,6 +68,10 @@ class Blob:
         return False
 
     def absorb(self, otherBlob):
+        """
+        Absorb blob
+        @param otherBlob other blob
+        """
         cells = self.cells.union(otherBlob.cells)
         lo = numpy.minimum(self.lo, otherBlob.lo)
         hi = numpy.maximum(self.hi, otherBlob.hi)
@@ -50,40 +79,3 @@ class Blob:
         self.lo = lo
         self.hi = hi
 
-
-
-
-
-
-
-
-
-		indices = numpy.where(data[slab] > 0)
-
-		self.ndims = len(indices)
-		numCells = len(indices[0])
-
-		# set of cell indices where data is nonzero
-		self.cells = {tuple([indices[i][j] for i in range(ndims)]) for j in range(numCells)}
-
-		# window of interest
-		self.lo = numpy.array([min([cell[i] for cell in self.cells])])
-		self.hi = numpy.array([max([cell[i] for cell in self.cells])])
-
-
-	def build(self):
-		"""
-		Build the object by fusing neighbouring cells that share a common face
-		"""
-		while self.merge():
-			pass
-
-    def merge(self):
-
-
-
-	def touches(self, otherBlob):
-		pass
-
-	def absorbs(self, otherBlob):
-		pass
