@@ -26,7 +26,7 @@ class Cluster:
 
         if len(self.cells) > 0:
 
-            self.centre, self.ellipsisA, self.ellipsisB, self.angle = \
+            self.centre, self.ellipsisA, self.ellipsisB, self.ellipsisAngle = \
                  self.getEllipsis()
 
 
@@ -36,11 +36,20 @@ class Cluster:
             self.jMax = numpy.max([c[1] for c in self.cells])
 
     def merge(self, otherCluster):
+        """
+        Merge this cluster with another
+        @param otherCluster
+        @return new cluster that is the union of this and otherCluster
+        """
         self.cells.union(otherCluster.cells)
         self.update()
 
     def overlaps(self, otherCluster):
-
+        """
+        Find our if this clsuter overlaps with otherCluster
+        @param otherCluster
+        @return True if there is overlap, False otherwise
+        """
         # quick check if the boxes don't overlap...
         res = False
         if otherCluster.iMax < self.iMin or otherCluster.iMin > self.iMax:
@@ -49,13 +58,13 @@ class Cluster:
             return res
 
         # the clusters one centre is inside the other ellipse
-        if self.isPointInsideEllipse(self.centre, 
+        if self.__isPointInsideEllipse(self.centre, 
                 otherCluster.centre, 
                 otherCluster.ellipsisA, otherCluster.ellipsisB,
                 otherCluster.ellipsisAngle):
             return True
 
-        if self.isPointInsideEllipse(otherCluster.centre, 
+        if self.__isPointInsideEllipse(otherCluster.centre, 
                 self.centre, 
                 self.ellipsisA, self.ellipsisB,
                 self.ellipsisAngle):
@@ -65,7 +74,7 @@ class Cluster:
 
     def toArray(self, bounds=[]):
         """
-        Convert cluster to numpy (dense) array
+        Convert this cluster to numpy (dense) array
         @bounds (iMin, iMax, jMin, jMax)
         @return array of coordinates, array of zeros and ones
         """
@@ -84,13 +93,43 @@ class Cluster:
 
         return iCoords, jCoords, ijValues
 
+    def getEllipseAsPolyline(self, numSegments=32):
+        """
+        Return the ellipsis as a segmented line
+        @return iPts, jPts arrays
+        """
+        # rotation of the i j coords to the principal axes of the inertia matrix
+        cosa = math.cos(self.ellipsisAngle)
+        sina = math.sin(self.ellipsisAngle)
+        transf = numpy.array([[cosa, sina], [-sina, cosa]])
+        invTrans = numpy.linalg.inv(transf)
+
+        iPts, jPts = [], []
+        dt = 2 * math.pi / float(numSegments)
+        for i in range(numSegments + 1):
+            th = i * dt
+            x = self.ellipsisA * math.cos(th)
+            y = self.ellipsisB * math.cos(th)
+            # rotate back to i,j coordinates
+            ij = invTrans.dot([x, y])
+            ij + self.centre
+            iPts.append(ij[0])
+            jPts.append(ij[1])
+
+        return iPts, jPts
+
+
     def show(self):
         """
         Plots the cluster
         """
         from matplotlib import pylab
         iCoords, jCoords, ijValues = self.toArray()
+        # show the cluster
         pylab.matshow(ijValues)
+        # show the ellipsis
+        iPts, jPts = self.getEllipseAsPolyline()
+        pylab.plot(iPts, jPts, 'm-')
         pylab.show()
 
          
@@ -154,8 +193,9 @@ class Cluster:
             jCentre = numpy.sum([c[1] for c in self.cells]) / float(n)
         return numpy.array([iCentre, jCentre])
 
-    def isPointInsideEllipse(self, point, 
+    def __isPointInsideEllipse(self, point, 
         ellipsisCentre, ellipsisA, ellipsisB, ellipsisAngle):
+        # TO DO 
         pass
 
 
@@ -165,13 +205,14 @@ def test0():
     # should be able to create a cluster with nothing in it
     cluster = Cluster()
     cluster.update()
-    # not sure why writing a zero dimensioned variable isnot working with netcdf4
+    # not sure why writing a zero dimensioned variable is not working with netcdf4
     #cluster.writeFile('test0.nc')
 
 def test1():
     # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2)})
     cluster.update()
+    cluster.show()
     cluster.writeFile('test0.nc')
 
 
