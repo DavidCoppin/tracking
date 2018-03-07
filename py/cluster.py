@@ -29,10 +29,11 @@ class Cluster:
             self.centre, self.ellipsisA, self.ellipsisB, self.angle = \
                  self.getEllipsis()
 
-            self.iMin = numpy.minimum([c[0] for c in self.cells])
-            self.jMin = numpy.minimum([c[1] for c in self.cells])
-            self.iMax = numpy.maximum([c[0] for c in self.cells])
-            self.jMax = numpy.minimum([c[1] for c in self.cells])
+
+            self.iMin = numpy.min([c[0] for c in self.cells])
+            self.jMin = numpy.min([c[1] for c in self.cells])
+            self.iMax = numpy.max([c[0] for c in self.cells])
+            self.jMax = numpy.max([c[1] for c in self.cells])
 
     def merge(self, otherCluster):
         self.cells.union(otherCluster.cells)
@@ -40,7 +41,7 @@ class Cluster:
 
     def overlaps(self, otherCluster):
 
-        # quick check...
+        # quick check if the boxes don't overlap...
         res = False
         if otherCluster.iMax < self.iMin or otherCluster.iMin > self.iMax:
             return res
@@ -72,13 +73,14 @@ class Cluster:
             # no op
             return numpy.array([]), numpy.array([]), numpy.array([])
 
-        iMin, jMin, jMin, jMax = self.iMin, self.iMax, self.jMin, self.jMax
+        iMin, jMin, iMax, jMax = self.iMin, self.jMin, self.iMax, self.jMax
         if bounds:
             iMin, iMax, jMin, jMax = bounds
         iCoords = numpy.arange(iMin, iMax + 1)
         jCoords = numpy.arange(jMin, jMax + 1)
         ijValues = numpy.zeros((len(iCoords), len(jCoords)), numpy.int32)
-        ijValues[ (c for c in self.cells) ] = 1
+        print [c for c in self.cells]
+        ijValues[ [(c[0] - iMin, c[1] - jMin) for c in self.cells] ] = 1
 
         return iCoords, jCoords, ijValues
 
@@ -92,7 +94,7 @@ class Cluster:
         pylab.show()
 
          
-    def write_file(self, filename):
+    def writeFile(self, filename):
         """
         Write to netcdf file
         @param filename file name
@@ -125,10 +127,10 @@ class Cluster:
         """
         centre = self.__getCentre()
         inertia = numpy.zeros((2, 2), numpy.float64)
-        inertia[0, 0] = numpy.sum([(c[0] - centre[0])^2 for c in self.cells])
+        inertia[0, 0] = numpy.sum([(c[0] - centre[0])**2 for c in self.cells])
         inertia[0, 1] = numpy.sum([(c[0] - centre[0])*(c[1] - centre[1]) for c in self.cells])
         inertia[1, 0] = inertia[0, 1]
-        inertia[1, 1] = numpy.sum([(c[1] - centre[1])^2 for c in self.cells])
+        inertia[1, 1] = numpy.sum([(c[1] - centre[1])**2 for c in self.cells])
 
         # diagonalize
         eigenvals, eigenvecs = numpy.linalg.eig(inertia)
@@ -164,13 +166,13 @@ def test0():
     cluster = Cluster()
     cluster.update()
     # not sure why writing a zero dimensioned variable isnot working with netcdf4
-    #cluster.write_file('test0.nc')
+    #cluster.writeFile('test0.nc')
 
 def test1():
     # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2)})
     cluster.update()
-    cluster.write_file('test0.nc')
+    cluster.writeFile('test0.nc')
 
 
 if __name__ == '__main__':
