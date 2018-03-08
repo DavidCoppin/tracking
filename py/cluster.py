@@ -151,8 +151,6 @@ class Cluster:
         jCoords = numpy.arange(bounds[0][1], bounds[1][1] + 1)
         ijValues = numpy.zeros((len(iCoords), len(jCoords)), numpy.int32)
         iMin, jMin = bounds[0]
-        print [c for c in self.cells]
-        print [(c[0] - iMin, c[1] - jMin) for c in self.cells]
         for c in self.cells:
             ijValues[c[0] - iMin, c[1] - jMin] = 1
 
@@ -213,7 +211,9 @@ class Cluster:
 
         # show the ellipsis
         iPts, jPts = self.getEllipseAsPolyline()
-        pylab.plot(iPts, jPts, 'm-')
+        pylab.plot(iPts, jPts, 'c-')
+        pylab.xlabel('i')
+        pylab.ylabel('j')
         pylab.show()
 
 # private methods 
@@ -245,7 +245,6 @@ def test0():
     #cluster.writeFile('test0.nc')
 
 def test1():
-    # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2)})
     cluster.update()
     #cluster.show()
@@ -253,31 +252,35 @@ def test1():
     #cluster.writeFile('test1.nc')
 
 def testHorizLine():
-    # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2), (0, -2), (1, -2), (2, -2)})
     cluster.update()
     print('testHorizLine {}'.format(cluster))
     #cluster.show()
 
 def testDipole():
-    # should be able to create a cluster with nothing in it
     cluster = Cluster({(-2, 0), (2, 0)})
     cluster.update()
     print('testDipole {}'.format(cluster))
     #cluster.show()
 
 def testRectangle():
-    # should be able to create a cluster with nothing in it
     cluster = Cluster({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
     cluster.update()
     print('testRectangle {}'.format(cluster))
     #cluster.show()
 
 def testRectangleSlanted():
-    # should be able to create a cluster with nothing in it
     cluster = Cluster({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
     cluster.update()
     print('testRectangleSlanted {}'.format(cluster))
+    #cluster.show()
+
+def testRandom():
+    import random
+    random.seed(1234)
+    cluster = Cluster({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
+    cluster.update()
+    print('testRandom {}'.format(cluster))
     cluster.show()
 
 
@@ -288,4 +291,5 @@ if __name__ == '__main__':
     testDipole()
     testRectangle()
     testRectangleSlanted()
+    testRandom()
 
