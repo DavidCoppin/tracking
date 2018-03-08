@@ -76,13 +76,13 @@ class Cluster:
             return False
 
         # the clusters one centre is inside the other ellipse
-        if self.__isPointInsideEllipse(self.centre, 
+        if self.isPointInsideEllipse(self.centre, 
                 otherCluster.centre, 
                 otherCluster.ellipsisA, otherCluster.ellipsisB,
                 otherCluster.ellipsisAngle):
             return True
 
-        if self.__isPointInsideEllipse(otherCluster.centre, 
+        if self.isPointInsideEllipse(otherCluster.centre, 
                 self.centre, 
                 self.ellipsisA, self.ellipsisB,
                 self.ellipsisAngle):
@@ -114,7 +114,7 @@ class Cluster:
         Get the ellipsis parameters that best represent this cluster
         @return centre, radius1, radius2, angle
         """
-        centre = self.__getCentre()
+        centre = self.getCentre()
         inertia = numpy.zeros((2, 2), numpy.float64)
         inertia[0, 0] = numpy.sum([(c[0] - centre[0])**2 for c in self.cells])
         inertia[0, 1] = numpy.sum([(c[0] - centre[0])*(c[1] - centre[1]) for c in self.cells])
@@ -218,7 +218,7 @@ class Cluster:
 
 # private methods 
 
-    def __getCentre(self):
+    def getCentre(self):
         """
         Get the barycentric centre
         """
@@ -229,11 +229,27 @@ class Cluster:
             jCentre = numpy.sum([c[1] for c in self.cells]) / float(n)
         return numpy.array([iCentre, jCentre])
 
-    def __isPointInsideEllipse(self, point, 
-        ellipsisCentre, ellipsisA, ellipsisB, ellipsisAngle):
-        # TO DO 
-        pass
+    def isPointInsideEllipse(self, point, 
+               ellipsisCentre, ellipsisA, ellipsisB, ellipsisAngle):
+        """
+        Check if a point is inside an ellipse
+        """
+        
+        # subtract the centre
+        pt = point - self.centre
 
+        # rotate to the principal axes of the ellipsis
+        cosa = math.cos(ellipsisAngle)
+        sina = math.sin(ellipsisAngle)
+        # Note: this is the inverse transformation
+        invTransf = numpy.array([[cosa, -sina], [sina, cosa]])
+        # distance of point to principal axes
+        ptPrimeAbs = abs(invTransf.dot(pt))
+
+        if (ptPrimeAbs[0] < self.ellipsisA) and (ptPrimeAbs[1] < self.ellipsisB):
+            return True
+
+        return False
 
 
 #############################################################################################
@@ -282,6 +298,14 @@ def testRandom():
     cluster.update()
     print('testRandom {}'.format(cluster))
     cluster.show()
+
+def testIfPointIsInsideEllipsis():
+    cluster = Cluster({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    cluster.update()
+    assert(cl)
+    print('test {}'.format(cluster))
+    #cluster.show()
+    cluster = Cluster({(0,0), (1,0), (1,1), ()})
 
 
 if __name__ == '__main__':
