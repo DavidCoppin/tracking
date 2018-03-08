@@ -86,7 +86,7 @@ class Ellipsis:
     def isPointInsideEllipse(self, point, 
                ellipsisCentre, ellipsisA, ellipsisB, ellipsisAngle):
         """
-        Check if a point is inside an ellipse
+        Check if a point is inside an ellipsis
         @return True if inside, False if outside or on the boundary
         """
         
