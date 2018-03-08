@@ -79,10 +79,11 @@ class Ellipsis:
         @return True if inside, False if outside or on the boundary
         """
         
-        # distance of point to the axes
-        ptPrimeAbs = abs(self.ij2AxesTransf.dot(point - self.centre))
+        # rotate the coordinates to align them to the principal axes
+        ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
 
-        if (ptPrimeAbs[0] < self.a) and (ptPrimeAbs[1] < self.b):
+        if (ptPrimeAbs[0]/self.a)**2 + (ptPrimeAbs[1]/self.b)**2 < 1.0:
+            # inside
             return True
 
         return False
@@ -104,8 +105,8 @@ class Ellipsis:
                 pointsInside.append(p)
             else:
                 pointsOutside.append(p)
-        pylab.plot([p[0] for p in pointsOutside], [p[1] for p in pointsOutside], 'rx')
-        pylab.plot([p[0] for p in pointsInside], [p[1] for p in pointsInside], 'r*')
+        pylab.plot([p[0] for p in pointsOutside], [p[1] for p in pointsOutside], 'kx')
+        pylab.plot([p[0] for p in pointsInside], [p[1] for p in pointsInside], 'rs')
         pylab.xlabel('i')
         pylab.ylabel('j')
         pylab.show()
@@ -152,9 +153,14 @@ def testRectangle():
 
 
 def testRectangleSlanted():
+    import random
+    random.seed(1234)
+
     ell = Ellipsis({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
     print(ell)
 
+
+    """
     pts = []
 
     # these points should be inside
@@ -182,6 +188,10 @@ def testRectangleSlanted():
     pt = ell.axes2ijTransf.dot(ptPrime)
     #assert(not ell.isPointInside(pt))
     pts.append(pt)
+    """
+
+    # create lots of random points
+    pts = [numpy.array([-2. + 6*random.random(), -1. + 3*random.random()]) for i in range(1000)]
 
     ell.show(pts)
 
