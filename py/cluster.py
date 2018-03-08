@@ -167,7 +167,7 @@ class Cluster:
         # rotation of the i j coords to the principal axes of the inertia matrix
         cosa = math.cos(self.ellipsisAngle)
         sina = math.sin(self.ellipsisAngle)
-        invTrans = numpy.array([[cosa, -sina], [sina, cosa]])
+        transf = numpy.array([[cosa, sina], [-sina, cosa]])
 
         iPts, jPts = [], []
         dt = 2 * math.pi / float(numSegments)
@@ -176,7 +176,7 @@ class Cluster:
             x = self.ellipsisA * math.cos(th)
             y = self.ellipsisB * math.sin(th)
             # rotate back to i,j coordinates
-            ij = invTrans.dot([x, y])
+            ij = transf.dot([x, y])
             ij += self.centre
             iPts.append(ij[0])
             jPts.append(ij[1])
@@ -208,12 +208,12 @@ class Cluster:
         iBnds = list(iCoords - 0.5) + [iCoords[-1] + 0.5]
         jBnds = list(jCoords - 0.5) + [jCoords[-1] + 0.5]
 
-        # show the cluster
+        # show the cluster, note the swap of indices with transpose
         pylab.pcolormesh(iBnds, jBnds, numpy.transpose(ijValues))
-        
+
         # show the ellipsis
         iPts, jPts = self.getEllipseAsPolyline()
-        pylab.plot(iPts - self.box[0][0], jPts - self.box[0][1], 'm-')
+        pylab.plot(iPts, jPts, 'm-')
         pylab.show()
 
 # private methods 
