@@ -36,7 +36,7 @@ class Ellipsis:
         self.b = math.sqrt(eigenvals[1] / nm)
 
 
-    def getEllipseAsPolyline(self, numSegments=32):
+    def getPolyline(self, numSegments=32):
         """
         Return the ellipsis as a segmented line
         @return iPts, jPts arrays
@@ -79,17 +79,36 @@ class Ellipsis:
         @return True if inside, False if outside or on the boundary
         """
         
-        # subtract the centre
-        point -= self.centre
-
         # distance of point to the axes
-        ptPrimeAbs = abs(self.ij2AxesTransf.dot(point))
+        ptPrimeAbs = abs(self.ij2AxesTransf.dot(point - self.centre))
 
         if (ptPrimeAbs[0] < self.a) and (ptPrimeAbs[1] < self.b):
             return True
 
         return False
 
+
+    def show(self, points=[]):
+        """
+        Plots the ellipsis
+        @param points set of points to be shown as inside (stars) or outside (x)
+        """
+        from matplotlib import pylab
+        iPts, jPts = self.getPolyline()
+        pylab.plot(iPts, jPts, 'c-')
+
+        pointsInside = []
+        pointsOutside = []
+        for p in points:
+            if self.isPointInside(p):
+                pointsInside.append(p)
+            else:
+                pointsOutside.append(p)
+        pylab.plot([p[0] for p in pointsOutside], [p[1] for p in pointsOutside], 'rx')
+        pylab.plot([p[0] for p in pointsInside], [p[1] for p in pointsInside], 'r*')
+        pylab.xlabel('i')
+        pylab.ylabel('j')
+        pylab.show()
 
 #############################################################################################
 def test0():
@@ -104,24 +123,68 @@ def test1():
 
 def testRectangle():
     ell = Ellipsis({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    print(ell)
+
+    pts = []
     # these points should be inside
     pt = numpy.array([1., 0.5])
     assert(ell.isPointInside(pt))
-    pt[0] = 1.8; pt[1] = 0.5
+    pts.append(pt)
+
+    pt = numpy.array([1.8, 0.5])
     assert(ell.isPointInside(pt))
-    pt[0] = 1.; pt[1] = 0.99
+    pts.append(pt)
+
+    pt = numpy.array([1., 0.99])
     assert(ell.isPointInside(pt))
+    pts.append(pt)
+
     # these points should be outside
-    pt[0] = 1.82; pt[1] = 0.5
+    pt = numpy.array([1.82, 0.5])
     assert(not ell.isPointInside(pt))
-    pt[0] = 1.; pt[1] = 1.01
+    pts.append(pt)
+
+    pt = numpy.array([1., 1.01])
     assert(not ell.isPointInside(pt))
-    
-    print(ell)
+    pts.append(pt)
+
+    #ell.show(pts)
+
 
 def testRectangleSlanted():
     ell = Ellipsis({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
     print(ell)
+
+    pts = []
+
+    # these points should be inside
+    pt = numpy.array([1., 0.5])
+    assert(ell.isPointInside(pt))
+    pts.append(pt)
+
+    ptPrime = numpy.array([1. + 1.2, 0.5])
+    pt = ell.axes2ijTransf.dot(ptPrime)
+    assert(ell.isPointInside(pt))
+    pts.append(pt)
+
+    ptPrime = numpy.array([1., 0.5 + 0.44])
+    pt = ell.axes2ijTransf.dot(ptPrime)
+    #assert(ell.isPointInside(pt))
+    pts.append(pt)
+
+    # these points should be outside
+    ptPrime = numpy.array([1. + 1.3, 0.5])
+    pt = ell.axes2ijTransf.dot(ptPrime)
+    #assert(not ell.isPointInside(pt))
+    pts.append(pt)
+
+    ptPrime = numpy.array([1., 0.5 + 0.46])
+    pt = ell.axes2ijTransf.dot(ptPrime)
+    #assert(not ell.isPointInside(pt))
+    pts.append(pt)
+
+    ell.show(pts)
+
 
 def testRandom():
     import random
