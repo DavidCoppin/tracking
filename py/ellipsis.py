@@ -104,6 +104,19 @@ def test1():
 
 def testRectangle():
     ell = Ellipsis({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    # these points should be inside
+    pt = numpy.array([1., 0.5])
+    assert(ell.isPointInside(pt))
+    pt[0] = 1.8; pt[1] = 0.5
+    assert(ell.isPointInside(pt))
+    pt[0] = 1.; pt[1] = 0.99
+    assert(ell.isPointInside(pt))
+    # these points should be outside
+    pt[0] = 1.82; pt[1] = 0.5
+    assert(not ell.isPointInside(pt))
+    pt[0] = 1.; pt[1] = 1.01
+    assert(not ell.isPointInside(pt))
+    
     print(ell)
 
 def testRectangleSlanted():
@@ -122,5 +135,5 @@ if __name__ == '__main__':
     testRectangle()
     testRectangleSlanted()
     testRandom()
-    
+
 
