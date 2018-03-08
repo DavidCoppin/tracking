@@ -15,39 +15,23 @@ class Ellipsis:
         inertia[1, 0] = inertia[0, 1]
         inertia[1, 1] = numpy.sum([(c[1] - self.centre[1])**2 for c in cells])
 
-        # diagonalize
-        self.eigenvals, eigenvecs = numpy.linalg.eig(inertia)
+        # the set of eigenvectors is the rotation matrix from ij space to the 
+        # principal axes
+        eigenvals, self.ij2AxesTransf = numpy.linalg.eig(inertia)
 
-        # number of masses
-        nm = float(len(cells))
+        # from the axes to ij
+        self.axes2ijTransf = numpy.transpose(self.ij2AxesTransf)
 
         # average radii from the centre
+        nm = float(len(cells))
         self.a = numpy.sqrt(eigenvals[0] / nm)
         self.b = numpy.sqrt(eigenvals[1] / nm)
-
-        # orientation given by the first eigenvector (the other must 
-        # be perpendicular)
-        vecA = eigenvecs[:, 0]
-        self.angle = math.atan2(vecA[1], vecA[0])
-
-        cosa = math.cos(angle)
-        sina = math.sin(angle)
-
-        # transformation from principle axes directions to i,j
-        self.axes2ijTransf = numpy.array([[cosa, -sina], [sina, cosa]])
-
-        # transformation from i, j to principle axes directions
-        self.ij2AxesTransf = numpy.array([[cosa, sina], [-sina, cosa]])
-
-    def getCentre(self):
-    	return self.centre
 
     def getEllipseAsPolyline(self, numSegments=32):
         """
         Return the ellipsis as a segmented line
         @return iPts, jPts arrays
         """
-
         iPts, jPts = [], []
         dt = 2 * math.pi / float(numSegments)
         for i in range(numSegments + 1):
@@ -68,9 +52,10 @@ class Ellipsis:
         Print object
         """
         res = """
-        Ellpsis: centre = {} a = {} b = {} angle = {}
-        """.format(self.centre, self.a, self.b, self.angle)
+        Ellpsis: centre = {} a = {} b = {} rotation = {}
+        """.format(self.centre, self.a, self.b, self.ij2AxesTransf)
         return res
+
 
     def getCentre(self):
         """
@@ -83,10 +68,11 @@ class Ellipsis:
             jCentre = numpy.sum([c[1] for c in self.cells]) / float(n)
         return numpy.array([iCentre, jCentre])
 
-    def isPointInsideEllipse(self, point, 
-               ellipsisCentre, ellipsisA, ellipsisB, ellipsisAngle):
+
+    def isPointInside(self, point):
         """
         Check if a point is inside an ellipsis
+        @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
         
@@ -96,7 +82,11 @@ class Ellipsis:
         # distance of point to the axes
         ptPrimeAbs = abs(self.ij2AxesTransf.dot(point))
 
+        if (ptPrimeAbs[0] < self.a) and (ptPrimeAbs[1] < self.b):
+            return True
+
         return False
+
 
 
 #############################################################################################
