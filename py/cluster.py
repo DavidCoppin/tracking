@@ -159,18 +159,17 @@ class Cluster:
         # rotation of the i j coords to the principal axes of the inertia matrix
         cosa = math.cos(self.ellipsisAngle)
         sina = math.sin(self.ellipsisAngle)
-        transf = numpy.array([[cosa, sina], [-sina, cosa]])
-        invTrans = numpy.linalg.inv(transf)
+        invTrans = numpy.array([[cosa, -sina], [sina, cosa]])
 
         iPts, jPts = [], []
         dt = 2 * math.pi / float(numSegments)
         for i in range(numSegments + 1):
             th = i * dt
             x = self.ellipsisA * math.cos(th)
-            y = self.ellipsisB * math.cos(th)
+            y = self.ellipsisB * math.sin(th)
             # rotate back to i,j coordinates
             ij = invTrans.dot([x, y])
-            ij + self.centre
+            ij += self.centre
             iPts.append(ij[0])
             jPts.append(ij[1])
 
