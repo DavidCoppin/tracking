@@ -26,10 +26,10 @@ class Ellipsis:
 
         # the set of eigenvectors is the rotation matrix from ij space to the 
         # inertial tensor's principal axes
-        eigenvals, self.ij2AxesTransf = numpy.linalg.eig(inertia)
+        eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
 
         # from the axes to ij (inverse of the above)
-        self.axes2ijTransf = numpy.transpose(self.ij2AxesTransf)
+        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
         # average radii from the centre
         self.a = math.sqrt(eigenvals[0] / nm)
@@ -89,15 +89,31 @@ class Ellipsis:
         return False
 
 
-    def show(self, points=[]):
+    def show(self, points=[], cells={}):
         """
         Plots the ellipsis
         @param points set of points to be shown as inside (stars) or outside (x)
         """
         from matplotlib import pylab
-        iPts, jPts = self.getPolyline()
-        pylab.plot(iPts, jPts, 'c-')
+        import matplotlib
 
+        fig, ax = pylab.subplots()
+
+        # show the cells
+        patches = []
+        for c in cells:
+            i, j = c
+            pts = numpy.array([[i-0.5, j-0.5], [i+0.5, j-0.5], [i+0.5, j+0.5], [i-0.5, j+0.5]])
+            patch = matplotlib.patches.Polygon(pts, closed=True)
+            patches.append(patch)
+        p = matplotlib.collections.PatchCollection(patches, alpha=0.4)
+        ax.add_collection(p)
+
+        # plot the ellipsis
+        iPts, jPts = self.getPolyline()
+        pylab.plot(iPts, jPts, 'r-')
+
+        # add points (stars if inside, crosses if outside)
         pointsInside = []
         pointsOutside = []
         for p in points:
@@ -106,7 +122,9 @@ class Ellipsis:
             else:
                 pointsOutside.append(p)
         pylab.plot([p[0] for p in pointsOutside], [p[1] for p in pointsOutside], 'kx')
-        pylab.plot([p[0] for p in pointsInside], [p[1] for p in pointsInside], 'rs')
+        pylab.plot([p[0] for p in pointsInside], [p[1] for p in pointsInside], 'cs')
+
+        # label, title, ...
         pylab.xlabel('i')
         pylab.ylabel('j')
         pylab.show()
@@ -156,44 +174,14 @@ def testRectangleSlanted():
     import random
     random.seed(1234)
 
-    ell = Ellipsis({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
+    cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
+    ell = Ellipsis(cells)
     print(ell)
-
-
-    """
-    pts = []
-
-    # these points should be inside
-    pt = numpy.array([1., 0.5])
-    assert(ell.isPointInside(pt))
-    pts.append(pt)
-
-    ptPrime = numpy.array([1. + 1.2, 0.5])
-    pt = ell.axes2ijTransf.dot(ptPrime)
-    assert(ell.isPointInside(pt))
-    pts.append(pt)
-
-    ptPrime = numpy.array([1., 0.5 + 0.44])
-    pt = ell.axes2ijTransf.dot(ptPrime)
-    #assert(ell.isPointInside(pt))
-    pts.append(pt)
-
-    # these points should be outside
-    ptPrime = numpy.array([1. + 1.3, 0.5])
-    pt = ell.axes2ijTransf.dot(ptPrime)
-    #assert(not ell.isPointInside(pt))
-    pts.append(pt)
-
-    ptPrime = numpy.array([1., 0.5 + 0.46])
-    pt = ell.axes2ijTransf.dot(ptPrime)
-    #assert(not ell.isPointInside(pt))
-    pts.append(pt)
-    """
 
     # create lots of random points
     pts = [numpy.array([-2. + 6*random.random(), -1. + 3*random.random()]) for i in range(1000)]
 
-    ell.show(pts)
+    ell.show(pts, cells)
 
 
 def testRandom():
