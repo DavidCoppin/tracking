@@ -55,6 +55,7 @@ class Cluster:
         @param otherCluster
         @return True if there is overlap, False otherwise
         """
+        
         # quick check if the boxes don't overlap...
         noOverlap = True
         for dim in range(0, 2):
@@ -169,7 +170,7 @@ def testRandom():
     cluster = Cluster({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
     cluster.update()
     print('testRandom {}'.format(cluster))
-    
+
 
 if __name__ == '__main__':
     test0()
