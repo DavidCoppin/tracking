@@ -29,7 +29,7 @@ class Cluster:
             self.centre, self.ellipsisA, self.ellipsisB, self.ellipsisAngle = \
                  self.getEllipsis()
 
-            for dim in range(0, 1):
+            for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
                 self.box[1][dim] = numpy.max([c[dim] for c in self.cells])
 
@@ -51,7 +51,7 @@ class Cluster:
         """
         # quick check if the boxes don't overlap...
         noOverlap = True
-        for dim in range(0, 1):
+        for dim in range(0, 2):
             # max is smaller than this min
             noOverlap &= otherCluster.box[1][dim] < self.box[0][dim]
             noOverlap &= self.box[1][dim] < otherCluster.box[0][dim]
@@ -95,7 +95,8 @@ class Cluster:
         iMin, jMin = bounds[0]
         print [c for c in self.cells]
         print [(c[0] - iMin, c[1] - jMin) for c in self.cells]
-        ijValues[ [(c[0] - iMin, c[1] - jMin) for c in self.cells] ] = 1
+        for c in self.cells:
+            ijValues[c[0] - iMin, c[1] - jMin] = 1
 
         return iCoords, jCoords, ijValues
 
