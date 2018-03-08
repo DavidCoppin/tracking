@@ -158,6 +158,7 @@ class Cluster:
 
         return iCoords, jCoords, ijValues
 
+
     def getEllipseAsPolyline(self, numSegments=32):
         """
         Return the ellipsis as a segmented line
@@ -202,11 +203,17 @@ class Cluster:
         bounds = [[self.box[0][1] - 1, self.box[0][1] - 1], 
                   [self.box[1][0] + 1, self.box[1][1] + 1]]
         iCoords, jCoords, ijValues = self.toArray(bounds=bounds)
+
+        # pcolormesh wants nodal coordinates, data are cell centred
+        iBnds = list(iCoords - 0.5) + [iCoords[-1] + 0.5]
+        jBnds = list(jCoords - 0.5) + [jCoords[-1] + 0.5]
+
         # show the cluster
-        pylab.matshow(ijValues)
+        pylab.pcolormesh(iBnds, jBnds, numpy.transpose(ijValues))
+        
         # show the ellipsis
         iPts, jPts = self.getEllipseAsPolyline()
-        pylab.plot(iPts, jPts, 'm-')
+        pylab.plot(iPts - self.box[0][0], jPts - self.box[0][1], 'm-')
         pylab.show()
 
 # private methods 
@@ -259,10 +266,26 @@ def testDipole():
     print('testDipole {}'.format(cluster))
     #cluster.show()
 
+def testRectangle():
+    # should be able to create a cluster with nothing in it
+    cluster = Cluster({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    cluster.update()
+    print('testRectangle {}'.format(cluster))
+    #cluster.show()
+
+def testRectangleSlanted():
+    # should be able to create a cluster with nothing in it
+    cluster = Cluster({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
+    cluster.update()
+    print('testRectangleSlanted {}'.format(cluster))
+    cluster.show()
+
 
 if __name__ == '__main__':
     test0()
     test1()
     testHorizLine()
     testDipole()
+    testRectangle()
+    testRectangleSlanted()
 
