@@ -15,8 +15,11 @@ class Cluster:
         self.centre = []
 
         # ellipsis parameters
+        # radius 1
         self.ellipsisA = None
+        # radius 2
         self.ellipsisB = None
+        # angle between pricipal first axis and i coordinate
         self.ellipsisAngle = None
 
         # min/max indices of the box containing the set of points
@@ -120,8 +123,12 @@ class Cluster:
 
         # diagonalize
         eigenvals, eigenvecs = numpy.linalg.eig(inertia)
-        a = numpy.sqrt(eigenvals[0])
-        b = numpy.sqrt(eigenvals[1])
+        # number of masses
+        nm = float(len(self.cells))
+        # average radii from the centre
+        a = numpy.sqrt(eigenvals[0] / nm)
+        b = numpy.sqrt(eigenvals[1] / nm)
+        # orientation
         vecA = eigenvecs[:, 0]
         angle = math.atan2(vecA[1], vecA[0])
 
@@ -176,6 +183,17 @@ class Cluster:
         return iPts, jPts
 
 
+    def __repr__(self):
+        """
+        Print object
+        """
+        res = """
+        Cluster: num cells = {} box = {} ellipsis centre = {} a = {} b = {} angle = {}
+        """.format(len(self.cells), self.box, \
+            self.centre, self.ellipsisA, self.ellipsisB, self.ellipsisAngle)
+        return res
+
+
     def show(self):
         """
         Plots the cluster
@@ -224,17 +242,27 @@ def test1():
     cluster = Cluster({(-1, -2)})
     cluster.update()
     #cluster.show()
-    cluster.writeFile('test1.nc')
+    print('test1 {}'.format(cluster))
+    #cluster.writeFile('test1.nc')
 
 def testHorizLine():
     # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2), (0, -2), (1, -2), (2, -2)})
     cluster.update()
-    cluster.show()
+    print('testHorizLine {}'.format(cluster))
+    #cluster.show()
+
+def testDipole():
+    # should be able to create a cluster with nothing in it
+    cluster = Cluster({(-2, 0), (2, 0)})
+    cluster.update()
+    print('testDipole {}'.format(cluster))
+    #cluster.show()
 
 
 if __name__ == '__main__':
     test0()
     test1()
     testHorizLine()
+    testDipole()
 
