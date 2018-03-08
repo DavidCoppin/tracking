@@ -8,24 +8,33 @@ class Ellipsis:
         Constructor 
         @param cells set of (i,j) tuples
         """
-        self.centre = self.getCentre()
+        n = len(cells)
+        nm = float(n)
+
+        # centre of the cluster
+        self.centre = []
+        if n > 0:
+            iCentre = numpy.sum([c[0] for c in cells]) / nm
+            jCentre = numpy.sum([c[1] for c in cells]) / nm
+            self.centre = numpy.array([iCentre, jCentre])
+
+        # compute inertia tensor (symmetric)
         inertia = numpy.zeros((2, 2), numpy.float64)
-        inertia[0, 0] = numpy.sum([(c[0] - self.centre[0])**2 for c in cells])
-        inertia[0, 1] = numpy.sum([(c[0] - self.centre[0])*(c[1] - self.centre[1]) for c in cells])
-        inertia[1, 0] = inertia[0, 1]
-        inertia[1, 1] = numpy.sum([(c[1] - self.centre[1])**2 for c in cells])
+        for i in range(2):
+            for j in range(2):
+                inertia[i, j] = numpy.sum([(c[i] - self.centre[i])*(c[j] - self.centre[j]) for c in cells])
 
         # the set of eigenvectors is the rotation matrix from ij space to the 
-        # principal axes
+        # inertial tensor's principal axes
         eigenvals, self.ij2AxesTransf = numpy.linalg.eig(inertia)
 
-        # from the axes to ij
+        # from the axes to ij (inverse of the above)
         self.axes2ijTransf = numpy.transpose(self.ij2AxesTransf)
 
         # average radii from the centre
-        nm = float(len(cells))
-        self.a = numpy.sqrt(eigenvals[0] / nm)
-        self.b = numpy.sqrt(eigenvals[1] / nm)
+        self.a = math.sqrt(eigenvals[0] / nm)
+        self.b = math.sqrt(eigenvals[1] / nm)
+
 
     def getEllipseAsPolyline(self, numSegments=32):
         """
@@ -43,7 +52,6 @@ class Ellipsis:
             ij += self.centre
             iPts.append(ij[0])
             jPts.append(ij[1])
-
         return iPts, jPts
 
 
@@ -61,12 +69,7 @@ class Ellipsis:
         """
         Get the barycentric centre
         """
-        iCentre, jCentre = None, None
-        n = len(self.cells)
-        if n > 0:
-            iCentre = numpy.sum([c[0] for c in self.cells]) / float(n)
-            jCentre = numpy.sum([c[1] for c in self.cells]) / float(n)
-        return numpy.array([iCentre, jCentre])
+        return self.centre
 
 
     def isPointInside(self, point):
@@ -88,12 +91,36 @@ class Ellipsis:
         return False
 
 
-
 #############################################################################################
 def test0():
-	pass
+    # test zero set
+    ell = Ellipsis({})
+    print(ell)
 
+def test1():
+    # test zero set
+    ell = Ellipsis({(-2, 1)})
+    print(ell)
+
+def testRectangle():
+    ell = Ellipsis({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    print(ell)
+
+def testRectangleSlanted():
+    ell = Ellipsis({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
+    print(ell)
+
+def testRandom():
+    import random
+    random.seed(1234)
+    ell = Ellipsis({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
+    print(ell)
 
 if __name__ == '__main__':
     test0()
+    test1()
+    testRectangle()
+    testRectangleSlanted()
+    testRandom()
+    
 
