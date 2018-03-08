@@ -20,7 +20,7 @@ class Cluster:
         self.ellipsisAngle = None
 
         # min/max indices of the box containing the set of points
-        self.iMin, self.jMin, self.iMax, self.jMax = None, None, None, None
+        self.box = [[None, None], [None, None]]
     
     def update(self):
 
@@ -29,11 +29,10 @@ class Cluster:
             self.centre, self.ellipsisA, self.ellipsisB, self.ellipsisAngle = \
                  self.getEllipsis()
 
+            for dim in range(0, 1):
+                self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
+                self.box[1][dim] = numpy.max([c[dim] for c in self.cells])
 
-            self.iMin = numpy.min([c[0] for c in self.cells])
-            self.jMin = numpy.min([c[1] for c in self.cells])
-            self.iMax = numpy.max([c[0] for c in self.cells])
-            self.jMax = numpy.max([c[1] for c in self.cells])
 
     def merge(self, otherCluster):
         """
@@ -51,11 +50,17 @@ class Cluster:
         @return True if there is overlap, False otherwise
         """
         # quick check if the boxes don't overlap...
-        res = False
-        if otherCluster.iMax < self.iMin or otherCluster.iMin > self.iMax:
-            return res
-        if otherCluster.jMax < self.jMin or otherCluster.jMin > self.jMax:
-            return res
+        noOverlap = True
+        for dim in range(0, 1):
+            # max is smaller than this min
+            noOverlap &= otherCluster.box[1][dim] < self.box[0][dim]
+            noOverlap &= self.box[1][dim] < otherCluster.box[0][dim]
+            # min is bigger than other max
+            noOverlap &= otherCluster.box[0][dim] > self.box[1][dim]
+            noOverlap &= self.box[0][dim] > otherCluster.box[1][dim]
+
+        if noOverlap:
+            return False
 
         # the clusters one centre is inside the other ellipse
         if self.__isPointInsideEllipse(self.centre, 
@@ -75,20 +80,21 @@ class Cluster:
     def toArray(self, bounds=[]):
         """
         Convert this cluster to numpy (dense) array
-        @bounds (iMin, iMax, jMin, jMax)
+        @bounds [[iMin, jMin], [iMax, jMax]]
         @return array of coordinates, array of zeros and ones
         """
         if len(self.cells) <= 0:
             # no op
             return numpy.array([]), numpy.array([]), numpy.array([])
 
-        iMin, jMin, iMax, jMax = self.iMin, self.jMin, self.iMax, self.jMax
-        if bounds:
-            iMin, iMax, jMin, jMax = bounds
-        iCoords = numpy.arange(iMin, iMax + 1)
-        jCoords = numpy.arange(jMin, jMax + 1)
+        if not bounds:
+            bounds = self.box
+        iCoords = numpy.arange(bounds[0][0], bounds[1][0] + 1)
+        jCoords = numpy.arange(bounds[0][1], bounds[1][1] + 1)
         ijValues = numpy.zeros((len(iCoords), len(jCoords)), numpy.int32)
+        iMin, jMin = bounds[0]
         print [c for c in self.cells]
+        print [(c[0] - iMin, c[1] - jMin) for c in self.cells]
         ijValues[ [(c[0] - iMin, c[1] - jMin) for c in self.cells] ] = 1
 
         return iCoords, jCoords, ijValues
@@ -124,7 +130,9 @@ class Cluster:
         Plots the cluster
         """
         from matplotlib import pylab
-        iCoords, jCoords, ijValues = self.toArray()
+        bounds = [[self.box[0][1] - 1, self.box[0][1] - 1], 
+                  [self.box[1][0] + 1, self.box[1][1] + 1]]
+        iCoords, jCoords, ijValues = self.toArray(bounds=bounds)
         # show the cluster
         pylab.matshow(ijValues)
         # show the ellipsis
@@ -212,11 +220,18 @@ def test1():
     # should be able to create a cluster with nothing in it
     cluster = Cluster({(-1, -2)})
     cluster.update()
+    #cluster.show()
+    cluster.writeFile('test1.nc')
+
+def testHorizLine():
+    # should be able to create a cluster with nothing in it
+    cluster = Cluster({(-1, -2), (0, -2), (1, -2), (2, -2)})
+    cluster.update()
     cluster.show()
-    cluster.writeFile('test0.nc')
 
 
 if __name__ == '__main__':
     test0()
     test1()
+    testHorizLine()
 
