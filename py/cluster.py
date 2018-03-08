@@ -22,6 +22,15 @@ class Cluster:
         # min/max indices of the box containing the set of points
         self.box = [[None, None], [None, None]]
     
+
+    def getNumCells(self):
+        """
+        Get the number of cells
+        @return number
+        """
+        return len(self.cells)
+
+
     def update(self):
 
         if len(self.cells) > 0:
@@ -42,6 +51,7 @@ class Cluster:
         """
         self.cells.union(otherCluster.cells)
         self.update()
+
 
     def overlaps(self, otherCluster):
         """
@@ -76,6 +86,47 @@ class Cluster:
             return True
 
         return False
+
+    def writeFile(self, filename):
+        """
+        Write to netcdf file
+        @param filename file name
+        """
+        import netCDF4
+        iCoords, jCoords, ijValues = self.toArray()
+        nc = netCDF4.Dataset(filename, 'w', format="NETCDF4")
+        iDim = nc.createDimension('iDim', size=iCoords.shape[0])
+        jDim = nc.createDimension('jDim', size=jCoords.shape[0])
+        iVar = nc.createVariable('i', 'i4', dimensions=('iDim',))
+        jVar = nc.createVariable('j', 'i4', dimensions=('jDim',))
+        nbVar = nc.createVariable('nb', 'i4', dimensions=('iDim', 'jDim'))
+        iVar[:] = iCoords
+        jVar[:] = jCoords
+        nbVar[:, :] = ijValues
+        nc.close()
+
+
+    def getEllipsis(self):
+        """
+        Get the ellipsis parameters that best represent this cluster
+        @return centre, radius1, radius2, angle
+        """
+        centre = self.__getCentre()
+        inertia = numpy.zeros((2, 2), numpy.float64)
+        inertia[0, 0] = numpy.sum([(c[0] - centre[0])**2 for c in self.cells])
+        inertia[0, 1] = numpy.sum([(c[0] - centre[0])*(c[1] - centre[1]) for c in self.cells])
+        inertia[1, 0] = inertia[0, 1]
+        inertia[1, 1] = numpy.sum([(c[1] - centre[1])**2 for c in self.cells])
+
+        # diagonalize
+        eigenvals, eigenvecs = numpy.linalg.eig(inertia)
+        a = numpy.sqrt(eigenvals[0])
+        b = numpy.sqrt(eigenvals[1])
+        vecA = eigenvecs[:, 0]
+        angle = math.atan2(vecA[1], vecA[0])
+
+        return centre, a, b, angle
+
 
     def toArray(self, bounds=[]):
         """
@@ -140,54 +191,6 @@ class Cluster:
         iPts, jPts = self.getEllipseAsPolyline()
         pylab.plot(iPts, jPts, 'm-')
         pylab.show()
-
-         
-    def writeFile(self, filename):
-        """
-        Write to netcdf file
-        @param filename file name
-        """
-        import netCDF4
-        iCoords, jCoords, ijValues = self.toArray()
-        nc = netCDF4.Dataset(filename, 'w', format="NETCDF4")
-        iDim = nc.createDimension('iDim', size=iCoords.shape[0])
-        jDim = nc.createDimension('jDim', size=jCoords.shape[0])
-        iVar = nc.createVariable('i', 'i4', dimensions=('iDim',))
-        jVar = nc.createVariable('j', 'i4', dimensions=('jDim',))
-        nbVar = nc.createVariable('nb', 'i4', dimensions=('iDim', 'jDim'))
-        iVar[:] = iCoords
-        jVar[:] = jCoords
-        nbVar[:, :] = ijValues
-        nc.close()
-
-
-    def getNumCells(self):
-        """
-        Get the number of cells
-        @return number
-        """
-        return len(self.cells)
-
-    def getEllipsis(self):
-        """
-        Get the ellipsis parameters that best represent this cluster
-        @return centre, radius1, radius2, angle
-        """
-        centre = self.__getCentre()
-        inertia = numpy.zeros((2, 2), numpy.float64)
-        inertia[0, 0] = numpy.sum([(c[0] - centre[0])**2 for c in self.cells])
-        inertia[0, 1] = numpy.sum([(c[0] - centre[0])*(c[1] - centre[1]) for c in self.cells])
-        inertia[1, 0] = inertia[0, 1]
-        inertia[1, 1] = numpy.sum([(c[1] - centre[1])**2 for c in self.cells])
-
-        # diagonalize
-        eigenvals, eigenvecs = numpy.linalg.eig(inertia)
-        a = numpy.sqrt(eigenvals[0])
-        b = numpy.sqrt(eigenvals[1])
-        vecA = eigenvecs[:, 0]
-        angle = math.atan2(vecA[1], vecA[0])
-
-        return centre, a, b, angle
 
 # private methods 
 
