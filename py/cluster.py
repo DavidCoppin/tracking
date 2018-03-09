@@ -1,6 +1,6 @@
 import numpy
 import math
-from ellipsis import Ellipsis
+from ellipse import Ellipse
 
 class Cluster:
 
@@ -12,7 +12,7 @@ class Cluster:
         # set of i,j cells 
         self.cells = cells
 
-        # ellipsis representing the "average" distribution
+        # ellipse representing the "average" distribution
         # of cells
         self.ellpsis = None
 
@@ -32,7 +32,7 @@ class Cluster:
 
         if len(self.cells) > 0:
 
-            self.ellipsis = Ellipsis(self.cells)
+            self.ellipse = Ellipse(self.cells)
 
             for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
@@ -71,10 +71,10 @@ class Cluster:
             return False
 
         # the clusters one centre is inside the other ellipse
-        if self.ellipsis.isPointInside(otherCluster.ellipsis.getCentre()):
+        if self.ellipse.isPointInside(otherCluster.ellipse.getCentre()):
             return True
 
-        if otherCluster.ellipsis.isPointInside(self.ellipsis.getCentre()):
+        if otherCluster.ellipse.isPointInside(self.ellipse.getCentre()):
             return True
 
         return False
@@ -123,10 +123,10 @@ class Cluster:
         Print object
         """
         res = """
-        Cluster: num cells = {} box = {} ellipsis centre = {} a = {} b = {} transf = {}
+        Cluster: num cells = {} box = {} ellipse centre = {} a = {} b = {} transf = {}
         """.format(len(self.cells), self.box, \
-            self.ellipsis.centre, self.ellipsis.a, self.ellipsis.b, \
-            self.ellipsis.ij2AxesTransf)
+            self.ellipse.centre, self.ellipse.a, self.ellipse.b, \
+            self.ellipse.ij2AxesTransf)
         return res
 
 

@@ -1,9 +1,9 @@
 import numpy
 import cv2
-from ellipsis import Ellipsis
+from ellipse import Ellipse
 
 """
-Compare the ellipses obtained from Ellipsis with those obtained from opencv3
+Compare the ellipses obtained from Ellipse with those obtained from opencv3
 """
 
 # define the cells where something special happens
@@ -19,8 +19,8 @@ for c in cells:
     cellData[c] = 1
 
 
-# create the ellipsis
-ell = Ellipsis(cells)
+# create the ellipse
+ell = Ellipse(cells)
 
 # now do the same with cv2...
 # TO DO 

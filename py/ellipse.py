@@ -1,7 +1,7 @@
 import numpy
 import math
 
-class Ellipsis:
+class Ellipse:
 
     def __init__(self, cells={}):
         """
@@ -42,7 +42,7 @@ class Ellipsis:
 
     def getPolyline(self, numSegments=32):
         """
-        Return the ellipsis as a segmented line
+        Return the ellipse as a segmented line
         @return iPts, jPts arrays
         """
         iPts, jPts = [], []
@@ -64,7 +64,7 @@ class Ellipsis:
         Print object
         """
         res = """
-        Ellipsis: centre = {} a = {} b = {} rotation = {}
+        Ellipse: centre = {} a = {} b = {} rotation = {}
         """.format(self.centre, self.a, self.b, self.ij2AxesTransf)
         return res
 
@@ -78,7 +78,7 @@ class Ellipsis:
 
     def isPointInside(self, point):
         """
-        Check if a point is inside an ellipsis
+        Check if a point is inside an ellipse
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
@@ -95,7 +95,7 @@ class Ellipsis:
 
     def show(self, points=[], cells={}):
         """
-        Plots the ellipsis
+        Plots the ellipse
         @param points set of points to be shown as inside (stars) or outside (x)
         """
         from matplotlib import pylab
@@ -113,7 +113,7 @@ class Ellipsis:
         p = matplotlib.collections.PatchCollection(patches, alpha=0.4)
         ax.add_collection(p)
 
-        # plot the ellipsis
+        # plot the ellipse
         iPts, jPts = self.getPolyline()
         pylab.plot(iPts, jPts, 'r-')
 
@@ -136,16 +136,16 @@ class Ellipsis:
 #############################################################################################
 def test0():
     # test zero set
-    ell = Ellipsis({})
+    ell = Ellipse({})
     print(ell)
 
 def test1():
     # test zero set
-    ell = Ellipsis({(-2, 1)})
+    ell = Ellipse({(-2, 1)})
     print(ell)
 
 def testRectangle():
-    ell = Ellipsis({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
+    ell = Ellipse({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
     print(ell)
 
     pts = []
@@ -179,7 +179,7 @@ def testRectangleSlanted():
     random.seed(1234)
 
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-    ell = Ellipsis(cells)
+    ell = Ellipse(cells)
     print(ell)
 
     # create lots of random points
@@ -191,7 +191,7 @@ def testRectangleSlanted():
 def testRandom():
     import random
     random.seed(1234)
-    ell = Ellipsis({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
+    ell = Ellipse({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
     print(ell)
 
 if __name__ == '__main__':
