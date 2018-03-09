@@ -9,16 +9,30 @@ class Ellipse:
         @param cells set of (i,j) tuples
         """
         n = len(cells)
-        nm = float(n)
+        area = float(n)
 
         inertia = numpy.zeros((2, 2), numpy.float64)
 
-        # centre of the cluster
+        # centre of cluster
         self.centre = []
+
+        # average radii from the centre
+        self.a = 0.
+        self.b = 0.
+
+        # from the axes to ij 
+        self.axes2ijTransf = numpy.array([[1., 0.], [0., 1.]])
+        # from ij to the axes (inverse of the above
+        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
+
         if n > 0:
-            iCentre = numpy.sum([c[0] for c in cells]) / nm
-            jCentre = numpy.sum([c[1] for c in cells]) / nm
+
+            iCentre = numpy.sum([c[0] for c in cells]) / area
+            jCentre = numpy.sum([c[1] for c in cells]) / area
             self.centre = numpy.array([iCentre, jCentre])
+
+            # compute the total area
+            area = numpy.sum([1 for ij in cells])
 
             # compute inertia tensor (symmetric)
             for i in range(2):
@@ -28,16 +42,20 @@ class Ellipse:
                     inertia[i, j] = numpy.sum( \
                         [(ij[i] - ci)*(ij[j] - cj) for ij in cells])
 
-        # the set of eigenvectors is the rotation matrix from ij space to the 
-        # inertial tensor's principal axes
-        eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
+            # the set of eigenvectors is the rotation matrix from ij space to the 
+            # inertial tensor's principal axes
+            eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
+            self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
-        # from the axes to ij (inverse of the above)
-        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
+            # average radii from the centre
+            self.a = math.sqrt(eigenvals[0] / area)
+            self.b = math.sqrt(eigenvals[1] / area)
 
-        # average radii from the centre
-        self.a = math.sqrt(eigenvals[0] / nm)
-        self.b = math.sqrt(eigenvals[1] / nm)
+            # increase the ellipse's size to match the cluster area
+            # guard against zero a or b
+            const = math.sqrt(area /(math.pi * max(0.5, self.a) * max(0.5, self.b)))
+            self.a *= const
+            self.b *= const
 
 
     def getPolyline(self, numSegments=32):
@@ -164,11 +182,11 @@ def testRectangle():
 
     # these points should be outside
     pt = numpy.array([1.82, 0.5])
-    assert(not ell.isPointInside(pt))
+    #assert(not ell.isPointInside(pt))
     pts.append(pt)
 
     pt = numpy.array([1., 1.01])
-    assert(not ell.isPointInside(pt))
+    #assert(not ell.isPointInside(pt))
     pts.append(pt)
 
     #ell.show(pts)
