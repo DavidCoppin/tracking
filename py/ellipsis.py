@@ -11,6 +11,8 @@ class Ellipsis:
         n = len(cells)
         nm = float(n)
 
+        inertia = numpy.zeros((2, 2), numpy.float64)
+
         # centre of the cluster
         self.centre = []
         if n > 0:
@@ -18,11 +20,13 @@ class Ellipsis:
             jCentre = numpy.sum([c[1] for c in cells]) / nm
             self.centre = numpy.array([iCentre, jCentre])
 
-        # compute inertia tensor (symmetric)
-        inertia = numpy.zeros((2, 2), numpy.float64)
-        for i in range(2):
-            for j in range(2):
-                inertia[i, j] = numpy.sum([(c[i] - self.centre[i])*(c[j] - self.centre[j]) for c in cells])
+            # compute inertia tensor (symmetric)
+            for i in range(2):
+                ci = self.centre[i]
+                for j in range(2):
+                    cj = self.centre[j]
+                    inertia[i, j] = numpy.sum( \
+                        [(ij[i] - ci)*(ij[j] - cj) for ij in cells])
 
         # the set of eigenvectors is the rotation matrix from ij space to the 
         # inertial tensor's principal axes
@@ -60,7 +64,7 @@ class Ellipsis:
         Print object
         """
         res = """
-        Ellpsis: centre = {} a = {} b = {} rotation = {}
+        Ellipsis: centre = {} a = {} b = {} rotation = {}
         """.format(self.centre, self.a, self.b, self.ij2AxesTransf)
         return res
 
