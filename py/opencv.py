@@ -22,3 +22,15 @@ def getEllipse(clusters, list_contours):
                 ellipse=cv2.fitEllipse(cnt)
                 cv2.ellipse(map_ellipse,ellipse,(255,0,0))
         return map_ellipse
+
+# test
+domain = (30, 40)
+clusters = np.zeros(domain, np.int32)
+
+# define the cells where something special happens
+for j in range(10):
+        for i in range(14):
+                clusters[i + j, i] = 1
+
+copy_clusters, list_contours = getContours(clusters)
+map_ellipse = getEllipse(copy_clusters, list_contours)
