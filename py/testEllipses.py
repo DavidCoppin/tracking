@@ -120,7 +120,6 @@ times  (old new): {}s   ; {}s for domain size {}
 
 #####################################################################
 def testObliqueRectangle():
-
     domain_size = (30, 40)
     cells = set()
     for j in range(10):
@@ -129,6 +128,35 @@ def testObliqueRectangle():
     print et
     et.plot()
 
+def testConcave():
+    domain_size = (30, 40)
+    cells = {(-2,3), (-3,3), (-3,2), (-3,1),
+         (-3,0), (-2,0), (-1,0), (0,0), (1,0), (2,0), (3,0),
+         (3,1), (3,2), (2,2), (1,2), (0,2),}
+    et = EllipseTester('concave', domain_size, cells)
+    print et
+    et.plot()
+
+def testIslands():
+    domain_size = (30, 40)
+    cells = {(0,0), (1,0), (1,1), (1,4)}
+    et = EllipseTester('islands', domain_size, cells)
+    print et
+    et.plot()
+
+def testLargeDomain():
+    domain_size = (3000, 4000)
+    cells = set()
+    for j in range(100):
+        cells = cells.union({(i+j, i) for i in range(30, 140)})
+    et = EllipseTester('large domain', domain_size, cells)
+    print et
+    et.plot()
+
 
 if __name__ == '__main__':
+    testLargeDomain()
     testObliqueRectangle()
+    testConcave()
+    testIslands()
+    
