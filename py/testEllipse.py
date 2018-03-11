@@ -55,11 +55,5 @@ dx =  dxPrime * cos_angle + dyPrime * sin_angle
 dy = -dxPrime * sin_angle + dyPrime * cos_angle
 mpl.plot(xc + dx, yc + dy, 'm--')
 
-
-#mpl.contourf(test_result)
-#
 mpl.show()
-
-# compare the two ellipses
-# centre, axes, angle.... may be points?
 
