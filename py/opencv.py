@@ -8,8 +8,14 @@ def getContours(clusters):
         for label in np.unique(clusters):
                 mask = np.zeros(clusters.shape, dtype="uint8")
                 mask[clusters == label] = 255
-                cnts, hierarchy = \
-                        cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                try:
+                        # opencv2
+                        cnts, hierarchy = \
+                                cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                except:
+                        # opencv3
+                        _, cnts, hierarchy = \
+                                cv2.findContours(mask.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
                 int_cnts.append(cnts)
         list_contours=list(itertools.chain.from_iterable(int_cnts))
         return copy_clusters, list_contours
@@ -21,16 +27,5 @@ def getEllipse(clusters, list_contours):
                 cv2.drawContours(cimg, list_contours, index, color=255, thickness=-1)
                 ellipse=cv2.fitEllipse(cnt)
                 cv2.ellipse(map_ellipse,ellipse,(255,0,0))
-        return map_ellipse
-
-# test
-domain = (30, 40)
-clusters = np.zeros(domain, np.int32)
-
-# define the cells where something special happens
-for j in range(10):
-        for i in range(14):
-                clusters[i + j, i] = 1
-
-copy_clusters, list_contours = getContours(clusters)
-map_ellipse = getEllipse(copy_clusters, list_contours)
+        #return map_ellipse
+        return ellipse # return the parameters of the ellipse

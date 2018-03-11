@@ -111,7 +111,7 @@ class Ellipse:
         return False
 
 
-    def show(self, points=[], cells={}):
+    def show(self, points=[], cells={}, show=True):
         """
         Plots the ellipse
         @param points set of points to be shown as inside (stars) or outside (x)
@@ -149,7 +149,8 @@ class Ellipse:
         # label, title, ...
         pylab.xlabel('i')
         pylab.ylabel('j')
-        pylab.show()
+        if show:
+            pylab.show()
 
 #############################################################################################
 def test0():
