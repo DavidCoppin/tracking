@@ -66,18 +66,18 @@ class EllipseTester:
         self.data['old']['y'] = yc + dy
 
     def __repr__(self):
-        area_new = math.pi*self.data['new']['axes'][0]*math.pi*self.data['new']['axes'][1]
-        area_old = math.pi*self.data['old']['axes'][0]*math.pi*self.data['old']['axes'][1]
+        area_new = math.pi*self.data['new']['axes'][0]*self.data['new']['axes'][1]
+        area_old = math.pi*self.data['old']['axes'][0]*self.data['old']['axes'][1]
         res = """
 EllipseTester {}
 center (old new): {}    ; {}
 axes   (old new): {}    ; {}
-area   (old new): {}    ; {}
+area   (old new): {}    ; {} exact: {}
 times  (old new): {}s   ; {}s for domain size {}
         """.format(self.label,
                    self.data['old']['centre'], self.data['new']['centre'],
                    self.data['old']['axes'], self.data['new']['axes'],
-                   area_old, area_new,
+                   area_old, area_new, len(self.cells),
                    self.data['old']['time'], self.data['new']['time'],
                    self.domain_size)
         return res
@@ -159,4 +159,3 @@ if __name__ == '__main__':
     testObliqueRectangle()
     testConcave()
     testIslands()
-    
