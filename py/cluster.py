@@ -49,6 +49,19 @@ class Cluster:
         self.update()
 
 
+    def isCentreInsideOf(self, otherCluster):
+        """
+        Return True if this ellipses' centre is inside the other cluster's ellipse
+        """
+        return otherCluster.ellipse.isPointInside(self.ellipse.getCentre()):
+
+    def containsCentreOf(self, otherCluster):
+        """
+        Return True if this cluster's ellipse contains the centre of another cluster
+        """
+        return self.ellipse.isPointInside(otherCluster.getCentre())
+
+
     def overlaps(self, otherCluster):
         """
         Find our if this clsuter overlaps with otherCluster
