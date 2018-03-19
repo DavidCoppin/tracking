@@ -53,7 +53,7 @@ class Cluster:
         """
         Return True if this ellipses' centre is inside the other cluster's ellipse
         """
-        return otherCluster.ellipse.isPointInside(self.ellipse.getCentre()):
+        return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
 
     def containsCentreOf(self, otherCluster):
         """
