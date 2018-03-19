@@ -32,21 +32,55 @@ class ClusterSystem:
         # watershed
         ws = watershed(-data, markers, mask=bw_data)
 
-        # load into cluster
+        # load into clusters
         self.clusters = []
         for idVal in range(1, ws.max()):
             iVals, jVals = np.where(ws == idVal)
             numVals = len(iVals)
             if numVals > 0:
                 cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
-                self.clusters.append(Cluster(cells))
+                # store this cluster as a list with one element (so far). Each 
+                # element will have its own ID
+                self.clusters.append([Cluster(cells)])
 
-    def removeLargeScale(self):
-        pass
+
+    def __getitem__(self, index):
+        """
+        Index access
+        @param index
+        """
+        return self.clusters[index]
+
+
+    def remove(self, index):
+        """
+        Remove cluster 
+        @param index 
+        """
+        del self.clusters[index]
+
+
+    def getNumClusters(self):
+        """
+        Get the number of clusters
+        @return number
+        """
+        return len(self.clusters)
+
+
+    def removeLargeScale(self, max_num_cells):
+        """
+        Remove large clusters
+        @param max_num_cells maximum number of cells (~ area in index space)
+        """
+        numClusters = len(self.clusters)
+        for i in range(numClusters - 1, -1, -1):
+            if self.clusters[i].getNumCells() > max_num_cells:
+                del self.clusters[i]
 
     def mergeClusters(self):
         """
-        Merge the overlapping clusters, ie clusters whose centres are inside each other's ellipse
+        Merge overlapping clusters, ie clusters whose centres are inside each other's ellipse
         """
         numClusters = len(self.clusters)
         clusterIndexToRemove = []
@@ -80,6 +114,7 @@ def test(filename, t, lat_slice, lon_slice):
     data = np.flipud(f.variables['CMORPH'][t, lat_slice, lon_slice])
     cs = ClusterSystem(data, thresh_min=0, thresh_max=0.8)
     cs.mergeClusters()
+    cs.removeLargeScale(max_num_cells=10)
     
 
 if __name__ == '__main__':
