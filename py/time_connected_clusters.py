@@ -6,7 +6,7 @@ import netCDF4
 Manages clusters across time in such a way that we one can easily extract all the clusters of a give Id and time index
 """
 
-class TimeClusterSystem:
+class TimeConnectedClusters:
 
     def __init__(self):
         """
@@ -34,12 +34,105 @@ class TimeClusterSystem:
         """
 
         # read the data and create a list of clusters
+        new_clusters = self.exactClustersFromData(data, thresh_low, thresh_high)
+        new_clusters = self.reduce(new_clusters)
+
+        # special case if initial time
+        if self.t_max < 0:
+            self.clusters += new_clusters
+            self.t_max += 1
+            for cluster_id in range(len(new_clusters)):
+                self.cluster_connectivity[cluster_id] = {self.t_max: [cluster_id]}
+            # done
+            return
+
+        # add the new clusters
+        start_id = len(self.clusters)
+        self.clusters += new_clusters
+        self.t_max += 1
+
+        num_new_clusters = len(new_clusters)
+        num_clusters = len(self.cluster_connectivity)
+
+        #
+        # establish the connectivity with past clusters
+        #
+
+        # track forward
+        previous_time_cluster_ids = [self.cluster_connectivity[i].get(self.t_max - 1, []) \
+                                        for i in range(num_clusters)]
+        for i in range(num_new_clusters):
+            cli = new_clusters[i]
+            for j in previous_time_cluster_ids:
+                clj = self.clusters[j]
+                if cli.isCentreInsideOf(clj):
+                    # add this cluster
+                    self.cluster_connectivity[j][self.t_max] = self.cluster_connectivity[j].get(self.t_max, []) + [start_id + i]
+
+        # track backward
+        for i in range(num_new_clusters):
+            cli = new_clusters[i]
+            for t_index in range(self.t_max - 1, -1 , -1):
+                for j in range(len(self.cluster_connectivity):
+                    # TO DO 
 
 
-        # iterate over each of the new clusters and determine the connection between each new cluster
+
+
+
+        # backward tracking
+
+        # iterate over each of the new clusters and determine the connection between ecah cluster
         # and existing clusters stored at previous time steps.
 
-        pass
+        num_ids = len(self.cluster_connectivity)
+
+        current_time_index = self.t_max
+        for cluster_id in range(num_ids):
+
+            # forward tracking 
+            current_clusters = [self.clusters[i] for i in range(self.cluster_connectivity[cluster_id].get(current_time_index, []))]
+
+
+
+
+    def extractClusters(self, data, thresh_low, thresh_high):
+        """
+        """
+        ma_data = np.ma.masked_where(data <= thresh_min, data).astype(np.uint8)
+        
+        # building threshold
+        tmp_data = ma_data.filled(0)
+        tmp_data[np.where(tmp_data!=0)] = 255
+        bw_data = tmp_data.astype(np.uint8)
+        
+        # building markers and borders
+        ma_conv = np.ma.masked_where(data <= thresh_max, data)
+        tmp_conv = ma_conv.filled(0)
+        tmp_conv[np.where(tmp_conv!=0)] = 255
+        bw_conv = tmp_conv.astype(np.uint8)
+        markers= ndimage.label(bw_conv, structure=np.ones((3, 3)))[0]
+        border = cv2.dilate(bw_data, None, iterations=5)
+        border -= cv2.erode(border, None)
+        markers[border == 255] = 255
+
+        # watershed
+        ws = watershed(-data, markers, mask=bw_data)
+
+        # load into clusters
+        res = []
+        for idVal in range(1, ws.max()):
+            iVals, jVals = np.where(ws == idVal)
+            numVals = len(iVals)
+            if numVals > 0:
+                cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
+                # store this cluster as a list with one element (so far). Each 
+                # element will have its own ID
+                res.append([Cluster(cells)])
+
+        return res
+
+
 
     def reduce(self, cluster_list):
         """
@@ -47,7 +140,24 @@ class TimeClusterSystem:
         @param cluster_list input cluster list
         @return output cluster list
         """
-        return []
+        res = copy.deepcopy(cluster_list)
+        n = len(cluster_list)
+        remove_indices = []
+
+        for i in range(n):
+            cli = res[i]
+            for j in range(i + 1, n):
+                clj = cluster_list[j]
+                if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+                    # merge and tag clj for removal
+                    cli += clj
+                    remove_indices.append(j)
+
+        remove_indices.revert()
+        for i in remove_indices:
+            del res[i]
+
+        return res
 
     def writeFile(self, filename, i_minmax=[], j_minmax=[]):
         """
