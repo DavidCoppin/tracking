@@ -14,10 +14,13 @@ class Cluster:
 
         # ellipse representing the "average" distribution
         # of cells
-        self.ellpsis = None
+        self.ellipse = None
 
         # min/max indices of the box containing the set of points
         self.box = [[None, None], [None, None]]
+
+        # compute the ellipse...
+        self.update()
     
 
     def getNumCells(self):
@@ -51,15 +54,9 @@ class Cluster:
 
     def isCentreInsideOf(self, otherCluster):
         """
-        Return True if this ellipses' centre is inside the other cluster's ellipse
+        Return True if this ellipse' centre is inside the other cluster's ellipse
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
-
-    def containsCentreOf(self, otherCluster):
-        """
-        Return True if this cluster's ellipse contains the centre of another cluster
-        """
-        return self.ellipse.isPointInside(otherCluster.getCentre())
 
 
     def overlaps(self, otherCluster):
@@ -144,12 +141,6 @@ class Cluster:
 
 
 #############################################################################################
-def test0():
-    # should be able to create a cluster with nothing in it
-    cluster = Cluster()
-    cluster.update()
-    # not sure why writing a zero dimensioned variable is not working with netcdf4
-    #cluster.writeFile('test0.nc')
 
 def test1():
     cluster = Cluster({(-1, -2)})
@@ -186,7 +177,6 @@ def testRandom():
 
 
 if __name__ == '__main__':
-    test0()
     test1()
     testHorizLine()
     testDipole()

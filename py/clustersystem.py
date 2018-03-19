@@ -30,19 +30,47 @@ class ClusterSystem:
         markers[border == 255] = 255
 
         # watershed
-        self.data = watershed(-data, markers, mask=bw_data)
+        ws = watershed(-data, markers, mask=bw_data)
+
+        # load into cluster
+        self.clusters = []
+        for idVal in range(1, ws.max()):
+            iVals, jVals = np.where(ws == idVal)
+            numVals = len(iVals)
+            if numVals > 0:
+                cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
+                self.clusters.append(Cluster(cells))
 
     def removeLargeScale(self):
         pass
 
     def mergeClusters(self):
-        pass
+        """
+        Merge the overlapping clusters, ie clusters whose centres are inside each other's ellipse
+        """
+        numClusters = len(self.clusters)
+        clusterIndexToRemove = []
+        for i in range(numClusters):
+            cli = self.clusters[i]
+            for j in range(i + 1, numClusters):
+                clj = self.clusters[j]
+                if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+                    cli.merge(clj)
+                    clusterIndexToRemove.append(j)
+        clusterIndexToRemove.reverse()
+        for j in clusterIndexToRemove:
+            del self.clusters[j]
+
 
     def checkCoastal(self):
         pass
 
+
+
     def removeNonCoastal(self):
         pass
+
+
 
 ###############################################################################
 def test(filename, t, lat_slice, lon_slice):
@@ -51,6 +79,7 @@ def test(filename, t, lat_slice, lon_slice):
     f = netCDF4.Dataset(filename, 'r')
     data = np.flipud(f.variables['CMORPH'][t, lat_slice, lon_slice])
     cs = ClusterSystem(data, thresh_min=0, thresh_max=0.8)
+    cs.mergeClusters()
     
 
 if __name__ == '__main__':

@@ -1,12 +1,16 @@
 import numpy
 import math
 
+"""
+A Class that computes the ellipse of a cloud of points
+"""
+
 class Ellipse:
 
-    def __init__(self, cells={}):
+    def __init__(self, cells):
         """
         Constructor 
-        @param cells set of (i,j) tuples
+        @param cells set of (i,j) tuples, must have at least one cell
         """
         n = len(cells)
         area = float(n)
@@ -25,37 +29,35 @@ class Ellipse:
         # from ij to the axes (inverse of the above
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
-        if n > 0:
+        iCentre = numpy.sum([c[0] for c in cells]) / area
+        jCentre = numpy.sum([c[1] for c in cells]) / area
+        self.centre = numpy.array([iCentre, jCentre])
 
-            iCentre = numpy.sum([c[0] for c in cells]) / area
-            jCentre = numpy.sum([c[1] for c in cells]) / area
-            self.centre = numpy.array([iCentre, jCentre])
+        # compute the total area
+        area = numpy.sum([1 for ij in cells])
 
-            # compute the total area
-            area = numpy.sum([1 for ij in cells])
-
-            # compute inertia tensor (symmetric)
-            for i in range(2):
-                ci = self.centre[i]
-                for j in range(2):
-                    cj = self.centre[j]
-                    inertia[i, j] = numpy.sum( \
+        # compute inertia tensor (symmetric)
+        for i in range(2):
+            ci = self.centre[i]
+            for j in range(2):
+                cj = self.centre[j]
+                inertia[i, j] = numpy.sum( \
                         [(ij[i] - ci)*(ij[j] - cj) for ij in cells])
 
-            # the set of eigenvectors is the rotation matrix from ij space to the 
-            # inertial tensor's principal axes
-            eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
-            self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
+        # the set of eigenvectors is the rotation matrix from ij space to the 
+        # inertial tensor's principal axes
+        eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
+        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
-            # average radii from the centre
-            self.a = math.sqrt(eigenvals[0])
-            self.b = math.sqrt(eigenvals[1])
+        # average radii from the centre
+        self.a = math.sqrt(eigenvals[0])
+        self.b = math.sqrt(eigenvals[1])
 
-            # increase the ellipse's size to match the cluster area
-            # and guard against zero a or b
-            const = math.sqrt(area /(math.pi * max(0.5, self.a) * max(0.5, self.b)))
-            self.a *= const
-            self.b *= const
+        # increase the ellipse's size to match the cluster area
+        # and guard against zero a or b
+        const = math.sqrt(area /(math.pi * max(0.5, self.a) * max(0.5, self.b)))
+        self.a *= const
+        self.b *= const
 
 
     def getPolyline(self, numSegments=32):
@@ -103,8 +105,9 @@ class Ellipse:
         
         # rotate the coordinates to align them to the principal axes
         ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
+        eps = 1.e-12
 
-        if (ptPrimeAbs[0]/self.a)**2 + (ptPrimeAbs[1]/self.b)**2 < 1.0:
+        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
             # inside
             return True
 
