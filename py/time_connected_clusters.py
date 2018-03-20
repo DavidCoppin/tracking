@@ -125,8 +125,10 @@ class TimeConnectedClusters:
 
         for i in range(n):
             cli = res[i]
+
             for j in range(i + 1, n):
                 clj = cluster_list[j]
+
                 if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
                     # merge and tag clj for removal
                     cli += clj
@@ -237,6 +239,22 @@ def testOneCluster():
     print 'One cluster'
     print tcc
 
+def testReduceNonOverlapping():
+    tcc = TimeConnectedClusters()
+    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
+    c1 = Cluster({(1, 3), (1, 4), (2, 4)})
+    reduced_list = tcc.reduce([c0, c1])
+    print 'input list non-overlapping', [c0, c1]
+    print 'output list non-overlapping', reduced_list
+
+def testReduceOverlapping():
+    tcc = TimeConnectedClusters()
+    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
+    c1 = Cluster({(1, 1), (1, 2), (2, 2)})
+    reduced_list = tcc.reduce([c0, c1])
+    print 'input list overlapping ', [c0, c1]
+    print 'output list overlapping ', reduced_list
+
 def testTwoClustersAtTime0():
     tcc = TimeConnectedClusters()
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
@@ -248,4 +266,6 @@ def testTwoClustersAtTime0():
 if __name__ == '__main__':
     testNoCluster()
     testOneCluster()
-    testTwoClustersAtTime0()
+    testReduceNonOverlapping()
+    testReduceOverlapping()
+    #testTwoClustersAtTime0()

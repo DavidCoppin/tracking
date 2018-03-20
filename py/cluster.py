@@ -54,8 +54,9 @@ class Cluster:
         Overload of += operator, add othercluster cells to self
         @param otherCluster other cluster
         """
-        self.cells.union(otherCluster.cells)
+        self.cells = self.cells.union(otherCluster.cells)
         self.update()
+        return self
 
 
     def writeFile(self, filename):
@@ -144,6 +145,12 @@ def testRandom():
     cluster.update()
     print('testRandom {}'.format(cluster))
 
+def testPlusEqual():
+    c0 = Cluster({(1,1), (2, 1)})
+    c1 = Cluster({(1,1), (1, 2)})
+    c0 += c1
+    print 'testPlusEqual after merge: ', c0
+
 
 if __name__ == '__main__':
     test1()
@@ -152,4 +159,5 @@ if __name__ == '__main__':
     testRectangle()
     testRectangleSlanted()
     testRandom()
+    testPlusEqual()
 
