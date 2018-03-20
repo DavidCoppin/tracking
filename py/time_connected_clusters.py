@@ -26,16 +26,11 @@ class TimeConnectedClusters:
         self.t_index = -1
 
 
-    def addTime(self, data, thresh_low, thresh_high):
+    def addTime(self, new_clusters):
         """
-        Add a time from image data
-        @param data image data
-        @param thresh_low low precip threshold
-        @param threshold_high high precip threshold
+        Add time entry
+        @param new_clusters list of new clusters
         """
-
-        # read the data and create a list of clusters
-        new_clusters = self.exactClustersFromData(data, thresh_low, thresh_high)
 
         # merge overlapping clusters
         new_clusters = self.reduce(new_clusters)
@@ -120,7 +115,7 @@ class TimeConnectedClusters:
                     cli += clj
                     remove_indices.append(j)
 
-        remove_indices.revert()
+        remove_indices.reverse()
         for i in remove_indices:
             del res[i]
 
@@ -198,10 +193,32 @@ class TimeConnectedClusters:
         return [self.clusters[i] for i in self.cluster_connect[cluster_id][time_index]]
 
 
+    def __repr__(self):
+        res = """
+TimeConnectedCluster: num of clusters   {}
+                      num of time steps {}
+                      num of Ids        {}
+                      connectivity:     {}
+        """.format(len(self.clusters), self.t_index + 1, \
+              len(self.cluster_connect), self.cluster_connect)
+        return res
+
+
 
 ###############################################################################
 def test0():
-    pass
+
+    tcc = TimeConnectedClusters()
+
+    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
+    c1 = Cluster({(1, 1), (1, 2), (2, 2)})
+
+    tcc.addTime([c0,])
+
+    print tcc
+
+
+
     
 
 if __name__ == '__main__':
