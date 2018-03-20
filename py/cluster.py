@@ -42,15 +42,6 @@ class Cluster:
                 self.box[1][dim] = numpy.max([c[dim] for c in self.cells])
 
 
-    def merge(self, otherCluster):
-        """
-        Merge this cluster with another
-        @param otherCluster
-        @return new cluster that is the union of this and otherCluster
-        """
-        self.cells.union(otherCluster.cells)
-        self.update()
-
 
     def isCentreInsideOf(self, otherCluster):
         """
@@ -58,36 +49,14 @@ class Cluster:
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
 
-
-    def overlaps(self, otherCluster):
+    def __iadd__(self, otherCluster):
         """
-        Find our if this clsuter overlaps with otherCluster
-        @param otherCluster
-        @return True if there is overlap, False otherwise
+        Overload of += operator, add othercluster cells to self
+        @param otherCluster other cluster
         """
-        
-        # quick check if the boxes don't overlap...
-        noOverlap = True
-        for dim in range(0, 2):
-            # max is smaller than this min
-            noOverlap &= otherCluster.box[1][dim] < self.box[0][dim]
-            noOverlap &= self.box[1][dim] < otherCluster.box[0][dim]
-            # min is bigger than other max
-            noOverlap &= otherCluster.box[0][dim] > self.box[1][dim]
-            noOverlap &= self.box[0][dim] > otherCluster.box[1][dim]
+        self.cells.union(otherCluster.cells)
+        self.update()
 
-        if noOverlap:
-            # the boxes are disjoint, no chance that there is overlap
-            return False
-
-        # the clusters one centre is inside the other ellipse
-        if self.ellipse.isPointInside(otherCluster.ellipse.getCentre()):
-            return True
-
-        if otherCluster.ellipse.isPointInside(self.ellipse.getCentre()):
-            return True
-
-        return False
 
     def writeFile(self, filename):
         """

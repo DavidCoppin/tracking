@@ -1,6 +1,7 @@
-from cluster import Clust
+from cluster import Cluster
 import numpy as np
 import netCDF4
+import copy
 
 """
 Manages clusters across time in such a way that we one can easily extract all the clusters of a give Id and time index
@@ -17,12 +18,12 @@ class TimeConnectedClusters:
 
         # list of dictionaries. Each dictionary represents clusters across time which share the same 
         # ID. 
-        self.cluster_connectivity = []
+        self.cluster_connect = []
 
         # min/max values in index space
         self.i_minmax = []
         self.j_minmax = []
-        self.t_max = -1
+        self.t_index = -1
 
 
     def addTime(self, data, thresh_low, thresh_high):
@@ -35,65 +36,31 @@ class TimeConnectedClusters:
 
         # read the data and create a list of clusters
         new_clusters = self.exactClustersFromData(data, thresh_low, thresh_high)
+
+        # merge overlapping clusters
         new_clusters = self.reduce(new_clusters)
 
-        # special case if initial time
-        if self.t_max < 0:
-            self.clusters += new_clusters
-            self.t_max += 1
-            for cluster_id in range(len(new_clusters)):
-                self.cluster_connectivity[cluster_id] = {self.t_max: [cluster_id]}
-            # done
-            return
+        # update the time index
+        old_t_index = self.t_index
+        self.t_index += 1
 
         # add the new clusters
-        start_id = len(self.clusters)
+        old_num_clusters = len(self.clusters)
         self.clusters += new_clusters
-        self.t_max += 1
 
-        num_new_clusters = len(new_clusters)
-        num_clusters = len(self.cluster_connectivity)
+        # connect the new clusters to previous occurring clusters if they overlap
+        numIds = len(self.cluster_connect)
 
-        #
-        # establish the connectivity with past clusters
-        #
-
-        # track forward
-        previous_time_cluster_ids = [self.cluster_connectivity[i].get(self.t_max - 1, []) \
-                                        for i in range(num_clusters)]
-        for i in range(num_new_clusters):
+        for i in range(len(new_clusters)):
             cli = new_clusters[i]
-            for j in previous_time_cluster_ids:
-                clj = self.clusters[j]
-                if cli.isCentreInsideOf(clj):
-                    # add this cluster
-                    self.cluster_connectivity[j][self.t_max] = self.cluster_connectivity[j].get(self.t_max, []) + [start_id + i]
-
-        # track backward
-        for i in range(num_new_clusters):
-            cli = new_clusters[i]
-            for t_index in range(self.t_max - 1, -1 , -1):
-                for j in range(len(self.cluster_connectivity):
-                    # TO DO 
-
-
-
-
-
-        # backward tracking
-
-        # iterate over each of the new clusters and determine the connection between ecah cluster
-        # and existing clusters stored at previous time steps.
-
-        num_ids = len(self.cluster_connectivity)
-
-        current_time_index = self.t_max
-        for cluster_id in range(num_ids):
-
-            # forward tracking 
-            current_clusters = [self.clusters[i] for i in range(self.cluster_connectivity[cluster_id].get(current_time_index, []))]
-
-
+            for j in range(numIds):
+                old_cluster_ids = self.cluster_connect[j].get(old_t_index, [])
+                old_clusters = [self.clusters[k] for k in old_cluster_ids]
+                for clj in old_clusters:
+                    if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+                        # cli and clj overlap and hence should share the same id
+                        self.cluster_connect[j][self.t_index] = self.cluster_connect[j].get(self.t_index, []) \
+                           + [old_num_clusters + i]
 
 
     def extractClusters(self, data, thresh_low, thresh_high):
@@ -197,13 +164,13 @@ class TimeConnectedClusters:
         # write the data
         i_index[:] = np.arange(iMin, iMax + 1)
         j_index[:] = np.arange(jMin, jMax + 1)
-        t_index[:] = np.arange(0, self.t_max + 1)
+        t_index[:] = np.arange(0, self.t_index + 1)
 
         # check ordering!!
-        data = np.zeros((self.t_max, jMax - jMin, iMax - iMin), np.int32)
+        data = np.zeros((self.t_index, jMax - jMin, iMax - iMin), np.int32)
 
-        for cluster_id in range(len(self.cluster_connectivity)):
-            for time_index in range(self.t_max):
+        for cluster_id in range(len(self.cluster_connect)):
+            for time_index in range(self.t_index):
                 clusters = self.getClusters(cluster_id, time_index)
                 for cl in clusters:
                     iCoords, jCoords, ijVals = cl.toArray()
@@ -217,7 +184,7 @@ class TimeConnectedClusters:
         Get the number of independent clusters
         @return number
         """
-        return len(cluster_connectivity)
+        return len(cluster_connect)
 
 
 
@@ -228,19 +195,14 @@ class TimeConnectedClusters:
         @param time_index
         @return list of cluster
         """
-        return [self.clusters[i] for i in self.cluster_connectivity[cluster_id][time_index]]
+        return [self.clusters[i] for i in self.cluster_connect[cluster_id][time_index]]
 
 
 
 ###############################################################################
-def test(filename):
-    import netCDF4
-    
-    f = netCDF4.Dataset(filename, 'r')
-    data = np.flipud(f.variables['CMORPH'][:, lat_slice, lon_slice])
-    # TO DO 
+def test0():
+    pass
     
 
 if __name__ == '__main__':
-    filename = 'Cmorph-2010_01_10.nc'
-    test(filename)
+    test0()
