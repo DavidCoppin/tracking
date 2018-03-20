@@ -225,20 +225,27 @@ TimeConnectedCluster: num of clusters   {}
 
 
 ###############################################################################
-def test0():
-
+def testNoCluster():
     tcc = TimeConnectedClusters()
-
-    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
-    c1 = Cluster({(1, 1), (1, 2), (2, 2)})
-
-    tcc.addTime([c0, c1])
-
+    print 'No cluster'
     print tcc
 
+def testOneCluster():
+    tcc = TimeConnectedClusters()
+    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
+    tcc.addTime([c0])
+    print 'One cluster'
+    print tcc
 
-
-    
+def testTwoClustersAtTime0():
+    tcc = TimeConnectedClusters()
+    c0 = Cluster({(1, 1), (2, 1), (2, 2)})
+    c1 = Cluster({(1, 1), (1, 2), (2, 2)})
+    tcc.addTime([c0, c1])
+    print 'Two clusters'
+    print tcc    
 
 if __name__ == '__main__':
-    test0()
+    testNoCluster()
+    testOneCluster()
+    testTwoClustersAtTime0()
