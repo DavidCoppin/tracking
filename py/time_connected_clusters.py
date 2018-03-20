@@ -43,19 +43,36 @@ class TimeConnectedClusters:
         old_num_clusters = len(self.clusters)
         self.clusters += new_clusters
 
-        # connect the new clusters to previous occurring clusters if they overlap
-        numIds = len(self.cluster_connect)
+        if self.t_index == 0:
+            # each cluster gets its own Id
+            self.cluster_connect = {i: {self.t_index: [i]} for i in range(len(new_clusters))}
+            # done
+            return
+
+        # connect the new clusters to previous time clusters if they overlap
 
         for i in range(len(new_clusters)):
+
             cli = new_clusters[i]
-            for j in range(numIds):
+
+            for j in range(len(self.cluster_connect)):
+
                 old_cluster_ids = self.cluster_connect[j].get(old_t_index, [])
                 old_clusters = [self.clusters[k] for k in old_cluster_ids]
+
+                found_overlap = False
+
                 for clj in old_clusters:
                     if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
                         # cli and clj overlap and hence should share the same id
-                        self.cluster_connect[j][self.t_index] = self.cluster_connect[j].get(self.t_index, []) \
-                           + [old_num_clusters + i]
+                        self.cluster_connect[j][self.t_index] = old_cluster_ids + [old_num_clusters + i]
+                        found_overlap = True
+
+                if not found_overlap:
+                    # this cluster does not overlap with any previous cluster, we need to 
+                    # start a new Id element
+                    new_id = len(self.cluster_connect)
+                    self.cluster_connect[new_id] = {self.t_index: [old_num_clusters + i]}
 
 
     def extractClusters(self, data, thresh_low, thresh_high):
@@ -198,9 +215,11 @@ class TimeConnectedClusters:
 TimeConnectedCluster: num of clusters   {}
                       num of time steps {}
                       num of Ids        {}
-                      connectivity:     {}
+                      clusters          {}
+                      connectivity      {}
         """.format(len(self.clusters), self.t_index + 1, \
-              len(self.cluster_connect), self.cluster_connect)
+              len(self.cluster_connect), [cl.cells for cl in self.clusters], \
+              self.cluster_connect)
         return res
 
 
@@ -213,7 +232,7 @@ def test0():
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 1), (1, 2), (2, 2)})
 
-    tcc.addTime([c0,])
+    tcc.addTime([c0, c1])
 
     print tcc
 
