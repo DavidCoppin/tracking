@@ -258,33 +258,28 @@ class TimeConnectedClusters:
         t_index = f.createVariable('t_index', 'i4', ('tDim',))
 
         # check ordering!!
-        nb = f.createVariable('nb', 'i4', ('tDim', 'jDim', 'iDim'))
+        nb_var = f.createVariable('nb', 'i4', ('tDim', 'jDim', 'iDim'))
 
         # write the data
         i_index[:] = np.arange(iMin, iMax + 1)
         j_index[:] = np.arange(jMin, jMax + 1)
         t_index[:] = np.arange(0, self.t_index + 1)
 
-        # check ordering!!
+        # data buffer, check ordering!!
         data = np.zeros((self.t_index, num_j, num_i), np.int32)
 
         for track_id in range(len(self.cluster_connect)):
             for t_index in range(self.t_index):
                 clusters = self.getClusters(track_id, t_index)
                 for cl in clusters:
-                    iCoords, jCoords, vals = cl.toArray()
-                    print '---- iCoords, jCoords, vals = ', iCoords, jCoords, vals
-                    iCoords -= iMin
-                    jCoords -= jMin
-                    jj, ii = np.meshgrid(jCoords, iCoords)
-                    print 'oooo jj, ii = ', jj, ii
-                    tji = [(t_index, jj.flat[k], ii.flat[k]) for k in range(len(vals.flat))]
-                    print '**** tji = ', tji
-                    print '**** vals.flat = ', vals.flat
-                    data[tji] = vals.flat
-        nb[:] = data
-
-
+                    n_cells = cl.getNumCells()
+                    tis = [t_index] * n_cells
+                    jis = [c[1] - jMin for c in cl.cells]
+                    iis = [c[0] - iMin for c in cl.cells]
+                    # check ordering!!
+                    data[tis, jis, iis] = track_id + 1
+        # now write all the data in one go
+        nb_var[:] = data
 
     def getNumberOfIds(self):
         """
