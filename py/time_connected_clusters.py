@@ -39,6 +39,7 @@ Manages clusters across time in such a way that we one can easily extract all th
 
 class TimeConnectedClusters:
 
+    # used to initialize min/max index values
     LARGE_INT = 999999999
 
     def __init__(self):
@@ -190,21 +191,6 @@ class TimeConnectedClusters:
                 res.append([Cluster(cells)])
 
         return res
-
-
-    def getMinIndices(self):
-        """
-        Get the low end box indices
-        @return (i_min, j_min)
-        """
-        ij_min = np.array([self.LARGE_INT, self.LARGE_INT])
-        for track_id in range(self.getNumberOfTracks()):
-            for t_index, cluster_indx in self.cluster_connect[track_id].items():
-                i_min = min([self.clusters[i].box[0][0] for i in cluster_indx])
-                j_min = min([self.clusters[i].box[0][1] for i in cluster_indx])
-                ij_min[:] = min(i_min, ij_min[0]), min(j_min, ij_min[1])
-        return ij_min
-
 
 
     def getMinMaxIndices(self):
