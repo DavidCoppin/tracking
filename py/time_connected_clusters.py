@@ -3,6 +3,36 @@ import numpy as np
 import netCDF4
 import copy
 
+    
+
+def reduce(cluster_list):
+    """
+    Reduce the list of clusters by merging overlapping clusters
+    @param cluster_list input cluster list
+    @return output cluster list
+    """
+    res = copy.deepcopy(cluster_list)
+    n = len(cluster_list)
+    remove_indices = []
+
+    for i in range(n):
+        cli = res[i]
+
+        for j in range(i + 1, n):
+            clj = cluster_list[j]
+
+            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+                # add clj to cli and tag clj for removal
+                cli += clj
+                remove_indices.append(j)
+
+    remove_indices.reverse()
+    for i in remove_indices:
+        del res[i]
+
+    return res
+
+
 """
 Manages clusters across time in such a way that we one can easily extract all the clusters of a give Id and time index
 """
@@ -48,7 +78,7 @@ class TimeConnectedClusters:
         """
 
         # merge overlapping clusters
-        new_clusters = self.reduce(new_clusters)
+        new_clusters = reduce(new_clusters)
 
         index = len(self.clusters)
 
@@ -158,34 +188,6 @@ class TimeConnectedClusters:
         return res
 
 
-
-    def reduce(self, cluster_list):
-        """
-        Reduce the list of clusters by merging overlapping clusters
-        @param cluster_list input cluster list
-        @return output cluster list
-        """
-        res = copy.deepcopy(cluster_list)
-        n = len(cluster_list)
-        remove_indices = []
-
-        for i in range(n):
-            cli = res[i]
-
-            for j in range(i + 1, n):
-                clj = cluster_list[j]
-
-                if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
-                    # merge and tag clj for removal
-                    cli += clj
-                    remove_indices.append(j)
-
-        remove_indices.reverse()
-        for i in remove_indices:
-            del res[i]
-
-        return res
-
     def writeFile(self, filename, i_minmax=[], j_minmax=[]):
         """
         Write data to netcdf file
@@ -286,18 +288,16 @@ def testOneCluster():
     print tcc
 
 def testReduceNonOverlapping():
-    tcc = TimeConnectedClusters()
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 3), (1, 4), (2, 4)})
-    reduced_list = tcc.reduce([c0, c1])
+    reduced_list = reduce([c0, c1])
     print 'input list non-overlapping', [c0, c1]
     print 'output list non-overlapping', reduced_list
 
 def testReduceOverlapping():
-    tcc = TimeConnectedClusters()
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 1), (1, 2), (2, 2)})
-    reduced_list = tcc.reduce([c0, c1])
+    reduced_list = reduce([c0, c1])
     print 'input list overlapping ', [c0, c1]
     print 'output list overlapping ', reduced_list
 
