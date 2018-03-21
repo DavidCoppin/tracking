@@ -23,7 +23,51 @@ class TimeConnectedClusters:
         # min/max values in index space
         self.i_minmax = []
         self.j_minmax = []
-        self.t_index = -1
+        self.t_index = 0
+
+
+    def fuse(self, id1, id2):
+        """
+        Fuse time clusters, the result will be stored in id1 and id2 will be removed entirely
+        @param id1 Id of track 1, track 1 will contain track 2
+        @param id2 Id of track 2, track 2 will be removed
+        """
+        for t_index in range(self.t_index):
+            clusters = self.cluster_connect[id1].get(t_indx, []) + \
+                       self.cluster_connect[id2].get(t_indx, [])
+            if clusters:
+                self.cluster_connect[id1][t_index] = clusters
+
+        del self.cluster_connect[id2]
+
+
+    def copy(self, id1, t_index, index_list, id2):
+        """
+        Copy the clusters from one Id to another for a given time index
+        @param id1 the Id source
+        @param t_index time index
+        @param index_list list of indices of cluster to be copied
+        @param id2 destination of the clusters to be moved
+        """
+        self.cluster_connect[id2][t_index] = self.cluster_connect[id2].get(t_index, []) \
+           + [self.cluster_connect[id1][t_index][i] for i in index_list]
+
+
+    def move(self, id1, t_index, index_list, id2):
+        """
+        Move the clusters form one Id to another for a given time index, the clusters
+          will be deleted from the source track
+        @param id1 the Id source track
+        @param t_index time index
+        @param index_list list of indices of cluster to be copied
+        @param id2 destination track Id where the clusters will be moved        
+        """
+        self.copy(id1, t_index, cluster_index_list, id2)
+        # remove the clusters form Id1, starting form the last 
+        cluster_index_list.sort()
+        cluster_index_list.reverse()
+        for i in cluster_index_list:
+            del self.cluster_connect[id1][t_index][i]
 
 
     def addTime(self, new_clusters):
@@ -35,48 +79,54 @@ class TimeConnectedClusters:
         # merge overlapping clusters
         new_clusters = self.reduce(new_clusters)
 
-        # update the time index
-        old_t_index = self.t_index
-        self.t_index += 1
+        index = len(self.clusters)
 
-        # add the new clusters
-        old_num_clusters = len(self.clusters)
-        self.clusters += new_clusters
-
+        # special case if first time step
         if self.t_index == 0:
-            # each cluster gets its own Id
-            self.cluster_connect = {i: {self.t_index: [i]} for i in range(len(new_clusters))}
+            # there is no past
+            # just create a new track for each cluster
+            for new_cl in new_clusters:
+
+                self.clusters.append(new_cl)
+                self.cluster_connect.append({self.t_index: [index]})
+                index += 1
+
             # done
-            return
+            return 
 
-        # connect the new clusters to previous time clusters if they overlap
+        # assign the new clusters to existing tracks
+        for new_cl in new_clusters:
+            self.clusters.append(new_cl)
+            # find out if this cluster belongs to an existing track
+            connected_clusters = []
+            track_ids = []
+            for track_id in range(len(self.cluster_connect)):
+                old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
+                for old_cl in [self.clusters[i] for i in old_cluster_inds]:
+                    # are new_cl and old_cl overlapping?
+                    if old_cl.isCentreInsideOf(new_cl): # and new_cl.isCentreInsideOf(old_cl):
+                        connected_clusters.append(old_cl)
+                        track_ids.append(track_id)
+            # this cluster could be assigned to any of the tracks in track_ids
+            if len(track_ids) == 0:
+  	        self.cluster_connect.append({self.t_index: [index]})
+            else:
+                # choose the track for which the distance between new_cl is smallest to 
+                # to any of the clusters of that track at t - dt
+                dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
+                i = np.argmin(dists)
+                self.cluster_connect[track_ids[i]][self.t_index] = \
+                  self.cluster_connect[track_ids[i]].get(self.t_index, []) + [index] 
 
-        for i in range(len(new_clusters)):
-
-            cli = new_clusters[i]
-
-            for j in range(len(self.cluster_connect)):
-
-                old_cluster_ids = self.cluster_connect[j].get(old_t_index, [])
-                old_clusters = [self.clusters[k] for k in old_cluster_ids]
-
-                found_overlap = False
-
-                for clj in old_clusters:
-                    if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
-                        # cli and clj overlap and hence should share the same id
-                        self.cluster_connect[j][self.t_index] = old_cluster_ids + [old_num_clusters + i]
-                        found_overlap = True
-
-                if not found_overlap:
-                    # this cluster does not overlap with any previous cluster, we need to 
-                    # start a new Id element
-                    new_id = len(self.cluster_connect)
-                    self.cluster_connect[new_id] = {self.t_index: [old_num_clusters + i]}
+        # test if new_cl.isCentreInsideOf(old_cl): if so then fuse 
 
 
     def extractClusters(self, data, thresh_low, thresh_high):
         """
+        Extract clusters from an image data
+        @param data
+        @param thresh_low
+        @param thresh_high
         """
         ma_data = np.ma.masked_where(data <= thresh_min, data).astype(np.uint8)
         
@@ -202,14 +252,14 @@ class TimeConnectedClusters:
 
 
 
-    def getClusters(self, cluster_id, time_index):
+    def getClusters(self, track_id, time_index):
         """
         Get the clusters of given ID at time index
-        @param cluster_id
+        @param track_id
         @param time_index
-        @return list of cluster
+        @return list of clusters
         """
-        return [self.clusters[i] for i in self.cluster_connect[cluster_id][time_index]]
+        return [self.clusters[i] for i in self.cluster_connect[track_id].get(time_index, [])]
 
 
     def __repr__(self):

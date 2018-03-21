@@ -49,6 +49,16 @@ class Cluster:
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
 
+   
+    def getDistance(self, otherCluster):
+        """
+        Get the distance between the two clusters' centres
+        @param otherCluster
+        @return distance
+        """
+        d = self.centre - otherCluster.centre
+        return numpy.sqrt(d.dot(d))
+
     def __iadd__(self, otherCluster):
         """
         Overload of += operator, add othercluster cells to self
