@@ -107,7 +107,7 @@ class TimeConnectedClusters:
 
             # find out if this cluster belongs to an existing track. This is equivalent to 
             # forward tracking
-            num_tracks = len(self.cluster_connect)
+            num_tracks = self.getNumberOfTracks()
             connected_clusters = []
             connected_track_ids = []
             for track_id in range(num_tracks):
@@ -124,7 +124,7 @@ class TimeConnectedClusters:
                 # this cluster is on its own
                 # create a new entry 
                 self.cluster_connect.append({self.t_index: [index]})
-                new_cl_track_id = len(self.cluster_connect)
+                new_cl_track_id = self.getNumberOfTracks()
             else:
                 # choose the track for which the distance between new_cl is smallest to 
                 # to any of the clusters of that track at t - dt
@@ -198,7 +198,7 @@ class TimeConnectedClusters:
         @return (i_min, j_min)
         """
         ij_min = np.array([self.LARGE_INT, self.LARGE_INT])
-        for track_id in range(len(self.cluster_connect)):
+        for track_id in range(self.getNumberOfTracks()):
             for t_index, cluster_indx in self.cluster_connect[track_id].items():
                 i_min = min([self.clusters[i].box[0][0] for i in cluster_indx])
                 j_min = min([self.clusters[i].box[0][1] for i in cluster_indx])
@@ -213,7 +213,7 @@ class TimeConnectedClusters:
         @return (i_max, j_max)
         """
         ij_max = np.array([-self.LARGE_INT, -self.LARGE_INT])
-        for track_id in range(len(self.cluster_connect)):
+        for track_id in range(self.getNumberOfTracks()):
             for t_index, cluster_indx in self.cluster_connect[track_id].items():
                 i_max = max([self.clusters[i].box[1][0] for i in cluster_indx])
                 j_max = max([self.clusters[i].box[1][1] for i in cluster_indx])
@@ -268,7 +268,7 @@ class TimeConnectedClusters:
         # data buffer, check ordering!!
         data = np.zeros((self.t_index, num_j, num_i), np.int32)
 
-        for track_id in range(len(self.cluster_connect)):
+        for track_id in range(self.getNumberOfTracks()):
             for t_index in range(self.t_index):
                 clusters = self.getClusters(track_id, t_index)
                 for cl in clusters:
@@ -280,13 +280,14 @@ class TimeConnectedClusters:
                     data[tis, jis, iis] = track_id + 1
         # now write all the data in one go
         nb_var[:] = data
+        
 
-    def getNumberOfIds(self):
+    def getNumberOfTracks(self):
         """
-        Get the number of independent clusters
+        Get the number of tracks
         @return number
         """
-        return len(cluster_connect)
+        return len(self.cluster_connect)
 
 
 
