@@ -41,35 +41,6 @@ class TimeConnectedClusters:
         del self.cluster_connect[id2]
 
 
-    def copy(self, id1, t_index, index_list, id2):
-        """
-        Copy the clusters from one Id to another for a given time index
-        @param id1 the Id source
-        @param t_index time index
-        @param index_list list of indices of cluster to be copied
-        @param id2 destination of the clusters to be moved
-        """
-        self.cluster_connect[id2][t_index] = self.cluster_connect[id2].get(t_index, []) \
-           + [self.cluster_connect[id1][t_index][i] for i in index_list]
-
-
-    def move(self, id1, t_index, index_list, id2):
-        """
-        Move the clusters form one Id to another for a given time index, the clusters
-          will be deleted from the source track
-        @param id1 the Id source track
-        @param t_index time index
-        @param index_list list of indices of cluster to be copied
-        @param id2 destination track Id where the clusters will be moved        
-        """
-        self.copy(id1, t_index, cluster_index_list, id2)
-        # remove the clusters form Id1, starting form the last 
-        cluster_index_list.sort()
-        cluster_index_list.reverse()
-        for i in cluster_index_list:
-            del self.cluster_connect[id1][t_index][i]
-
-
     def addTime(self, new_clusters):
         """
         Add time entry
@@ -95,30 +66,55 @@ class TimeConnectedClusters:
             return 
 
         # assign the new clusters to existing tracks
+
         for new_cl in new_clusters:
+
+            new_cl_track_id = -1
+
+            # add the cluster
             self.clusters.append(new_cl)
-            # find out if this cluster belongs to an existing track
+
+            # find out if this cluster belongs to an existing track. This is equivalent to 
+            # forward tracking
+            num_tracks = len(self.cluster_connect)
             connected_clusters = []
-            track_ids = []
-            for track_id in range(len(self.cluster_connect)):
+            connected_track_ids = []
+            for track_id in range(num_tracks):
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
-                    # are new_cl and old_cl overlapping?
-                    if old_cl.isCentreInsideOf(new_cl): # and new_cl.isCentreInsideOf(old_cl):
+
+                    # is the centre of old_cl inside the ellipse of new_cl?
+                    if old_cl.isCentreInsideOf(new_cl):
                         connected_clusters.append(old_cl)
-                        track_ids.append(track_id)
+                        connected_track_ids.append(track_id)
+
             # this cluster could be assigned to any of the tracks in track_ids
-            if len(track_ids) == 0:
-  	        self.cluster_connect.append({self.t_index: [index]})
+            if len(connected_track_ids) == 0:
+                # this cluster is on its own
+                # create a new entry 
+                self.cluster_connect.append({self.t_index: [index]})
+                new_cl_track_id = len(self.cluster_connect)
             else:
                 # choose the track for which the distance between new_cl is smallest to 
                 # to any of the clusters of that track at t - dt
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
-                self.cluster_connect[track_ids[i]][self.t_index] = \
-                  self.cluster_connect[track_ids[i]].get(self.t_index, []) + [index] 
+                new_cl_track_id = connected_track_ids[i]
+                self.cluster_connect[new_cl_track_id][self.t_index].append(index)
 
-        # test if new_cl.isCentreInsideOf(old_cl): if so then fuse 
+            # backward tracking
+            track_ids_to_fuse = []
+            for track_id in range(num_tracks):
+                old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
+                for old_cl in [self.clusters[i] for i in old_cluster_inds]:
+
+                    # is the centre of new_cl inside the ellipse of old_cl?
+                    if new_cl.isCentreInsideOf(old_cl):
+                        # the two tracks take the same Id 
+                        self.fuse(trac_id, dew_cl_track_id)
+
+            # update the cluster index
+            index += 1
 
 
     def extractClusters(self, data, thresh_low, thresh_high):
