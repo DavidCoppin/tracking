@@ -207,18 +207,19 @@ class TimeConnectedClusters:
 
 
 
-    def getMaxIndices(self):
+    def getMinMaxIndices(self):
         """
-        Get the high end box indices
-        @return (i_max, j_max)
+        Get the low/high end box indices
+        @return i_min, j_min, i_max, j_max
         """
-        ij_max = np.array([-self.LARGE_INT, -self.LARGE_INT])
-        for track_id in range(self.getNumberOfTracks()):
-            for t_index, cluster_indx in self.cluster_connect[track_id].items():
-                i_max = max([self.clusters[i].box[1][0] for i in cluster_indx])
-                j_max = max([self.clusters[i].box[1][1] for i in cluster_indx])
-                ij_max[:] = max(i_max, ij_max[0]), max(j_max, ij_max[1])
-        return ij_max
+        i_min, j_min, i_max, j_max = self.LARGE_INT, self.LARGE_INT, -self.LARGE_INT, -self.LARGE_INT
+        for track in self.cluster_connect:
+            for cl_indx_list in track.values():
+                i_min = min(i_min, min([self.clusters[k].box[0][0] for k in cl_indx_list]))
+                j_min = min(j_min, min([self.clusters[k].box[0][1] for k in cl_indx_list]))
+                i_max = max(i_max, max([self.clusters[k].box[1][0] for k in cl_indx_list]))
+                j_max = max(j_max, max([self.clusters[k].box[1][1] for k in cl_indx_list]))
+        return i_min, j_min, i_max, j_max
 
 
 
@@ -233,8 +234,7 @@ class TimeConnectedClusters:
 
         # create dimensions
 
-        iMin, jMin = self.getMinIndices()
-        iMax, jMax = self.getMaxIndices()
+        iMin, jMin, iMax, jMax = self.getMinMaxIndices()
 
         if i_minmax:
             iMin = min(self.i_minmax[0], i_minmax[0])
