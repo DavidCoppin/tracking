@@ -39,6 +39,8 @@ Manages clusters across time in such a way that we one can easily extract all th
 
 class TimeConnectedClusters:
 
+    LARGE_INT = 999999999
+
     def __init__(self):
         """
         No argument constructor
@@ -50,9 +52,7 @@ class TimeConnectedClusters:
         # ID. 
         self.cluster_connect = []
 
-        # min/max values in index space
-        self.i_minmax = []
-        self.j_minmax = []
+        # current time index
         self.t_index = 0
 
 
@@ -93,6 +93,7 @@ class TimeConnectedClusters:
                 index += 1
 
             # done
+            self.t_index += 1
             return 
 
         # assign the new clusters to existing tracks
@@ -146,6 +147,9 @@ class TimeConnectedClusters:
             # update the cluster index
             index += 1
 
+        # update the time index
+        self.t_index += 1
+
 
     def extractClusters(self, data, thresh_low, thresh_high):
         """
@@ -188,6 +192,36 @@ class TimeConnectedClusters:
         return res
 
 
+    def getMinIndices(self):
+        """
+        Get the low end box indices
+        @return (i_min, j_min)
+        """
+        ij_min = np.array([self.LARGE_INT, self.LARGE_INT])
+        for track_id in range(len(self.cluster_connect)):
+            for t_index, cluster_indx in self.cluster_connect[track_id].items():
+                i_min = min([self.clusters[i].box[0][0] for i in cluster_indx])
+                j_min = min([self.clusters[i].box[0][1] for i in cluster_indx])
+                ij_min[:] = min(i_min, ij_min[0]), min(j_min, ij_min[1])
+        return ij_min
+
+
+
+    def getMaxIndices(self):
+        """
+        Get the high end box indices
+        @return (i_max, j_max)
+        """
+        ij_max = np.array([-self.LARGE_INT, -self.LARGE_INT])
+        for track_id in range(len(self.cluster_connect)):
+            for t_index, cluster_indx in self.cluster_connect[track_id].items():
+                i_max = max([self.clusters[i].box[1][0] for i in cluster_indx])
+                j_max = max([self.clusters[i].box[1][1] for i in cluster_indx])
+                ij_max[:] = max(i_max, ij_max[0]), max(j_max, ij_max[1])
+        return ij_max
+
+
+
     def writeFile(self, filename, i_minmax=[], j_minmax=[]):
         """
         Write data to netcdf file
@@ -199,17 +233,20 @@ class TimeConnectedClusters:
 
         # create dimensions
 
-        iMin, iMax = self.i_minmax
+        iMin, jMin = self.getMinIndices()
+        iMax, jMax = self.getMaxIndices()
+
         if i_minmax:
             iMin = min(self.i_minmax[0], i_minmax[0])
             iMax = max(self.i_minmax[1], i_minmax[1])
-        iDim = f.createDimension('iDim', size=iMax-iMin)
+        num_i = iMax - iMin + 1
+        iDim = f.createDimension('iDim', size=num_i)
 
-        jMin, jMax = self.j_minmax
         if j_minmax:
             jMin = min(self.j_minmax[0], j_minmax[0])
             jMax = max(self.j_minmax[1], j_minmax[1])
-        jDim = f.createDimension('jDim', size=jMax-jMin)
+        num_j = jMax - jMin + 1
+        jDim = f.createDimension('jDim', size=num_j)
 
         # inifinte dimension
         tDim = f.createDimension('tDim', size=None)
@@ -229,14 +266,22 @@ class TimeConnectedClusters:
         t_index[:] = np.arange(0, self.t_index + 1)
 
         # check ordering!!
-        data = np.zeros((self.t_index, jMax - jMin, iMax - iMin), np.int32)
+        data = np.zeros((self.t_index, num_j, num_i), np.int32)
 
-        for cluster_id in range(len(self.cluster_connect)):
-            for time_index in range(self.t_index):
-                clusters = self.getClusters(cluster_id, time_index)
+        for track_id in range(len(self.cluster_connect)):
+            for t_index in range(self.t_index):
+                clusters = self.getClusters(track_id, t_index)
                 for cl in clusters:
-                    iCoords, jCoords, ijVals = cl.toArray()
-                    data[time_index, iCoords, jCoords] = ijVals
+                    iCoords, jCoords, vals = cl.toArray()
+                    print '---- iCoords, jCoords, vals = ', iCoords, jCoords, vals
+                    iCoords -= iMin
+                    jCoords -= jMin
+                    jj, ii = np.meshgrid(jCoords, iCoords)
+                    print 'oooo jj, ii = ', jj, ii
+                    tji = [(t_index, jj.flat[k], ii.flat[k]) for k in range(len(vals.flat))]
+                    print '**** tji = ', tji
+                    print '**** vals.flat = ', vals.flat
+                    data[tji] = vals.flat
         nb[:] = data
 
 
@@ -253,7 +298,7 @@ class TimeConnectedClusters:
     def getClusters(self, track_id, time_index):
         """
         Get the clusters of given ID at time index
-        @param track_id
+        @param track_id track Id
         @param time_index
         @return list of clusters
         """
@@ -306,6 +351,11 @@ def testTwoClustersAtTime0():
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 1), (1, 2), (2, 2)})
     tcc.addTime([c0, c1])
+    print tcc
+    c3 = Cluster({(4,3), (7,3)})
+    tcc.addTime([c3])
+    print tcc
+    tcc.writeFile('twoClusters.nc')
     print 'Two clusters'
     print tcc    
 
@@ -314,4 +364,4 @@ if __name__ == '__main__':
     testOneCluster()
     testReduceNonOverlapping()
     testReduceOverlapping()
-    #testTwoClustersAtTime0()
+    testTwoClustersAtTime0()
