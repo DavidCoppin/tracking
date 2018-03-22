@@ -28,15 +28,16 @@ def testDavid():
     data[5, 7:14] = 2
 
     clusters = extractClusters(numpy.flipud(data), thresh_min=0.0, thresh_max=0.8)
-    print clusters
 
     tcc = TimeConnectedClusters()
     # add a couple of times
     tcc.addTime(clusters)
     tcc.addTime(clusters)
 
+    print tcc
+
     # write to file
-    tcc.writeFile('david.nc')
+    #tcc.writeFile('david.nc')
 
 
 

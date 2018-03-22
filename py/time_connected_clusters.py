@@ -126,8 +126,8 @@ class TimeConnectedClusters:
         @param id2 Id of track 2, track 2 will be removed
         """
         for t_index in range(self.t_index):
-            clusters = self.cluster_connect[id1].get(t_indx, []) + \
-                       self.cluster_connect[id2].get(t_indx, [])
+            clusters = self.cluster_connect[id1].get(t_index, []) + \
+                       self.cluster_connect[id2].get(t_index, [])
             if clusters:
                 self.cluster_connect[id1][t_index] = clusters
 
@@ -193,7 +193,7 @@ class TimeConnectedClusters:
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
                 new_cl_track_id = connected_track_ids[i]
-                self.cluster_connect[new_cl_track_id][self.t_index].append(index)
+                self.cluster_connect[new_cl_track_id][self.t_index] = self.cluster_connect[new_cl_track_id].get(self.t_index, []) + [index]
 
             # backward tracking
             track_ids_to_fuse = []
@@ -204,7 +204,7 @@ class TimeConnectedClusters:
                     # is the centre of new_cl inside the ellipse of old_cl?
                     if new_cl.isCentreInsideOf(old_cl):
                         # the two tracks take the same Id 
-                        self.fuse(trac_id, dew_cl_track_id)
+                        self.fuse(track_id, new_cl_track_id)
 
             # update the cluster index
             index += 1
