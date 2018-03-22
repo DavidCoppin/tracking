@@ -17,10 +17,11 @@ def testRectangle():
     print tcc
     tcc.addTime(clusters)
     print tcc
+    tcc.writeFile('rectangle.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
 
 def testTwoRectangles():
-    rectangle = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
+    rectangle1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
     clusters = [Cluster(rectangle)]
 
     tcc = TimeConnectedClusters()

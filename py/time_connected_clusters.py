@@ -247,14 +247,14 @@ class TimeConnectedClusters:
         iMin, jMin, iMax, jMax = self.getMinMaxIndices()
 
         if i_minmax:
-            iMin = min(self.i_minmax[0], i_minmax[0])
-            iMax = max(self.i_minmax[1], i_minmax[1])
+            iMin = min(iMin, i_minmax[0])
+            iMax = max(iMax, i_minmax[1])
         num_i = iMax - iMin + 1
         iDim = f.createDimension('iDim', size=num_i)
 
         if j_minmax:
-            jMin = min(self.j_minmax[0], j_minmax[0])
-            jMax = max(self.j_minmax[1], j_minmax[1])
+            jMin = min(jMin, j_minmax[0])
+            jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin + 1
         jDim = f.createDimension('jDim', size=num_j)
 
@@ -273,7 +273,7 @@ class TimeConnectedClusters:
         # write the data
         i_index[:] = np.arange(iMin, iMax + 1)
         j_index[:] = np.arange(jMin, jMax + 1)
-        t_index[:] = np.arange(0, self.t_index + 1)
+        t_index[:] = np.arange(0, self.t_index)
 
         # data buffer, check ordering!!
         data = np.zeros((self.t_index, num_j, num_i), np.int32)
