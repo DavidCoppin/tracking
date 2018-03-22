@@ -43,7 +43,11 @@ def testSplittingInTwo():
     tcc.addTime([Cluster(circ2), Cluster(circ3)])
     print tcc
     tcc.writeFile('splitting_in_two.nc', i_minmax=(0, 10), j_minmax=(0, 8))
-
+    # expected result: 
+    # Because centre of circ2 and circ3 are inside ellipse of rect1, the result
+    # should be [{0: [rect1], 1: [circ2, circ3]} 
+    # Currently fusing, test if rect1's centre is inside ellipse of circ2 or circ3 (should not be). 
+    # But even if it is, fuse should be active because it will try to fuse with itself
 
 def testDigits():
     """
