@@ -46,21 +46,19 @@ def extractClusters(data, thresh_min, thresh_max):
     @return list of clusters
     """
 
-    # extract all features
     """
     image = np.logical_and(data >= thresh_min, data <= thresh_max)
-    print '*** image = ', image
-
-    # separate individual features based on distance
+    print image
+    # Now we want to separate the two objects in image
+    # Generate the markers as local maxima of the distance to the background
     distance = ndimage.distance_transform_edt(image)
     local_maxi = peak_local_max(distance, indices=False, footprint=np.ones((3, 3)),
                             labels=image)
     markers = ndimage.label(local_maxi)[0]
     labels = watershed(-distance, markers, mask=image)
-    print labels
     """
 
-    #"""
+
     ma_data = np.ma.masked_where(data <= thresh_min, data).astype(np.uint8)
         
     # building threshold
@@ -125,6 +123,7 @@ class TimeConnectedClusters:
         @param id1 Id of track 1, track 1 will contain track 2
         @param id2 Id of track 2, track 2 will be removed
         """
+        print '*** fusing ', id1, id2
         for t_index in range(self.t_index):
             clusters = self.cluster_connect[id1].get(t_index, []) + \
                        self.cluster_connect[id2].get(t_index, [])
@@ -198,6 +197,11 @@ class TimeConnectedClusters:
             # backward tracking
             track_ids_to_fuse = []
             for track_id in range(num_tracks):
+
+                if track_id == new_cl_track_id:
+                    # skip self
+                    continue
+
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
 
@@ -314,7 +318,7 @@ TimeConnectedCluster: num of clusters   {}
                       num of Ids        {}
                       clusters          {}
                       connectivity      {}
-        """.format(len(self.clusters), self.t_index + 1, \
+        """.format(len(self.clusters), self.t_index, \
               len(self.cluster_connect), [cl.cells for cl in self.clusters], \
               self.cluster_connect)
         return res
