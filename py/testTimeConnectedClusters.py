@@ -20,13 +20,17 @@ def testRectangle():
     tcc.writeFile('rectangle.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
 
-def testTwoRectangles():
-    rectangle1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
-    clusters = [Cluster(rectangle)]
+def testTwoMergingRectangles():
+    rect1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
+    rect2 = {(6, 3), (7, 3), (8, 3), (6, 4), (7, 4), (8, 4)}
+    rect3 = {(3, 4), (4, 4), (5, 4), (3, 5), (4, 5), (5, 5)}
 
     tcc = TimeConnectedClusters()
-    tcc.addTime(clusters)
+    tcc.addTime([Cluster(rect1), Cluster(rect2)])
     print tcc
+    tcc.addTime([Cluster(rect3)])
+    print tcc
+    tcc.writeFile('two_merging_rectangles.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
 
 def testDigits():
@@ -69,4 +73,5 @@ def testDigits():
 
 if __name__ == '__main__':
     testRectangle()
+    testTwoMergingRectangles()
     #testDigits()
