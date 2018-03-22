@@ -51,7 +51,7 @@ def testOnlyFuse():
     rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
     rect3 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
     # Simplest fuse test : no forward tracking possible (center of rect3 can't be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be inside ellipse of cluster 3
-    # Result expected: all clusters should get same id: 1
+    # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0, 1], 1: [2]}]
     # Problem : cluster 2 keeps its id
     tcc = TimeConnectedClusters()
     tcc.addTime([Cluster(rect1), Cluster(rect2)])
@@ -66,7 +66,7 @@ def testOnlySplit():
     rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
     rect3 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
     # Simplest split test : no backward tracking possible (center of rect3 can't be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be inside ellipse of cluster 3
-    # Result expected: all clusters should get same id: 1
+    # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0], 1: [1, 2]}]
     # Problem : cluster 2 keeps its id
     tcc = TimeConnectedClusters()
     tcc.addTime([Cluster(rect3)])
