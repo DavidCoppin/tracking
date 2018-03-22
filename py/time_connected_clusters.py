@@ -5,6 +5,7 @@ import copy
 from scipy import ndimage
 import cv2
 from skimage.morphology import watershed
+from skimage.feature import peak_local_max
     
 
 def reduce(cluster_list):
@@ -28,6 +29,7 @@ def reduce(cluster_list):
                 cli += clj
                 remove_indices.append(j)
 
+    # remove the tagged clusters
     remove_indices.reverse()
     for i in remove_indices:
         del res[i]
@@ -44,36 +46,51 @@ def extractClusters(data, thresh_min, thresh_max):
     @return list of clusters
     """
 
+    # extract all features
+    """
+    image = np.logical_and(data >= thresh_min, data <= thresh_max)
+    print '*** image = ', image
+
+    # separate individual features based on distance
+    distance = ndimage.distance_transform_edt(image)
+    local_maxi = peak_local_max(distance, indices=False, footprint=np.ones((3, 3)),
+                            labels=image)
+    markers = ndimage.label(local_maxi)[0]
+    labels = watershed(-distance, markers, mask=image)
+    print labels
+    """
+
+    #"""
     ma_data = np.ma.masked_where(data <= thresh_min, data).astype(np.uint8)
         
     # building threshold
-    tmp_data = ma_data.filled(0)
-    tmp_data[np.where(tmp_data!=0)] = 255
+    tmp_data = ma_data.filled(fill_value=0)
+    tmp_data[np.where(tmp_data !=0)] = 255
     bw_data = tmp_data.astype(np.uint8)
         
     # building markers and borders
     ma_conv = np.ma.masked_where(data <= thresh_max, data)
-    tmp_conv = ma_conv.filled(0)
-    tmp_conv[np.where(tmp_conv!=0)] = 255
+    tmp_conv = ma_conv.filled(fill_value=0)
+    tmp_conv[np.where(tmp_conv !=0)] = 255
     bw_conv = tmp_conv.astype(np.uint8)
-    markers= ndimage.label(bw_conv, structure=np.ones((3, 3)))[0]
+    markers = ndimage.label(bw_conv, structure=np.ones((3, 3)))[0]
     border = cv2.dilate(bw_data, None, iterations=5)
     border -= cv2.erode(border, None)
     markers[border == 255] = 255
 
-    # watershed
-    ws = watershed(-data, markers, mask=bw_data)
+    # labels each feature
+    labels = watershed(-data, markers, mask=bw_data)
 
     # load into clusters
     res = []
-    for idVal in range(1, ws.max()):
-        iVals, jVals = np.where(ws == idVal)
+    for idVal in range(1, labels.max()):
+        iVals, jVals = np.where(labels == idVal)
         numVals = len(iVals)
         if numVals > 0:
             cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
             # store this cluster as a list with one element (so far). Each 
             # element will have its own ID
-            res.append([Cluster(cells)])
+            res.append(Cluster(cells))
 
     return res
 
@@ -159,7 +176,6 @@ class TimeConnectedClusters:
             for track_id in range(num_tracks):
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
-
                     # is the centre of old_cl inside the ellipse of new_cl?
                     if old_cl.isCentreInsideOf(new_cl):
                         connected_clusters.append(old_cl)

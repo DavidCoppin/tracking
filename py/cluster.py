@@ -56,7 +56,7 @@ class Cluster:
         @param otherCluster
         @return distance
         """
-        d = self.centre - otherCluster.centre
+        d = self.ellipse.getCentre() - otherCluster.ellipse.getCentre()
         return numpy.sqrt(d.dot(d))
 
     def __iadd__(self, otherCluster):
