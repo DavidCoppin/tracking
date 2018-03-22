@@ -20,11 +20,24 @@ def testRectangle():
     tcc.writeFile('rectangle.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
 
-def testTwoMergingRectangles():
+def testIndRectangles():
     rect1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
     rect2 = {(6, 3), (7, 3), (8, 3), (6, 4), (7, 4), (8, 4)}
     rect3 = {(3, 4), (4, 4), (5, 4), (3, 5), (4, 5), (5, 5)}
 
+    tcc = TimeConnectedClusters()
+    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    print tcc
+    tcc.addTime([Cluster(rect3)])
+    print tcc
+    tcc.writeFile('independant_rectangles.nc', i_minmax=(0, 10), j_minmax=(0, 8))
+
+
+def testTwoMergingRectangles():
+    rect1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4),(2, 5), (3, 5), (4, 5)}
+    rect2 = {(6, 3), (7, 3), (8, 3), (6, 4), (7, 4), (8, 4),(6, 5), (6, 5), (6, 5)}
+    rect3 = {(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5)}
+    # Should have only one track because cluster 1 and 2 at t=0 merge at t=1. Should pass into fuse    # Prob: cluster 1 at=0 does not become cluster 2
     tcc = TimeConnectedClusters()
     tcc.addTime([Cluster(rect1), Cluster(rect2)])
     print tcc
@@ -89,6 +102,7 @@ def testDigits():
 
 if __name__ == '__main__':
     testRectangle()
+    testIndRectangles()
     testTwoMergingRectangles()
     testSplittingInTwo()
     #testDigits()
