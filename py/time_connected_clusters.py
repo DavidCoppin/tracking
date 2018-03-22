@@ -290,6 +290,8 @@ class TimeConnectedClusters:
                     data[tis, jis, iis] = track_id + 1
         # now write all the data in one go
         nb_var[:] = data
+
+        f.close()
         
 
     def getNumberOfTracks(self):
