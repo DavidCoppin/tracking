@@ -61,6 +61,20 @@ def testOnlyFuse():
     tcc.writeFile('only_fuse.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
 
+def testOnlySplit():
+    rect1 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
+    rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    rect3 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
+    # Simplest split test : no backward tracking possible (center of rect3 can't be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be inside ellipse of cluster 3
+    # Result expected: all clusters should get same id: 1
+    # Problem : cluster 2 keeps its id
+    tcc = TimeConnectedClusters()
+    tcc.addTime([Cluster(rect3)])
+    print tcc
+    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    print tcc
+    tcc.writeFile('only_split.nc', i_minmax=(0, 10), j_minmax=(0, 8))
+
 
 def testSplittingInTwo():
     rect1 = {(3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9)}
@@ -119,7 +133,8 @@ def testDigits():
 if __name__ == '__main__':
     #testRectangle()
     #testIndRectangles()
-    testTwoMergingRectangles()
+    #testTwoMergingRectangles()
     testOnlyFuse()
+    testOnlySplit()
     #testSplittingInTwo()
     #testDigits()
