@@ -89,7 +89,7 @@ def testOnlyFuse():
     print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c0.getCentre(), 
                                                                        c1.getCentre())
-    tcc.addTime([c1, c2])
+    tcc.addTime([c1, c0])
     print tcc
 
     if c2.isCentreInsideOf(c0):
@@ -221,6 +221,6 @@ if __name__ == '__main__':
     #testIndRectangles()
     #testTwoMergingRectangles()
     testOnlyFuse()
-    testOnlySplit()
+    #testOnlySplit()
     #testSplittingInTwo()
     #testDigits()
