@@ -79,7 +79,7 @@ def testOnlyFuse():
     # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0, 1], 1: [2]}]
     # Problem : cluster 2 keeps its id
     tcc = TimeConnectedClusters()
-    print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getLastTimeStep(),
+    print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c0.getCentre(), 
                                                                        c1.getCentre())
     tcc.addTime([c1, c2])
@@ -93,13 +93,13 @@ def testOnlyFuse():
         print 'c0 is inside c2'
     if c1.isCentreInsideOf(c2):
         print 'c1 is inside c2'
-    print 'time step {}: adding cluster with centre {}'.format(tcc.getLastTimeStep(),
+    print 'time step {}: adding cluster with centre {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c2.getCentre())
     tcc.addTime([c2])
     print tcc
     tcc.writeFile('only_fuse.nc', i_minmax=(0, 10), j_minmax=(0, 8))
     assert(tcc.getNumberOfTracks() == 1)
-    assert(tcc.getLastTimeStep() == 1)
+    assert(tcc.getNumberOfTimeSteps() == 2)
 
 
 def testOnlySplit():
