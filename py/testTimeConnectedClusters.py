@@ -34,16 +34,31 @@ def testIndRectangles():
 
 
 def testTwoMergingRectangles():
-    rect1 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4),(2, 5), (3, 5), (4, 5)}
-    rect2 = {(6, 3), (7, 3), (8, 3), (6, 4), (7, 4), (8, 4),(6, 5), (6, 5), (6, 5)}
-    rect3 = {(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5)}
-    # Should have only one track because cluster 1 and 2 at t=0 merge at t=1. Should pass into fuse    # Prob: cluster 1 at=0 does not become cluster 2
+    print '='*70
+    print 'testTwoMergingRectangles'
+    print '-'*70
+    rect0 = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4),(2, 5), (3, 5), (4, 5)}
+    rect1 = {(6, 3), (7, 3), (8, 3), (6, 4), (7, 4), (8, 4),(6, 5), (6, 5), (6, 5)}
+    rect2 = {(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (3, 4), (4, 4), (5, 4), (6, 4), 
+             (7, 4), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5)}
+    c0, c1, c2 = Cluster(rect0), Cluster(rect1), Cluster(rect2)
+    if c0.isCentreInsideOf(c2):
+        print 'c0 is inside c2'
+    if c1.isCentreInsideOf(c2):
+        print 'c1 is inside c2'
+    if c1.isCentreInsideOf(c0):
+        print 'c1 is inside c0'
+    if c2.isCentreInsideOf(c0):
+        print 'c2 is inside c0'
+    # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should 
+    # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
     tcc = TimeConnectedClusters()
-    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    tcc.addTime([c0, c1])
     print tcc
-    tcc.addTime([Cluster(rect3)])
+    tcc.addTime([c2])
     print tcc
     tcc.writeFile('two_merging_rectangles.nc', i_minmax=(0, 10), j_minmax=(0, 8))
+    assert(tcc.getNumberOfTracks() == 1)
 
 
 def testOnlyFuse():
@@ -159,7 +174,7 @@ def testDigits():
 if __name__ == '__main__':
     #testRectangle()
     #testIndRectangles()
-    #testTwoMergingRectangles()
+    testTwoMergingRectangles()
     testOnlyFuse()
     #testOnlySplit()
     #testSplittingInTwo()
