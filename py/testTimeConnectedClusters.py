@@ -83,7 +83,8 @@ def testOnlyFuse():
     # be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be 
     # inside ellipse of cluster 3
     # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0, 1], 1: [2]}]
-    # Problem : cluster 2 keeps its id
+    # Problem : only c2 appears in netcdf file at t=0 while it should be c0 and c1. 
+    # Probably overwritten (lat,lon) of c0 and c1 by (lat,lon) of c2
     tcc = TimeConnectedClusters()
     print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c0.getCentre(), 
@@ -219,7 +220,7 @@ if __name__ == '__main__':
     #testRectangle()
     #testIndRectangles()
     #testTwoMergingRectangles()
-    #testOnlyFuse()
-    #testOnlySplit()
+    testOnlyFuse()
+    testOnlySplit()
     #testSplittingInTwo()
-    testDigits()
+    #testDigits()
