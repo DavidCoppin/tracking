@@ -49,6 +49,14 @@ class Cluster:
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
 
+
+    def getCentre(self):
+        """
+        Get the centre 
+        @return array 
+        """
+        return self.ellipse.getCentre()
+
    
     def getDistance(self, otherCluster):
         """

@@ -47,18 +47,44 @@ def testTwoMergingRectangles():
 
 
 def testOnlyFuse():
-    rect1 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
-    rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
-    rect3 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
-    # Simplest fuse test : no forward tracking possible (center of rect3 can't be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be inside ellipse of cluster 3
+    print '='*70
+    print 'testOnlyFuse'
+    print '-'*70
+    rect0 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
+    rect1 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    rect2 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), 
+             (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), 
+             (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
+    c0 = Cluster(rect0)
+    c1 = Cluster(rect1)
+    c2 = Cluster(rect2)
+    # Simplest fuse test: no forward tracking possible (center of rect3 can't 
+    # be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be 
+    # inside ellipse of cluster 3
     # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0, 1], 1: [2]}]
     # Problem : cluster 2 keeps its id
     tcc = TimeConnectedClusters()
-    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getLastTimeStep(),
+                                                                       c0.getCentre(), 
+                                                                       c1.getCentre())
+    tcc.addTime([c1, c2])
     print tcc
-    tcc.addTime([Cluster(rect3)])
+
+    if c2.isCentreInsideOf(c0):
+        print 'c2 is inside c0'
+    if c2.isCentreInsideOf(c1):
+        print 'c2 is inside c1'
+    if c0.isCentreInsideOf(c2):
+        print 'c0 is inside c2'
+    if c1.isCentreInsideOf(c2):
+        print 'c1 is inside c2'
+    print 'time step {}: adding cluster with centre {}'.format(tcc.getLastTimeStep(),
+                                                                       c2.getCentre())
+    tcc.addTime([c2])
     print tcc
     tcc.writeFile('only_fuse.nc', i_minmax=(0, 10), j_minmax=(0, 8))
+    assert(tcc.getNumberOfTracks() == 1)
+    assert(tcc.getLastTimeStep() == 1)
 
 
 def testOnlySplit():
@@ -135,6 +161,6 @@ if __name__ == '__main__':
     #testIndRectangles()
     #testTwoMergingRectangles()
     testOnlyFuse()
-    testOnlySplit()
+    #testOnlySplit()
     #testSplittingInTwo()
     #testDigits()

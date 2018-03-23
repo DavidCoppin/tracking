@@ -302,6 +302,14 @@ class TimeConnectedClusters:
         return len(self.cluster_connect)
 
 
+    def getLastTimeStep(self):
+        """
+        Get the last time step (also number of time steps)
+        @return number
+        """
+        return self.t_index
+
+
 
     def getClusters(self, track_id, time_index):
         """
@@ -317,7 +325,7 @@ class TimeConnectedClusters:
         res = """
 TimeConnectedCluster: num of clusters   {}
                       num of time steps {}
-                      num of Ids        {}
+                      num of tracks     {}
                       clusters          {}
                       connectivity      {}
         """.format(len(self.clusters), self.t_index, \
