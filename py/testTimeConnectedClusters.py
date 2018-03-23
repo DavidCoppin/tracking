@@ -1,8 +1,14 @@
 import numpy
 import matplotlib
 import time
-from time_connected_clusters import TimeConnectedClusters, extractClusters
+#from time_connected_clusters import TimeConnectedClusters, extractClusters
+from time_connected_clusters import TimeConnectedClusters
+#from extractClusters import ExtractClusters
 from cluster import Cluster
+from scipy import ndimage
+from skimage.morphology import watershed
+import cv2
+
 
 """
 Test TimeConnectedClusters
@@ -133,28 +139,68 @@ def testSplittingInTwo():
     # Currently fusing, test if rect1's centre is inside ellipse of circ2 or circ3 (should not be). 
     # But even if it is, fuse should be active because it will try to fuse with itself
 
+
+def extractClusters(data, thresh_min, thresh_max):
+    """ 
+    Extract clusters from an image data
+    @param data
+    @param thresh_min
+    @param thresh_max
+    @return list of clusters
+    """
+    # remove data below minimum threshold
+    ma_data = numpy.ma.masked_where(data <= thresh_min, data)
+    # building black and white image with lower threshold to create borders for watershed
+    tmp_data = ma_data.filled(fill_value=0)
+    tmp_data[numpy.where(tmp_data !=0)] = 255 
+    bw_data = tmp_data.astype(numpy.uint8)
+    border = cv2.dilate(bw_data, None, iterations=5)
+    border -= cv2.erode(border, None)
+
+    # remove data below minimum threshold
+    ma_conv = numpy.ma.masked_where(data <= thresh_max, data)
+    # building black and white image with high threshold to serve as markers for watershed..
+    tmp_conv = ma_conv.filled(fill_value=0)
+    tmp_conv[numpy.where(tmp_conv !=0)] = 255 
+    bw_conv = tmp_conv.astype(numpy.uint8)
+    markers = ndimage.label(bw_conv, structure=numpy.ones((3, 3)))[0]
+    # add border on image with high threshold to tell the watershed where it should fill in
+    markers[border == 255] = 255 
+    # labels each feature
+    labels = watershed(-data, markers, mask=bw_data)
+
+    # load into clusters
+    res = []
+    for idVal in range(1, labels.max()+1):
+        iVals, jVals = numpy.where(labels == idVal)
+        numVals = len(iVals)
+        if numVals > 0:
+            cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
+            # store this cluster as a list with one element (so far). Each.
+            # element will have its own ID
+            res.append(Cluster(cells))
+    return res
+
+
 def testDigits():
     """
-    Checking that we can create a time clonnected cluster with no cluster
+    Checking that we can create a time connected cluster from image
     """
     lats = numpy.arange(0, 20)
     lons = numpy.arange(0, 50)
-
     data = numpy.zeros((len(lats), len(lons)), numpy.float64)
-
     # create a cluster
-    data[10:10+5, 10] = 1
-
-    """
-    data[2, 5:5+4] = 2
-    data[4, 5:5+4] = 2
-    data[6, 5:5+4] = 2
-    data[3, 5] = 2
-    data[5, 8] = 2
-    """
-
-    print data
-    clusters = extractClusters(numpy.flipud(data), thresh_min=0., thresh_max=10.)
+    data[10:10+5, 10] = 5
+    data[2:4, 5:5+4] = 3
+    data[4:6, 5:5+4] = 1
+    data[6:8, 5:5+4] = 3
+    data[3, 12] = 5
+    data[5, 15] = 2
+#    print data
+    # Version with Class
+#    clusters = extractClusters.extractPoints(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
+    # Version inside testTimeConnecteClusters
+    clusters = extractClusters(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
     print clusters
 
     tcc = TimeConnectedClusters()
@@ -166,16 +212,14 @@ def testDigits():
     print tcc
 
     # write to file
-    #tcc.writeFile('digits.nc')
-
-
+    tcc.writeFile('digits.nc', i_minmax=(0, len(lats)), j_minmax=(0, len(lons)))
 
 
 if __name__ == '__main__':
     #testRectangle()
     #testIndRectangles()
-    testTwoMergingRectangles()
-    testOnlyFuse()
+    #testTwoMergingRectangles()
+    #testOnlyFuse()
     #testOnlySplit()
     #testSplittingInTwo()
-    #testDigits()
+    testDigits()
