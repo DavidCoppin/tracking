@@ -287,8 +287,6 @@ def testSplitMulti():
     c7 = Cluster(rect7)
     # Description: test consecutive splits at different time steps
     # Expected result: 1 tracks all along
-    #       connectivity [{0: [0, 2], 1: [5]}, {0: [1], 1: [4]}, {0: [3], 1: [6]}] at t1
-    #       connectivity [{0: [0, 2, 1], 1: [5, 4], 2: [7]}, {0: [3], 1: [6], 2: [8]}] at t2
     tcc = TimeConnectedClusters()
 #    print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSt>
 #                                                                         c0.getCentre())
