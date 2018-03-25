@@ -305,8 +305,8 @@ def testSplitMulti():
 #                                                                     c7.getCentre())
     tcc.addTime([c4, c5, c6, c7])
     print tcc
-    tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
-    assert(tcc.getNumberOfTracks() == 0)
+    tcc.writeFile('split_multi.nc', i_minmax=(0, 15), j_minmax=(0, 10))
+    assert(tcc.getNumberOfTracks() == 1)
 
 
 if __name__ == '__main__':
