@@ -235,8 +235,10 @@ def testSeveralFuse():
     c4 = Cluster(rect4)
     c5 = Cluster(rect5)
     c6 = Cluster(rect6)
-    # Description:
-    # Expected result: 
+    # Description: test different fuses at different time steps
+    # Expected result: 4 tracks after t0, 3 tracks after t1, 2 after t2 with
+    #       connectivity [{0: [0, 2], 1: [5]}, {0: [1], 1: [4]}, {0: [3], 1: [6]}] at t1
+    #       connectivity [{0: [0, 2, 1], 1: [5, 4], 2: [7]}, {0: [3], 1: [6], 2: [8]}] at t2
     tcc = TimeConnectedClusters()
     print 'time step {}: adding clusters with centres {} {} {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                          c1.getCentre(),
