@@ -216,57 +216,56 @@ def testDigits():
     tcc.writeFile('digits.nc', i_minmax=(0, len(lats)), j_minmax=(0, len(lons)))
 
 
-  def testSeveralFuse():
-      print 'testSeveralFuse'
-      print '-'*70
-      rect0 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
-      rect1 = {(7, 3), (8, 3), (7, 4)}
-      rect2 = {(8, 4), (7, 5), (8, 5)}
-      rect3 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
-      rect4 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),.
-               (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4),.
-               (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
-      rect5 = {(10, 5), (11, 5), (12, 5), (10, 6), (11, 6), (12, 6)}
-	  rect6 = {(10, 7), (11, 7), (12, 7), (10, 6), (11, 6), (12, 6)}
-      c0 = Cluster(rect0)
-      c1 = Cluster(rect1)
-      c2 = Cluster(rect2)
-      c3 = Cluster(rect3)
-      c4 = Cluster(rect4)
-      c5 = Cluster(rect5)
-      c6 = Cluster(rect6)
-      c7 = Cluster(rect7)
-      # Simplest fuse test: no forward tracking possible (center of rect3 can't.
-      # be inside ellipse of cluster 1 or 2, but centers of clusters 1 and 2 should be.
-      # inside ellipse of cluster 3
-      # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0, 1], 1: [2]}]
-      # Problem : only c2 appears in netcdf file at t=0 while it should be c0 and c1..
-      # Probably overwritten (lat,lon) of c0 and c1 by (lat,lon) of c2
-      tcc = TimeConnectedClusters()
-      print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getNumberOfTimeSteps(>
-                                                                         c0.getCentre(),.
-                                                                         c1.getCentre())
-      tcc.addTime([c1, c0, c2,c5])
-      print tcc
-      print 'time step {}: adding cluster with centre {}'.format(tcc.getNumberOfTimeSteps(),
-                                                                         c2.getCentre())
-      tcc.addTime([c0, c3, c6])
-      print tcc
-      print 'time step {}: adding cluster with centre {}'.format(tcc.getNumberOfTimeSteps(),
-                                                                         c2.getCentre())
-	  tcc.addTime([c4, c5])
-      tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
-      assert(tcc.getNumberOfTracks() == 1)
-      assert(tcc.getNumberOfTimeSteps() == 2)
+def testSeveralFuse():
+    print 'testSeveralFuse'
+    print '-'*70
+    rect0 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
+    rect1 = {(7, 3), (8, 3), (7, 4)}
+    rect2 = {(8, 4), (7, 5), (8, 5)}
+    rect3 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    rect4 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),
+             (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4),
+             (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
+    rect5 = {(10, 5), (11, 5), (12, 5), (10, 6), (11, 6), (12, 6)}
+    rect6 = {(10, 7), (11, 7), (12, 7), (10, 6), (11, 6), (12, 6)}
+    c0 = Cluster(rect0)
+    c1 = Cluster(rect1)
+    c2 = Cluster(rect2)
+    c3 = Cluster(rect3)
+    c4 = Cluster(rect4)
+    c5 = Cluster(rect5)
+    c6 = Cluster(rect6)
+    # Description:
+    # Expected result: 
+    tcc = TimeConnectedClusters()
+    print 'time step {}: adding clusters with centres {} {} {} {}'.format(tcc.getNumberOfTimeSteps(),
+                                                                         c1.getCentre(),
+                                                                         c0.getCentre(),
+                                                                         c2.getCentre(),
+                                                                         c5.getCentre())
+    tcc.addTime([c1, c0, c2, c5])
+    print tcc
+    print 'time step {}: adding clusters with centres {} {} {}'.format(tcc.getNumberOfTimeSteps(),
+                                                                         c0.getCentre(),
+                                                                         c3.getCentre(),
+                                                                         c6.getCentre())
+    tcc.addTime([c0, c3, c6])
+    print tcc
+    print 'time step {}: adding cluster with centres {} {}'.format(tcc.getNumberOfTimeSteps(),
+                                                                     c4.getCentre(),
+                                                                     c5.getCentre())
+    tcc.addTime([c4, c5])
+    tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
+    assert(tcc.getNumberOfTracks() == 1)
 
 
 
 if __name__ == '__main__':
-    #testRectangle()
-    #testIndRectangles()
-    #testTwoMergingRectangles()
-    #testOnlyFuse()
-    #testOnlySplit()
-    #testSplittingInTwo()
+    testRectangle()
+    testIndRectangles()
+    testTwoMergingRectangles()
+    testOnlyFuse()
+    testOnlySplit()
+    testSplittingInTwo()
     #testDigits()
-	#testSeveralFuse()
+    testSeveralFuse()
