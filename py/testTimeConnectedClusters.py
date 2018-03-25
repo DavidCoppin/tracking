@@ -1,13 +1,8 @@
 import numpy
 import matplotlib
 import time
-#from time_connected_clusters import TimeConnectedClusters, extractClusters
 from time_connected_clusters import TimeConnectedClusters
-#from extractClusters import ExtractClusters
 from cluster import Cluster
-from scipy import ndimage
-from skimage.morphology import watershed
-import cv2
 
 
 """
@@ -217,6 +212,7 @@ def testDigits():
 
 
 def testSeveralFuse():
+    print '='*70
     print 'testSeveralFuse'
     print '-'*70
     rect0 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5)}
@@ -245,17 +241,23 @@ def testSeveralFuse():
                                                                          c0.getCentre(),
                                                                          c2.getCentre(),
                                                                          c5.getCentre())
+    assert(tcc.getNumberOfTracks() == 4)
+
     tcc.addTime([c1, c0, c2, c5])
     print tcc
     print 'time step {}: adding clusters with centres {} {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                          c0.getCentre(),
                                                                          c3.getCentre(),
                                                                          c6.getCentre())
+    assert(tcc.getNumberOfTracks() == 3)
+
     tcc.addTime([c0, c3, c6])
     print tcc
     print 'time step {}: adding cluster with centres {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                      c4.getCentre(),
                                                                      c5.getCentre())
+    assert(tcc.getNumberOfTracks() == 2)
+    
     tcc.addTime([c4, c5])
     print tcc
     tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
@@ -317,5 +319,5 @@ if __name__ == '__main__':
     #testOnlySplit()
     #testSplittingInTwo()
     #testDigits()
-    #testSeveralFuse()
     testSplitMulti()
+    testSeveralFuse()
