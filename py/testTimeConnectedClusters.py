@@ -306,40 +306,38 @@ def testProbMinFuse():
     # Description: test fusing bug between colliding clusters
     # Expected result: 2 tracks after t0, 1 tracks after t1 with
     #       connectivity [{0: [0, 1], 1: [2]}] at t1
-    rect1 = {(7, 3), (8, 3), (7, 4)}
-    rect2 = {(8, 4), (7, 5), (8, 5)}
-    rect3 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    rect0 = {(7, 3), (8, 3), (7, 4), (8, 4)}
+    rect1 = {(7, 5), (8, 5)}
+    rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    c0 = Cluster(rect0)
     c1 = Cluster(rect1)
     c2 = Cluster(rect2)
-    c3 = Cluster(rect3)
-    if c1.isCentreInsideOf(c3):
-        print 'c1 is inside c3'
-    if c2.isCentreInsideOf(c3):
-        print 'c2 is inside c3'
-    if c3.isCentreInsideOf(c1):
-        print 'c3 is inside c1'
-    if c3.isCentreInsideOf(c2):
-        print 'c3 is inside c2'
+    if c0.isCentreInsideOf(c2):
+        print 'c0 is inside c2'
+    if c1.isCentreInsideOf(c2):
+        print 'c1 is inside c2'
+    if c2.isCentreInsideOf(c0):
+        print 'c2 is inside c0'
+    if c2.isCentreInsideOf(c1):
+        print 'c2 is inside c1'
 
     tcc = TimeConnectedClusters()
     print 'time step {}: adding clusters with centres {} {}'.format(tcc.getNumberOfTimeSteps,
-                                                                         c1.getCentre(),
-                                                                         c2.getCentre())
-    tcc.addTime([c1, c2])
+                                                                         c0.getCentre(),
+                                                                         c1.getCentre())
+    tcc.addTime([c0, c1])
     assert(tcc.getNumberOfTracks() == 2)
+    tr_id0, t_indx0 = tcc.findCluster(0)
     tr_id1, t_indx1 = tcc.findCluster(1)
-    tr_id2, t_indx2 = tcc.findCluster(2)
+    print 'cluster 0 is in track {} at time index {}'.format(tr_id0, t_indx0)
     print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
-    print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
     print tcc
 
     #
     # time_index = 1
     print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSteps,
-                                                                         c3.getCentre())
-    tcc.addTime([c3])
-    print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
-    print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
+                                                                         c2.getCentre())
+    tcc.addTime([c2])
     print tcc
     tcc.writeFile('prob_min_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 
