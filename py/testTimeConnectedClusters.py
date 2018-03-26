@@ -364,6 +364,12 @@ def testProbMinFuse():
     print tcc1
     print '<<< tcc2'
     print tcc2
+    # run some checks
+    assert(tcc1.getNumberOfTracks() == tcc2.getNumberOfTracks() == 1)
+    assert(t_indx0 == 0)
+    assert(t_indx1 == 0)
+    assert(t_indx2 == 1)
+    assert(tr_id0 == 0 and tr_id1 == 0 and tr_id2 == 0)
     tcc1.writeFile('prob_min_fuse1.nc', i_minmax=(0, 15), j_minmax=(0, 10))
     tcc2.writeFile('prob_min_fuse2.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 
