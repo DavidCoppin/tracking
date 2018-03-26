@@ -338,6 +338,12 @@ def testProbMinFuse():
     print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSteps,
                                                                          c2.getCentre())
     tcc.addTime([c2])
+    tr_id0, t_indx0 = tcc.findCluster(0)
+    tr_id1, t_indx1 = tcc.findCluster(1)
+    tr_id2, t_indx2 = tcc.findCluster(2)
+    print 'cluster 0 is in track {} at time index {}'.format(tr_id0, t_indx0)
+    print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
+    print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
     print tcc
     tcc.writeFile('prob_min_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 
