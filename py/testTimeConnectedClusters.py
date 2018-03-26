@@ -304,10 +304,17 @@ def testProbMinFuse():
     print 'testProbMinFuse'
     print '-'*70
     # Description: test fusing bug between colliding clusters
+    # works fine with rect0 = {(7, 3), (8, 3)} and rect1 = {(7, 4), (8, 4), (7, 5), (8, 5)}
+    # but does not work with rect0 = {(7, 4), (8, 4), (7, 5), (8, 5)} and rect1 = {(7, 3), (8, 3)},
+    # which is just replacing rect0 by rect1 and vice versa
+    # --> case ok: c2 inside c1 but not inside c0
+    #     bug: c2 inside c0 but not inside c1
+    # ==> problem probably when appending track in addTime: after tcc.addTime([c2]), track and time
+    # for c1 are switched to -1  (cf print cluster 1 is in track -1 at time index -1)
     # Expected result: 2 tracks after t0, 1 tracks after t1 with
     #       connectivity [{0: [0, 1], 1: [2]}] at t1
-    rect0 = {(7, 3), (8, 3), (7, 4), (8, 4)}
-    rect1 = {(7, 5), (8, 5)}
+    rect1 = {(7, 3), (8, 3)}
+    rect0 = {(7, 4), (8, 4), (7, 5), (8, 5)}
     rect2 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
     c0 = Cluster(rect0)
     c1 = Cluster(rect1)
