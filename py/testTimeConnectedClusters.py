@@ -264,7 +264,6 @@ def testSeveralFuse():
     print 'cluster 5 is in track {} at time index {}'.format(tr_id5, t_indx5)
     print 'cluster 4 is in track {} at time index {}'.format(tr_id4, t_indx4)
     print 'cluster 6 is in track {} at time index {}'.format(tr_id6, t_indx6)
-
     assert(t_indx5 == t_indx4 == t_indx6 == 1)
     assert(tr_id5 != tr_id4)
     assert(tr_id4 != tr_id6)
@@ -275,10 +274,27 @@ def testSeveralFuse():
     print 'time step {}: adding cluster with centres {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                      c4.getCentre(),
                                                                      c5.getCentre())
-    tcc.addTime([c4, c5])
+    c7 = c4
+    c8 = c5
+    tcc.addTime([c7, c8])
+    #       connectivity [{0: [0, 2, 1], 1: [5, 4], 2: [7]}, {0: [3], 1: [6], 2: [8]}] at t2
     assert(tcc.getNumberOfTracks() == 2)
+    tr_id0, t_indx0 = tcc.findCluster(0)
+    tr_id1, t_indx1 = tcc.findCluster(1)
+    tr_id2, t_indx2 = tcc.findCluster(2)
+    tr_id3, t_indx3 = tcc.findCluster(3)
+    tr_id4, t_indx4 = tcc.findCluster(4)
+    tr_id5, t_indx5 = tcc.findCluster(5)
+    tr_id6, t_indx6 = tcc.findCluster(6)
+    tr_id7, t_indx7 = tcc.findCluster(7)
+    tr_id8, t_indx8 = tcc.findCluster(8)
+    assert(t_indx8 == 2 and t_indx7 == 2)
+    assert(tr_id7 != tr_id8)
+    assert(tr_id5 == tr_id4 and t_indx5 == t_indx4 == 1)
+    assert(tr_id6 != tr_id5 and t_indx6 == 1)
+    # this fails
+    assert((tr_id0 == tr_id1 == tr_id2) and (tr_indx0 == tr_indx1 == tr_indx2))
 
-    # more checks here
     print tcc
     tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 

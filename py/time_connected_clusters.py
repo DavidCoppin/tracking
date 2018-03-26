@@ -2,10 +2,6 @@ from cluster import Cluster
 import numpy as np
 import netCDF4
 import copy
-from scipy import ndimage
-import cv2
-from skimage.morphology import watershed
-from skimage.feature import peak_local_max
     
 
 def reduce(cluster_list):
@@ -37,64 +33,9 @@ def reduce(cluster_list):
     return res
 
 
-def extractClusters(data, thresh_min, thresh_max):
-    """
-    Extract clusters from an image data
-    @param data
-    @param thresh_min
-    @param thresh_max
-    @return list of clusters
-    """
-
-    """
-    image = np.logical_and(data >= thresh_min, data <= thresh_max)
-    print image
-    # Now we want to separate the two objects in image
-    # Generate the markers as local maxima of the distance to the background
-    distance = ndimage.distance_transform_edt(image)
-    local_maxi = peak_local_max(distance, indices=False, footprint=np.ones((3, 3)),
-                            labels=image)
-    markers = ndimage.label(local_maxi)[0]
-    labels = watershed(-distance, markers, mask=image)
-    """
-
-
-    ma_data = np.ma.masked_where(data <= thresh_min, data).astype(np.uint8)
-        
-    # building threshold
-    tmp_data = ma_data.filled(fill_value=0)
-    tmp_data[np.where(tmp_data !=0)] = 255
-    bw_data = tmp_data.astype(np.uint8)
-        
-    # building markers and borders
-    ma_conv = np.ma.masked_where(data <= thresh_max, data)
-    tmp_conv = ma_conv.filled(fill_value=0)
-    tmp_conv[np.where(tmp_conv !=0)] = 255
-    bw_conv = tmp_conv.astype(np.uint8)
-    markers = ndimage.label(bw_conv, structure=np.ones((3, 3)))[0]
-    border = cv2.dilate(bw_data, None, iterations=5)
-    border -= cv2.erode(border, None)
-    markers[border == 255] = 255
-
-    # labels each feature
-    labels = watershed(-data, markers, mask=bw_data)
-
-    # load into clusters
-    res = []
-    for idVal in range(1, labels.max()):
-        iVals, jVals = np.where(labels == idVal)
-        numVals = len(iVals)
-        if numVals > 0:
-            cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
-            # store this cluster as a list with one element (so far). Each 
-            # element will have its own ID
-            res.append(Cluster(cells))
-
-    return res
-
-
 """
-Manages clusters across time in such a way that we one can easily extract all the clusters of a give Id and time index
+Manages clusters across time in such a way that we one can easily extract all the clusters 
+of a given Id and time index
 """
 
 class TimeConnectedClusters:
