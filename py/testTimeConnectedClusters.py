@@ -299,6 +299,33 @@ def testSeveralFuse():
     tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 
 
+def testProbMinFuse():
+    print '='*70
+    print 'testProbMinFuse'
+    print '-'*70
+    rect1 = {(7, 3), (8, 3), (7, 4)}
+    rect2 = {(8, 4), (7, 5), (8, 5)}
+    rect3 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
+    c1 = Cluster(rect1)
+    c2 = Cluster(rect2)
+    c3 = Cluster(rect3)
+    tcc = TimeConnectedClusters()
+    print 'time step {}: adding clusters with centres {} {}'.format(tcc.getNumberOfTimeSteps,
+                                                                         c1.getCentre(),
+                                                                         c2.getCentre())
+    tcc.addTime([c1, c2])
+    assert(tcc.getNumberOfTracks() == 2)
+    print tcc
+
+    #
+    # time_index = 1
+    print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSteps,
+                                                                         c3.getCentre())
+    tcc.addTime([c3])
+    print tcc
+    tcc.writeFile('prob_min_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
+
+
 def testSplitMulti():
     print '='*70
     print 'testSplitMulti'
@@ -354,5 +381,6 @@ if __name__ == '__main__':
     #testOnlySplit()
     #testSplittingInTwo()
     #testDigits()
-    testSplitMulti()
-    testSeveralFuse()
+    #testSplitMulti()
+    #testSeveralFuse()
+    testProbMinFuse()
