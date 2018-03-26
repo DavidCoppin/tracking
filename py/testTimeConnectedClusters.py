@@ -312,12 +312,25 @@ def testProbMinFuse():
     c1 = Cluster(rect1)
     c2 = Cluster(rect2)
     c3 = Cluster(rect3)
+    if c1.isCentreInsideOf(c3):
+        print 'c1 is inside c3'
+    if c2.isCentreInsideOf(c3):
+        print 'c2 is inside c3'
+    if c3.isCentreInsideOf(c1):
+        print 'c3 is inside c1'
+    if c3.isCentreInsideOf(c2):
+        print 'c3 is inside c2'
+
     tcc = TimeConnectedClusters()
     print 'time step {}: adding clusters with centres {} {}'.format(tcc.getNumberOfTimeSteps,
                                                                          c1.getCentre(),
                                                                          c2.getCentre())
     tcc.addTime([c1, c2])
     assert(tcc.getNumberOfTracks() == 2)
+    tr_id1, t_indx1 = tcc.findCluster(1)
+    tr_id2, t_indx2 = tcc.findCluster(2)
+    print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
+    print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
     print tcc
 
     #
@@ -325,6 +338,8 @@ def testProbMinFuse():
     print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSteps,
                                                                          c3.getCentre())
     tcc.addTime([c3])
+    print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
+    print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
     print tcc
     tcc.writeFile('prob_min_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 
