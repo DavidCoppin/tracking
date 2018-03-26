@@ -303,6 +303,9 @@ def testProbMinFuse():
     print '='*70
     print 'testProbMinFuse'
     print '-'*70
+    # Description: test fusing bug between colliding clusters
+    # Expected result: 2 tracks after t0, 1 tracks after t1 with
+    #       connectivity [{0: [0, 1], 1: [2]}] at t1
     rect1 = {(7, 3), (8, 3), (7, 4)}
     rect2 = {(8, 4), (7, 5), (8, 5)}
     rect3 = {(7, 3), (8, 3), (7, 4), (8, 4), (7, 5), (8, 5)}
