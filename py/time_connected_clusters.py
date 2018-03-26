@@ -76,7 +76,6 @@ class TimeConnectedClusters:
                     self.cluster_connect[track_id0].get(t_index, []) + cl_list
 
         # remove all the merged tracks
-        track_ids.sort()
         track_ids.reverse()
         for track_id in track_ids[:-1]:
             del self.cluster_connect[track_id]
