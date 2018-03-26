@@ -231,10 +231,14 @@ def testSeveralFuse():
     c4 = Cluster(rect4)
     c5 = Cluster(rect5)
     c6 = Cluster(rect6)
+
     # Description: test different fuses at different time steps
     # Expected result: 4 tracks after t0, 3 tracks after t1, 2 after t2 with
     #       connectivity [{0: [0, 2], 1: [5]}, {0: [1], 1: [4]}, {0: [3], 1: [6]}] at t1
     #       connectivity [{0: [0, 2, 1], 1: [5, 4], 2: [7]}, {0: [3], 1: [6], 2: [8]}] at t2
+
+    #
+    # time_index = 0
     tcc = TimeConnectedClusters()
     print 'time step {}: adding clusters with centres {} {} {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                          c1.getCentre(),
@@ -245,6 +249,8 @@ def testSeveralFuse():
     assert(tcc.getNumberOfTracks() == 4)
     print tcc
 
+    #
+    # time_index = 1
     print 'time step {}: adding clusters with centres {} {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                          c0.getCentre(),
                                                                          c3.getCentre(),
@@ -252,7 +258,20 @@ def testSeveralFuse():
     tcc.addTime([c0, c3, c6])
     assert(tcc.getNumberOfTracks() == 3)
     print tcc
+    tr_id5, t_indx5 = tcc.findCluster(5)
+    tr_id4, t_indx4 = tcc.findCluster(4)
+    tr_id6, t_indx6 = tcc.findCluster(6)
+    print 'cluster 5 is in track {} at time index {}'.format(tr_id5, t_indx5)
+    print 'cluster 4 is in track {} at time index {}'.format(tr_id4, t_indx4)
+    print 'cluster 6 is in track {} at time index {}'.format(tr_id6, t_indx6)
 
+    assert(t_indx5 == t_indx4 == t_indx6 == 1)
+    assert(tr_id5 != tr_id4)
+    assert(tr_id4 != tr_id6)
+    assert(tr_id5 != tr_id6)
+
+    #
+    # time_index = 2
     print 'time step {}: adding cluster with centres {} {}'.format(tcc.getNumberOfTimeSteps(),
                                                                      c4.getCentre(),
                                                                      c5.getCentre())
@@ -260,7 +279,6 @@ def testSeveralFuse():
     assert(tcc.getNumberOfTracks() == 2)
 
     # more checks here
-
     print tcc
     tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
 

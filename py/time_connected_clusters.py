@@ -303,7 +303,24 @@ class TimeConnectedClusters:
         nb_var[:] = data
 
         f.close()
-        
+
+    def findCluster(self, cluster_id):
+        """
+        Find the track number and time index of a cluster
+        @param cluster_id cluster Id
+        @return track_id, time_index
+        @note returns -1, -1 if the cluster id was not found
+        """
+        found_track_id = -1
+        found_time_index = -1
+        for track_id in range(self.getNumberOfTracks()):
+            for time_index, cluster_ids in self.cluster_connect[track_id].items():
+                if cluster_id in cluster_ids:
+                    found_track_id = track_id
+                    found_time_index = time_index
+        return found_track_id, found_time_index
+
+
 
     def getNumberOfTracks(self):
         """
