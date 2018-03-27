@@ -23,7 +23,7 @@ class Cluster:
         self.update()
     
 
-    def getNumCells(self):
+    def getNumberOfCells(self):
         """
         Get the number of cells
         @return number

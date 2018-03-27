@@ -232,7 +232,7 @@ class TimeConnectedClusters:
             for t_index in range(self.t_index):
                 clusters = self.getClusters(track_id, t_index)
                 for cl in clusters:
-                    n_cells = cl.getNumCells()
+                    n_cells = cl.getNumberOfCells()
                     tis = [t_index] * n_cells
                     jis = [c[1] - jMin for c in cl.cells]
                     iis = [c[0] - iMin for c in cl.cells]
