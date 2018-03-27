@@ -68,6 +68,16 @@ class Cluster:
         return numpy.sqrt(d.dot(d))
 
 
+    def __mul__(self, otherCluster):
+        """
+        Overload of * operator, returns a cluster that is the intersection of 
+        this and otherCluster
+        @param otherCluster
+        @return intersection of self with otherCluster
+        """
+        return Cluster(self.cells.intersection(otherCluster.cells))
+
+
     def __iadd__(self, otherCluster):
         """
         Overload of += operator, add othercluster cells to self
@@ -170,6 +180,13 @@ def testPlusEqual():
     c0 += c1
     print 'testPlusEqual after merge: ', c0
 
+def testTimes():
+    c0 = Cluster({(1,1), (2, 1), (2, 2)})
+    c1 = Cluster({(2, 2), (2, 3)})
+    c2 = c0 * c1
+    assert(c2.getNumberOfCells() == 1)
+    print 'testTimes intersection: ', c2
+
 
 if __name__ == '__main__':
     test1()
@@ -179,4 +196,5 @@ if __name__ == '__main__':
     testRectangleSlanted()
     testRandom()
     testPlusEqual()
+    testTimes()
 
