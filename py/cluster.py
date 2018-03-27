@@ -67,6 +67,7 @@ class Cluster:
         d = self.ellipse.getCentre() - otherCluster.ellipse.getCentre()
         return numpy.sqrt(d.dot(d))
 
+
     def __iadd__(self, otherCluster):
         """
         Overload of += operator, add othercluster cells to self

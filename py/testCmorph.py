@@ -4,55 +4,14 @@ import numpy
 import matplotlib
 import time
 from time_connected_clusters import TimeConnectedClusters
+from feature_extractor import FeatureExtractor
 from cluster import Cluster
-from scipy import ndimage
-from skimage.morphology import watershed
-import cv2
+#from scipy import ndimage
+#from skimage.morphology import watershed
+#import cv2
 import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
-
-def extractClusters(data, thresh_min, thresh_max):
-    """.
-    Extract clusters from an image data
-    @param data
-    @param thresh_min
-    @param thresh_max
-    @return list of clusters
-    """
-    # remove data below minimum threshold
-    ma_data = numpy.ma.masked_where(data <= thresh_min, data)
-    # building black and white image with lower threshold to create borders for watershed
-    tmp_data = ma_data.filled(fill_value=0)
-    tmp_data[numpy.where(tmp_data !=0)] = 255.
-    bw_data = tmp_data.astype(numpy.uint8)
-    border = cv2.dilate(bw_data, None, iterations=5)
-    border -= cv2.erode(border, None)
-
-    # remove data below minimum threshold
-    ma_conv = numpy.ma.masked_where(data <= thresh_max, data)
-    # building black and white image with high threshold to serve as markers for watershed..
-    tmp_conv = ma_conv.filled(fill_value=0)
-    tmp_conv[numpy.where(tmp_conv !=0)] = 255.
-    bw_conv = tmp_conv.astype(numpy.uint8)
-    markers = ndimage.label(bw_conv, structure=numpy.ones((3, 3)))[0]
-    # add border on image with high threshold to tell the watershed where it should fill in
-    markers[border == 255] = 255.
-    # labels each feature
-    labels = watershed(-data, markers, mask=bw_data)
-
-    # load into clusters
-    res = []
-    for idVal in range(1, labels.max()+1):
-        iVals, jVals = numpy.where(labels == idVal)
-        numVals = len(iVals)
-        if numVals > 0:
-            cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
-            # store this cluster as a list with one element (so far). Each.
-            # element will have its own ID
-            res.append(Cluster(cells))
-    return res
-
 
 def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     """
@@ -85,7 +44,7 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     for t in xrange(48) :
         print 'nb_day, t', nb_day, t
         data = f.variables["CMORPH"][t,lat_slice, lon_slice]
-        clusters = extractClusters(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
+        clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
         print clusters
         tcc.addTime(clusters)
 

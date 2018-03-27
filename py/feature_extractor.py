@@ -8,7 +8,7 @@ import cv2
 A Class that extracts the clusters from the original data using watershed algorithm from opencv
 """
 
-class ExtractClusters:
+class FeatureExtractor:
 
     def __init__(self, data, thresh_min, thresh_max):
         """
@@ -39,7 +39,7 @@ class ExtractClusters:
         # labels each feature
         self.labels = watershed(-data, markers, mask=bw_data)
     
-    def extractPoints(self):
+    def getClusters(self):
         # load into clusters
         res = []
         for idVal in range(1, self.labels.max()+1):
