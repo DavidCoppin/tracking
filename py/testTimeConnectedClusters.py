@@ -178,6 +178,31 @@ def extractClusters(data, thresh_min, thresh_max):
     return res
 
 
+def testOverlap():
+    print '='*70
+    print 'testOverlap'
+    print '-'*70
+    # Expected result: since c0 is inside c1, would expect/like that it is directly included
+    # in track with c1
+    rect0 = {(4, 3), (5, 3), (6, 3)}
+    rect1 = {(3, 3), (7, 3), (3, 4), (4, 4), (5, 4), (6, 4),
+             (7, 4), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5)}
+    c0, c1 = Cluster(rect0), Cluster(rect1)
+    if c0.isCentreInsideOf(c1):
+        print 'c0 is inside c1'
+    if c1.isCentreInsideOf(c0):
+        print 'c1 is inside c0'
+    # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
+    # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
+    tcc = TimeConnectedClusters()
+    tcc.addTime([c0, c1])
+    print tcc
+    tcc.addTime([c0])
+    print tcc
+    tcc.writeFile('overlap.nc', i_minmax=(0, 10), j_minmax=(0, 8))
+    assert(tcc.getNumberOfTracks() == 1)
+
+
 def testDigits():
     """
     Checking that we can create a time connected cluster from image
@@ -422,12 +447,13 @@ def testSplitMulti():
 
 
 if __name__ == '__main__':
-    testRectangle()
-    testIndRectangles()
-    testTwoMergingRectangles()
-    testOnlyFuse()
-    testOnlySplit()
-    testSplittingInTwo()
-    testSplitMulti()
-    testSeveralFuse()
-    testProbMinFuse()
+    #testRectangle()
+    #testIndRectangles()
+    #testTwoMergingRectangles()
+    #testOnlyFuse()
+    #testOnlySplit()
+    #testSplittingInTwo()
+    #testSplitMulti()
+    #testSeveralFuse()
+    #testProbMinFuse()
+    testOverlap()
