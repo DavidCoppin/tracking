@@ -27,7 +27,7 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     print 'dates', dates
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
-        filename=os.path.join('/home/dcop696/clusters/py/Data/CMORPH/Cmorph-'\
+        filename=os.path.join('Data/CMORPH/Cmorph-'\
                +str(date.year)+'_'+str(date.month).zfill(2)+'_'\
                +str(date.day).zfill(2)+'.nc.bz2')
         #Open the file
