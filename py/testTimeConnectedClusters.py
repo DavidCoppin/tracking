@@ -446,6 +446,42 @@ def testSplitMulti():
     assert(tcc.getNumberOfTracks() == 1)
 
 
+def testMovingClusters():
+    print '='*70
+    print 'testMovingClusters'
+    print '-'*70
+    # Expected result: after new ellipse fitted to min area, c1, c2 should be inside c0
+    # and c4, c5, c6 inside c3 ==> 2 tracks expected
+    rect0 = {(3, 2), (4, 2), (3, 3), (4, 3)}
+    rect1 = {(6, 2), (7, 2), (6, 3), (7, 3)}
+    rect2 = {(5, 4), (6, 4), (5, 5), (6, 5)}
+    rect3 = {(10, 10), (11, 10)}
+    rect4 = {(10, 13), (11, 13)}
+    rect5 = {(12, 12), (13, 12)}
+    rect6 = {(13, 10), (14, 10)}
+    c0, c1, c2 = Cluster(rect0), Cluster(rect1), Cluster(rect2)
+    c3, c4, c5, c6 = Cluster(rect3), Cluster(rect4), Cluster(rect5), Cluster(rect6)
+    if c1.isCentreInsideOf(c0):
+        print 'c1 is inside c0'
+    if c2.isCentreInsideOf(c0):
+        print 'c2 is inside c0'
+    if c4.isCentreInsideOf(c3):
+		print 'c4 is inside c3'
+    if c5.isCentreInsideOf(c3):
+        print 'c5 is inside c3'
+    if c6.isCentreInsideOf(c3):
+        print 'c6 is inside c3'
+    # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
+    # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
+    tcc = TimeConnectedClusters()
+    tcc.addTime([c0, c3])
+    print tcc
+    tcc.addTime([c1, c2, c4, c5, c6])
+    print tcc
+    tcc.writeFile('moving_clusters.nc', i_minmax=(0, 16), j_minmax=(0, 16))
+    assert(tcc.getNumberOfTracks() == 2)
+
+
 if __name__ == '__main__':
     #testRectangle()
     #testIndRectangles()
@@ -456,4 +492,5 @@ if __name__ == '__main__':
     #testSplitMulti()
     #testSeveralFuse()
     #testProbMinFuse()
-    testOverlap()
+    #testOverlap()
+    testMovingClusters()
