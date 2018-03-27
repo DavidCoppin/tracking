@@ -293,7 +293,7 @@ def testSeveralFuse():
     assert(tr_id5 == tr_id4 and t_indx5 == t_indx4 == 1)
     assert(tr_id6 != tr_id5 and t_indx6 == 1)
     # this fails
-    assert((tr_id0 == tr_id1 == tr_id2) and (tr_indx0 == tr_indx1 == tr_indx2))
+    assert((tr_id0 == tr_id1 == tr_id2) and (t_indx0 == t_indx1 == t_indx2))
 
     print tcc
     tcc.writeFile('several_fuse.nc', i_minmax=(0, 15), j_minmax=(0, 10))
@@ -422,13 +422,12 @@ def testSplitMulti():
 
 
 if __name__ == '__main__':
-    #testRectangle()
-    #testIndRectangles()
-    #testTwoMergingRectangles()
-    #testOnlyFuse()
-    #testOnlySplit()
-    #testSplittingInTwo()
-    #testDigits()
-    #testSplitMulti()
-    #testSeveralFuse()
+    testRectangle()
+    testIndRectangles()
+    testTwoMergingRectangles()
+    testOnlyFuse()
+    testOnlySplit()
+    testSplittingInTwo()
+    testSplitMulti()
+    testSeveralFuse()
     testProbMinFuse()
