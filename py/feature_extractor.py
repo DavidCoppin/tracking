@@ -50,9 +50,8 @@ class FeatureExtractor:
             iVals, jVals = numpy.where(self.labels == idVal)
             numVals = len(iVals)
             if numVals > 0:
-                cells = [(iVals[i], jVals[i]) for i in range(len(iVals))]
-                # store this cluster as a list with one element (so far). Each 
-                # element will have its own ID
+            	# store as a set
+                cells = {(iVals[i], jVals[i]) for i in range(len(iVals))}
                 res.append(Cluster(cells))
         return res
     
