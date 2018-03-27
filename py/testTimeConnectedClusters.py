@@ -192,8 +192,6 @@ def testOverlap():
         print 'c0 is inside c1'
     if c1.isCentreInsideOf(c0):
         print 'c1 is inside c0'
-    # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
-    # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
     tcc = TimeConnectedClusters()
     tcc.addTime([c0, c1])
     print tcc
