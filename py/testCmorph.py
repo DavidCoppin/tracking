@@ -41,16 +41,16 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
             f = nc(newfilename)
         except RuntimeError:
             f = nc(newfilename.replace('-','_'))
-    for t in xrange(48) :
-        print 'nb_day, t', nb_day, t
-        data = f.variables["CMORPH"][t, lat_slice, lon_slice]
-        clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5).getClusters()
-        print clusters
-        tcc.addTime(clusters)
+        for t in xrange(48) :
+            print 'nb_day, t', nb_day, t
+            data = f.variables["CMORPH"][t, lat_slice, lon_slice]
+            clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5).getClusters()
+#            print clusters
+            tcc.addTime(clusters)
 
     # write to file
-    lat = f.variables['lat'][:]
-    lon = f.variables['lon'][:]
+    lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
+    lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     f.close()
     tcc.writeFile('cmorph.nc', i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
 
