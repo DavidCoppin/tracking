@@ -27,9 +27,9 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     print 'dates', dates
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
-        filename=os.path.join('Data/CMORPH/Cmorph-'\
-               +str(date.year)+'_'+str(date.month).zfill(2)+'_'\
-               +str(date.day).zfill(2)+'.nc.bz2')
+        filename=os.path.join('Data/CMORPH/Cmorph-' \
+               + str(date.year) + '_' + str(date.month).zfill(2) + '_'\
+               + str(date.day).zfill(2) + '.nc.bz2')
         #Open the file
         filename = filename.replace('--','-').replace('__','_')
         print 'filename', filename
@@ -44,7 +44,7 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     for t in xrange(48) :
         print 'nb_day, t', nb_day, t
         data = f.variables["CMORPH"][t,lat_slice, lon_slice]
-        clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
+        clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5).getClusters()
         print clusters
         tcc.addTime(clusters)
 
