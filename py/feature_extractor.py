@@ -1,3 +1,16 @@
+'''
+Created on March 28, 2018
+
+@author: David Coppin
+@institution: Department of Physics, University of Auckland
+
+@description: A Class that extracts the clusters from the original data 
+              using watershed algorithm from opencv. 
+              Uses two different thresholds, the highest to estimate the convective cores,
+              the lowest to keep the enveloppe of lower intensity around these cores.
+              If the lower threshold is zero, we keep all the data
+'''
+
 import numpy
 from scipy import ndimage
 from skimage.morphology import watershed

@@ -2,7 +2,7 @@
 Created on March 28, 2018
 
 @author: David Coppin
-@institution: Dpeartment of Physics, University of Auckland
+@institution: Department of Physics, University of Auckland
 
 @description: A Class that creates the different coastal mask used in the algorithm
 '''
