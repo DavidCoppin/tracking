@@ -4,13 +4,18 @@ from ellipse import Ellipse
 
 class Cluster:
 
-    def __init__(self, cells={}):
+    def __init__(self, cells={}, min_ellipse_area=1):
         """
         Constructor 
         @param cells set of (i,j) tuples
+        @param min_ellipse_area ellipse axes will be scaled to match 
+                                min_ellipse_area or larger
         """
         # set of i,j cells 
         self.cells = cells
+
+        # want the ellipse axes to scale to at least this area
+        self.min_ellipse_area = min_ellipse_area
 
         # ellipse representing the "average" distribution
         # of cells
@@ -35,7 +40,7 @@ class Cluster:
 
         if len(self.cells) > 0:
 
-            self.ellipse = Ellipse(self.cells)
+            self.ellipse = Ellipse(self.cells, self.min_ellipse_area)
 
             for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])

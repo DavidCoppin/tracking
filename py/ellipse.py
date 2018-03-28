@@ -7,7 +7,7 @@ A Class that computes the ellipse of a cloud of points
 
 class Ellipse:
 
-    def __init__(self, cells):
+    def __init__(self, cells, min_ellipse_area=1):
         """
         Constructor 
         @param cells set of (i,j) tuples, must have at least one cell
@@ -53,8 +53,8 @@ class Ellipse:
         self.a = math.sqrt(eigenvals[0])
         self.b = math.sqrt(eigenvals[1])
 
-        # increase the ellipse's size to match the cluster area
-        # and guard against zero a or b
+        # increase the ellipse's size to match the cluster's area
+        area = max(min_ellipse_area, area)
         const = math.sqrt(area /(math.pi * max(0.5, self.a) * max(0.5, self.b)))
         self.a *= const
         self.b *= const
@@ -216,11 +216,18 @@ def testRandom():
     ell = Ellipse({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
     print(ell)
 
+
+def testMinEllipseArea():
+    cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
+    ell = Ellipse(cells, min_ellipse_area=144)
+    ell.show()
+
 if __name__ == '__main__':
     test0()
     test1()
     testRectangle()
     testRectangleSlanted()
     testRandom()
+    testMinEllipseArea()
 
 

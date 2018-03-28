@@ -13,7 +13,7 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
+def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_area):
     """
     Checking that we can create a time connected cluster from image
     """
@@ -21,7 +21,7 @@ def testCmorph(fyear,lyear,minmax_lons, minmax_lats):
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
-    tcc = TimeConnectedClusters()
+    tcc = TimeConnectedClusters(min_ellipse_area=min_ellipse_area)
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
     print 'dates', dates
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-d2', dest='date2', default='2010-01-13', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1450:1700', help='Min and max longitude indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='300:550', help='Min and max latitude indices LATMIN,LATMAX')
+    parser.add_argument('-min_area', dest='min_area', default=30, help='Min ellipse area in pixels')
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -80,5 +81,5 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(fyear,lyear,minmax_lons, minmax_lats)
+    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_area)
 

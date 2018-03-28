@@ -490,5 +490,5 @@ if __name__ == '__main__':
     #testSplitMulti()
     #testSeveralFuse()
     #testProbMinFuse()
-    #testOverlap()
+    testOverlap()
     testMovingClusters()

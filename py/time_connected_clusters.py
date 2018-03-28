@@ -43,9 +43,11 @@ class TimeConnectedClusters:
     # used to initialize min/max index values
     LARGE_INT = 999999999
 
-    def __init__(self):
+    def __init__(self, min_ellipse_area=1):
         """
-        No argument constructor
+        Constructor
+        @param min_ellipse_area minimum ellipse area of a cluster. use this to help the algorithm
+        keep track of clsuters that move beyond their ellipse boundary in one time step.
         """
         # flat list of clusters
         self.clusters = []
