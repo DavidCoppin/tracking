@@ -217,10 +217,16 @@ def testRandom():
     print(ell)
 
 
-def testMinEllipseArea():
+def testMinEllipseArea(area=1):
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-    ell = Ellipse(cells, min_ellipse_area=144)
+    ell = Ellipse(cells, min_ellipse_area=area)
     ell.show()
+
+def testMinEllipseAreaBig():
+    cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
+    ell = Ellipse(cells, min_ellipse_area=14400)
+    ell.show()
+
 
 if __name__ == '__main__':
     test0()
@@ -228,6 +234,8 @@ if __name__ == '__main__':
     testRectangle()
     testRectangleSlanted()
     testRandom()
-    testMinEllipseArea()
+    testMinEllipseArea(area=1)
+    testMinEllipseArea(area=144)
+    testMinEllipseArea(area=1000)
 
 
