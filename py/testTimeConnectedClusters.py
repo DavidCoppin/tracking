@@ -471,7 +471,7 @@ def testMovingClusters():
         print 'c6 is inside c3'
     # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
     # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
-    tcc = TimeConnectedClusters()
+    tcc = TimeConnectedClusters(min_ellipse_area=50)
     tcc.addTime([c0, c3])
     print tcc
     tcc.addTime([c1, c2, c4, c5, c6])
@@ -490,6 +490,6 @@ if __name__ == '__main__':
     #testSplitMulti()
     #testSeveralFuse()
     #testProbMinFuse()
-    testOverlap()
+    #testOverlap()
     testMovingClusters()
 

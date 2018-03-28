@@ -7,7 +7,7 @@ A Class that computes the ellipse of a cloud of points
 
 class Ellipse:
 
-    def __init__(self, cells, min_ellipse_area=1):
+    def __init__(self, cells, min_ellipse_area=30):
         """
         Constructor 
         @param cells set of (i,j) tuples, must have at least one cell
@@ -219,7 +219,7 @@ def testRandom():
 
 def testMinEllipseArea():
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-    ell = Ellipse(cells, min_ellipse_area=144)
+    ell = Ellipse(cells, min_ellipse_area=50)
     ell.show()
 
 if __name__ == '__main__':
