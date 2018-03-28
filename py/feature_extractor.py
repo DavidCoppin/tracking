@@ -23,16 +23,16 @@ A Class that extracts the clusters from the original data using watershed algori
 
 class FeatureExtractor:
 
-    def __init__(self, data, thresh_min, thresh_max):
+    def __init__(self, data, thresh_low, thresh_high):
         """
         Extract clusters from an image data
         @param data
-        @param thresh_min
-        @param thresh_max
+        @param thresh_low
+        @param thresh_high
         @return list of clusters
         """
 	    # remove data below minimum threshold
-        ma_data = numpy.ma.masked_where(data <= thresh_min, data)
+        ma_data = numpy.ma.masked_where(data <= thresh_low, data)
         # build black and white image with lower threshold to create borders for watershed
         tmp_data = ma_data.filled(fill_value=0)
         tmp_data[numpy.where(tmp_data !=0)] = 255
@@ -41,7 +41,7 @@ class FeatureExtractor:
         border -= cv2.erode(border, None)
     
         # remove data below minimum threshold
-        ma_conv = numpy.ma.masked_where(data <= thresh_max, data)
+        ma_conv = numpy.ma.masked_where(data <= thresh_high, data)
 	    # build black and white image with high threshold to serve as markers for watershed	
         tmp_conv = ma_conv.filled(fill_value=0)
         tmp_conv[numpy.where(tmp_conv !=0)] = 255
