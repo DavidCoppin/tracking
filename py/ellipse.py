@@ -50,8 +50,8 @@ class Ellipse:
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
         # average radii from the centre
-        self.a = math.sqrt(eigenvals[0])
-        self.b = math.sqrt(eigenvals[1])
+        self.a = max(1, math.sqrt(eigenvals[0]))
+        self.b = max(1, math.sqrt(eigenvals[1]))
 
         # increase the ellipse's size to match the cluster's area
         area = max(min_ellipse_area, area)

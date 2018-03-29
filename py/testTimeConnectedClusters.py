@@ -206,7 +206,7 @@ def testDigits():
     Checking that we can create a time connected cluster from image
     """
     lats = numpy.arange(0, 20)
-    lons = numpy.arange(0, 50)
+    lons = numpy.arange(0, min_area)
     data = numpy.zeros((len(lats), len(lons)), numpy.float64)
     # create a cluster
     data[10:10+5, 10] = 5
@@ -457,14 +457,15 @@ def testMovingClusters():
     rect4 = {(10, 13), (11, 13)}
     rect5 = {(12, 12), (13, 12)}
     rect6 = {(13, 10), (14, 10)}
-    c0, c1, c2 = Cluster(rect0, min_ellipse_area=50), Cluster(rect1, min_ellipse_area=50), Cluster(rect2, min_ellipse_area=50)
-    c3, c4, c5, c6 = Cluster(rect3, min_ellipse_area=50), Cluster(rect4, min_ellipse_area=50), Cluster(rect5, min_ellipse_area=50), Cluster(rect6, min_ellipse_area=50)
+    min_area =  30 # 10000 # 50
+    c0, c1, c2 = Cluster(rect0, min_ellipse_area=min_area), Cluster(rect1, min_ellipse_area=min_area), Cluster(rect2, min_ellipse_area=min_area)
+    c3, c4, c5, c6 = Cluster(rect3, min_ellipse_area=min_area), Cluster(rect4, min_ellipse_area=min_area), Cluster(rect5, min_ellipse_area=min_area), Cluster(rect6, min_ellipse_area=min_area)
     if c1.isCentreInsideOf(c0):
         print 'c1 is inside c0'
     if c2.isCentreInsideOf(c0):
         print 'c2 is inside c0'
     if c4.isCentreInsideOf(c3):
-		print 'c4 is inside c3'
+        print 'c4 is inside c3'
     if c5.isCentreInsideOf(c3):
         print 'c5 is inside c3'
     if c6.isCentreInsideOf(c3):

@@ -87,7 +87,7 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         """
         # merge overlapping clusters
-        new_clusters = reduce(new_clusters)
+        #new_clusters = reduce(new_clusters)
 
         index = len(self.clusters)
 
