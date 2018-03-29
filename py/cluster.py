@@ -40,7 +40,7 @@ class Cluster:
 
         if len(self.cells) > 0:
 
-            self.ellipse = Ellipse(self.cells, self.min_ellipse_area)
+            self.ellipse = Ellipse(self.cells, min_ellipse_area=self.min_ellipse_area)
 
             for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
@@ -148,35 +148,29 @@ class Cluster:
 
 def test1():
     cluster = Cluster({(-1, -2)})
-    cluster.update()
     print('test1 {}'.format(cluster))
     #cluster.writeFile('test1.nc')
 
 def testHorizLine():
     cluster = Cluster({(-1, -2), (0, -2), (1, -2), (2, -2)})
-    cluster.update()
     print('testHorizLine {}'.format(cluster))
 
 def testDipole():
     cluster = Cluster({(-2, 0), (2, 0)})
-    cluster.update()
     print('testDipole {}'.format(cluster))
 
 def testRectangle():
     cluster = Cluster({(i, 0) for i in range(3)}.union({(i, 1) for i in range(3)}))
-    cluster.update()
     print('testRectangle {}'.format(cluster))
 
 def testRectangleSlanted():
     cluster = Cluster({(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)}))
-    cluster.update()
     print('testRectangleSlanted {}'.format(cluster))
 
 def testRandom():
     import random
     random.seed(1234)
     cluster = Cluster({(random.randint(0, 200), random.randint(0, 100)) for i in range(500)})
-    cluster.update()
     print('testRandom {}'.format(cluster))
 
 def testPlusEqual():

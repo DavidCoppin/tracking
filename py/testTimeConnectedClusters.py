@@ -457,8 +457,8 @@ def testMovingClusters():
     rect4 = {(10, 13), (11, 13)}
     rect5 = {(12, 12), (13, 12)}
     rect6 = {(13, 10), (14, 10)}
-    c0, c1, c2 = Cluster(rect0), Cluster(rect1), Cluster(rect2)
-    c3, c4, c5, c6 = Cluster(rect3), Cluster(rect4), Cluster(rect5), Cluster(rect6)
+    c0, c1, c2 = Cluster(rect0, min_ellipse_area=50), Cluster(rect1, min_ellipse_area=50), Cluster(rect2, min_ellipse_area=50)
+    c3, c4, c5, c6 = Cluster(rect3, min_ellipse_area=50), Cluster(rect4, min_ellipse_area=50), Cluster(rect5, min_ellipse_area=50), Cluster(rect6, min_ellipse_area=50)
     if c1.isCentreInsideOf(c0):
         print 'c1 is inside c0'
     if c2.isCentreInsideOf(c0):
@@ -471,7 +471,7 @@ def testMovingClusters():
         print 'c6 is inside c3'
     # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
     # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
-    tcc = TimeConnectedClusters(min_ellipse_area=50)
+    tcc = TimeConnectedClusters()
     tcc.addTime([c0, c3])
     print tcc
     tcc.addTime([c1, c2, c4, c5, c6])

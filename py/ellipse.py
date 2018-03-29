@@ -219,12 +219,9 @@ def testRandom():
 
 def testMinEllipseArea(area=1):
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-<<<<<<< HEAD
     ell = Ellipse(cells, min_ellipse_area=area)
-=======
-    ell = Ellipse(cells, min_ellipse_area=50)
->>>>>>> 73dd82712a455045f7d42b135e4c91a2afd4830d
     ell.show()
+    
 
 def testMinEllipseAreaBig():
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
