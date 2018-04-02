@@ -457,9 +457,9 @@ def testMovingClusters():
     rect4 = {(10, 13), (11, 13)}
     rect5 = {(12, 12), (13, 12)}
     rect6 = {(13, 10), (14, 10)}
-    min_area =  30 # 10000 # 50
-    c0, c1, c2 = Cluster(rect0, min_ellipse_area=min_area), Cluster(rect1, min_ellipse_area=min_area), Cluster(rect2, min_ellipse_area=min_area)
-    c3, c4, c5, c6 = Cluster(rect3, min_ellipse_area=min_area), Cluster(rect4, min_ellipse_area=min_area), Cluster(rect5, min_ellipse_area=min_area), Cluster(rect6, min_ellipse_area=min_area)
+    min_axis = 6 # 10000 # 50
+    c0, c1, c2 = Cluster(rect0, min_ellipse_axis=min_axis), Cluster(rect1, min_ellipse_axis=min_axis), Cluster(rect2, min_ellipse_axis=min_axis)
+    c3, c4, c5, c6 = Cluster(rect3, min_ellipse_axis=min_axis), Cluster(rect4, min_ellipse_axis=min_axis), Cluster(rect5, min_ellipse_axis=min_axis), Cluster(rect6, min_ellipse_axis=min_axis)
     if c1.isCentreInsideOf(c0):
         print 'c1 is inside c0'
     if c2.isCentreInsideOf(c0):

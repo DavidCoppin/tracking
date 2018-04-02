@@ -13,7 +13,7 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_area):
+def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis):
     """
     Checking that we can create a time connected cluster from image
     """
@@ -21,7 +21,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_area):
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
-    tcc = TimeConnectedClusters(min_ellipse_area=min_ellipse_area)
+    tcc = TimeConnectedClusters()
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
     print 'dates', dates
@@ -44,7 +44,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_area):
         for t in xrange(48) :
             print 'nb_day, t', nb_day, t
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
-            clusters = FeatureExtractor(numpy.flipud(data), thresh_min=0., thresh_max=2.5).getClusters()
+            clusters = FeatureExtractor(numpy.flipud(data), thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
 #            print clusters
             tcc.addTime(clusters)
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-d2', dest='date2', default='2010-01-13', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1450:1700', help='Min and max longitude indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='300:550', help='Min and max latitude indices LATMIN,LATMAX')
-    parser.add_argument('-min_area', dest='min_area', default=30, help='Min ellipse area in pixels')
+    parser.add_argument('-min_axis', dest='min_axis', default=6, help='Min ellipse axis in pixels')
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -81,5 +81,5 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_area)
+    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_axis)
 

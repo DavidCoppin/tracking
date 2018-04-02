@@ -53,9 +53,10 @@ class FeatureExtractor:
         self.labels = watershed(-data, markers, mask=bw_data)
     
 
-    def getClusters(self):
+    def getClusters(self, min_ellipse_axis=1):
         """
         Get the features as clusters
+        @param min_ellipse_cluster min ellipse axis size
         @return list of clusters, each cluster is a feature
         """
         res = []
@@ -65,7 +66,7 @@ class FeatureExtractor:
             if numVals > 0:
             	# store as a set
                 cells = {(iVals[i], jVals[i]) for i in range(len(iVals))}
-                res.append(Cluster(cells))
+                res.append(Cluster(cells, min_ellipse_axis))
         return res
     
 

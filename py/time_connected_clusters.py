@@ -123,7 +123,7 @@ class TimeConnectedClusters:
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
                     # is the centre of new_cl inside the ellipse of old_cl?
-                    if new_cl.isCentreInsideOf(old_cl):
+                    if new_cl.isCentreInsideOfExt(old_cl):
                         connected_clusters.append(old_cl)
                         connected_track_ids.append(track_id)
 
@@ -154,7 +154,7 @@ class TimeConnectedClusters:
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
 
                     # is the centre of old_cl inside the ellipse of new_cl?
-                    if old_cl.isCentreInsideOf(new_cl):
+                    if old_cl.isCentreInsideOfExt(new_cl):
                         track_ids_to_fuse.append(track_id)
 
             if track_ids_to_fuse:

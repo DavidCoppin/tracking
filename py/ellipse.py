@@ -7,10 +7,11 @@ A Class that computes the ellipse of a cloud of points
 
 class Ellipse:
 
-    def __init__(self, cells, min_ellipse_area=30):
+    def __init__(self, cells, min_ellipse_axis=10):
         """
         Constructor 
         @param cells set of (i,j) tuples, must have at least one cell
+        @param min_ellipse_axis min axis length 
         """
         n = len(cells)
         area = float(n)
@@ -33,9 +34,6 @@ class Ellipse:
         jCentre = numpy.sum([c[1] for c in cells]) / area
         self.centre = numpy.array([iCentre, jCentre])
 
-        # compute the total area
-        area = numpy.sum([1 for ij in cells])
-
         # compute inertia tensor (symmetric)
         for i in range(2):
             ci = self.centre[i]
@@ -50,14 +48,20 @@ class Ellipse:
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
         # average radii from the centre
-        self.a = max(1, math.sqrt(eigenvals[0]))
-        self.b = max(1, math.sqrt(eigenvals[1]))
+        self.a = max(0.5, math.sqrt(eigenvals[0]))
+        self.b = max(0.5, math.sqrt(eigenvals[1]))
 
-        # increase the ellipse's size to match the cluster's area
-        area = max(min_ellipse_area, area)
-        const = math.sqrt(area /(math.pi * max(0.5, self.a) * max(0.5, self.b)))
+        # compute the total area
+        area = len(cells)
+
+	# extend the axis to match the cluster's area
+        const = math.sqrt(area /(math.pi * self.a * self.b))
         self.a *= const
         self.b *= const
+
+        # add halo to the axes if need be
+        self.aExt = max(min_ellipse_axis, self.a)
+        self.bExt = max(min_ellipse_axis, self.b)
 
 
     def getPolyline(self, numSegments=32):
@@ -71,6 +75,25 @@ class Ellipse:
             th = i * dt
             x = self.a * math.cos(th)
             y = self.b * math.sin(th)
+            # rotate back to i,j coordinates
+            ij = self.axes2ijTransf.dot([x, y])
+            ij += self.centre
+            iPts.append(ij[0])
+            jPts.append(ij[1])
+        return iPts, jPts
+
+
+    def getPolylineExt(self, numSegments=32):
+        """
+        Return the extended ellipse as a segmented line
+        @return iPts, jPts arrays
+        """
+        iPts, jPts = [], []
+        dt = 2 * math.pi / float(numSegments)
+        for i in range(numSegments + 1):
+            th = i * dt
+            x = self.aExt * math.cos(th)
+            y = self.bExt * math.sin(th)
             # rotate back to i,j coordinates
             ij = self.axes2ijTransf.dot([x, y])
             ij += self.centre
@@ -98,7 +121,7 @@ class Ellipse:
 
     def isPointInside(self, point):
         """
-        Check if a point is inside an ellipse
+        Check if point is inside ellipse
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
@@ -112,6 +135,25 @@ class Ellipse:
             return True
 
         return False
+
+
+    def isPointInsideExt(self, point):
+        """
+        Check if point is inside extended ellipse
+        @param point point in j, j index space
+        @return True if inside, False if outside or on the boundary
+        """
+  
+        # rotate the coordinates to align them to the principal axes
+        ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
+        eps = 1.e-12
+
+        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
+            # inside
+            return True
+
+        return False
+
 
 
     def show(self, points=[], cells={}, show=True):
@@ -137,6 +179,8 @@ class Ellipse:
         # plot the ellipse
         iPts, jPts = self.getPolyline()
         pylab.plot(iPts, jPts, 'r-')
+        iPts, jPts = self.getPolylineExt()
+        pylab.plot(iPts, jPts, 'b--')
 
         # add points (stars if inside, crosses if outside)
         pointsInside = []
@@ -217,15 +261,15 @@ def testRandom():
     print(ell)
 
 
-def testMinEllipseArea(area=1):
+def testMinEllipseAxis(axis=1):
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-    ell = Ellipse(cells, min_ellipse_area=area)
+    ell = Ellipse(cells, min_ellipse_axis=axis)
     ell.show()
     
 
 def testMinEllipseAreaBig():
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
-    ell = Ellipse(cells, min_ellipse_area=14400)
+    ell = Ellipse(cells, min_ellipse_axis=120)
     ell.show()
 
 
@@ -235,8 +279,8 @@ if __name__ == '__main__':
     testRectangle()
     testRectangleSlanted()
     testRandom()
-    testMinEllipseArea(area=1)
-    testMinEllipseArea(area=144)
-    testMinEllipseArea(area=1000)
+    testMinEllipseAxis(axis=1)
+    testMinEllipseAxis(axis=12)
+    testMinEllipseAxis(axis=300)
 
 

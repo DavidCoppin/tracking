@@ -4,18 +4,17 @@ from ellipse import Ellipse
 
 class Cluster:
 
-    def __init__(self, cells={}, min_ellipse_area=1):
+    def __init__(self, cells={}, min_ellipse_axis=1):
         """
         Constructor 
         @param cells set of (i,j) tuples
-        @param min_ellipse_area ellipse axes will be scaled to match 
-                                min_ellipse_area or larger
+        @param min_ellipse_axis min axis length used in iscentreInsideOfExt
         """
         # set of i,j cells 
         self.cells = cells
 
         # want the ellipse axes to scale to at least this area
-        self.min_ellipse_area = min_ellipse_area
+        self.min_ellipse_axis = min_ellipse_axis
 
         # ellipse representing the "average" distribution
         # of cells
@@ -40,7 +39,7 @@ class Cluster:
 
         if len(self.cells) > 0:
 
-            self.ellipse = Ellipse(self.cells, min_ellipse_area=self.min_ellipse_area)
+            self.ellipse = Ellipse(self.cells, min_ellipse_axis=self.min_ellipse_axis)
 
             for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
@@ -53,6 +52,14 @@ class Cluster:
         Return True if this ellipse' centre is inside the other cluster's ellipse
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
+
+
+    def isCentreInsideOfExt(self, otherCluster):
+        """
+        Return True if this ellipse' centre is inside the other cluster's extended ellipse
+        @note the extended ellipse is the ellipse with minimum axes lengths
+        """
+        return otherCluster.ellipse.isPointInsideExt(self.ellipse.getCentre())
 
 
     def getCentre(self):
