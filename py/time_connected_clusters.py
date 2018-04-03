@@ -291,7 +291,7 @@ class TimeConnectedClusters:
 
         for i in range(len(t_inds)):
             ti = t_inds[i]
-            x = float(i)/float(len(t_inds) - 1)
+            x = float(i)/float(len(t_inds))
             color = rgb(x)
 
             # get the ellipses

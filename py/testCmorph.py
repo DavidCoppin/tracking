@@ -13,7 +13,7 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis):
+def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, save=False):
     """
     Checking that we can create a time connected cluster from image
     """
@@ -53,11 +53,14 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis):
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     f.close()
     tcc.writeFile('cmorph.nc', i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    if save:
+        tcc.save('cmorph.pckl')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tracking.')
     parser.add_argument('-w', action='store_true', help='Print copyright')
+    parser.add_argument('-s', dest='save', action='store_true', help='Save time connected clusters object for debugging')
     parser.add_argument('-d1', dest='date1', default='2010-01-12', help='Start date YYYY-MM-DD')
     parser.add_argument('-d2', dest='date2', default='2010-01-13', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1450:1700', help='Min and max longitude indices LONMIN,LONMAX')
@@ -81,5 +84,5 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_axis)
+    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_axis, args.save)
 
