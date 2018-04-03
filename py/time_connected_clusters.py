@@ -64,20 +64,27 @@ class TimeConnectedClusters:
         will be folded into the first one
         @param track_ids list of track Ids
         """
-        if not track_ids:
+
+        # remove duplicates
+        trs = set(track_ids)
+
+        if len(trs) <= 1:
             # nothing to do
             return
 
-        track_id0 = track_ids[0]
+        tr_ids = list(trs)
+        tr_ids.sort()
+        track_id0 = tr_ids[0]
+        cl_conn0 = self.cluster_connect[track_id0]
 
-        for track_id in track_ids[1:]:
+        for track_id in tr_ids[1:]:
             for t_index, cl_list in self.cluster_connect[track_id].items():
-                self.cluster_connect[track_id0][t_index] = \
-                    self.cluster_connect[track_id0].get(t_index, []) + cl_list
+                cl_conn0[t_index] = cl_conn0.get(t_index, []) + cl_list
 
         # remove all the merged tracks
-        track_ids.reverse()
-        for track_id in track_ids[:-1]:
+        n = len(tr_ids)
+        for i in range(n - 1, 0, -1):
+            track_id = tr_ids[i]
             del self.cluster_connect[track_id]
 
 
