@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-d2', dest='date2', default='2010-01-13', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1450:1700', help='Min and max longitude indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='300:550', help='Min and max latitude indices LATMIN,LATMAX')
-    parser.add_argument('-min_axis', dest='min_axis', default=6, help='Min ellipse axis in pixels')
+    parser.add_argument('-min_axis', dest='min_axis', type=float, default=6, help='Min ellipse axis in pixels')
     args = parser.parse_args()
 
     # get the lat-lon box
