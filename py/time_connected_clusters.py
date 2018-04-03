@@ -2,6 +2,7 @@ from cluster import Cluster
 import numpy as np
 import netCDF4
 import copy
+import math
     
 
 def reduce(cluster_list):
@@ -266,6 +267,47 @@ class TimeConnectedClusters:
                     found_time_index = time_index
         return found_track_id, found_time_index
 
+
+    def showEllipses(self, track_id, time_inds=None):
+        """
+        Show all the cluster ellipses of track track_id at time time_index
+        @param track_id track ID
+        @param time_inds time index list, use None to specify all
+        """
+        from matplotlib import pylab
+
+        # colour map
+        def rgb(x):
+            r = max(0., math.sin(math.pi*(x - 0.5)))
+            g = max(0., math.cos(math.pi*x))
+            b = math.sin(math.pi*x)
+            return r, g, b
+
+        track = self.cluster_connect[track_id]
+        t_inds = track.keys()
+        if time_inds:
+            t_inds = time_inds
+
+        for i in range(len(t_inds)):
+            ti = t_inds[i]
+            x = float(i)/float(len(t_inds) - 1)
+            color = rgb(x)
+
+            # get the ellipses
+            ellipses = [self.clusters[j].ellipse \
+                            for j in track.get(ti, [])]
+
+            for j in range(len(ellipses)):
+
+                el = ellipses[j]
+                iPts, jPts = el.getPolyline()
+                iPtsExt, jPtsExt = el.getPolylineExt()
+                pylab.plot(iPts, jPts, '-', c=color)
+                pylab.plot(iPtsExt, jPtsExt, '--', c=color)
+                xc, yc = el.getCentre()
+                pylab.plot(xc, yc, '+', c=color)
+
+        pylab.show()
 
 
     def getNumberOfTracks(self):

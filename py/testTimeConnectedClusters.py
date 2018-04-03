@@ -479,6 +479,7 @@ def testMovingClusters():
     print tcc
     tcc.writeFile('moving_clusters.nc', i_minmax=(0, 16), j_minmax=(0, 16))
     assert(tcc.getNumberOfTracks() == 2)
+    tcc.showEllipses(0)
 
 
 if __name__ == '__main__':
