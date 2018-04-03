@@ -3,6 +3,7 @@ import numpy as np
 import netCDF4
 import copy
 import math
+import pickle
     
 
 def reduce(cluster_list):
@@ -303,11 +304,20 @@ class TimeConnectedClusters:
                 iPts, jPts = el.getPolyline()
                 iPtsExt, jPtsExt = el.getPolylineExt()
                 pylab.plot(iPts, jPts, '-', c=color)
-                pylab.plot(iPtsExt, jPtsExt, '--', c=color)
+                pylab.plot(iPtsExt, jPtsExt, '.', c=color)
                 xc, yc = el.getCentre()
                 pylab.plot(xc, yc, '+', c=color)
 
         pylab.show()
+
+
+    def save(self, filename="timeConnectedClusters.pckl"):
+        """
+        Save object to file 
+        @param filename file name
+        """
+        f = open(filename, 'w')
+        pickle.dump(self, f)
 
 
     def getNumberOfTracks(self):

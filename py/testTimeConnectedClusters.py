@@ -3,6 +3,7 @@ import matplotlib
 import time
 from time_connected_clusters import TimeConnectedClusters
 from cluster import Cluster
+import pickle
 
 
 """
@@ -479,7 +480,14 @@ def testMovingClusters():
     print tcc
     tcc.writeFile('moving_clusters.nc', i_minmax=(0, 16), j_minmax=(0, 16))
     assert(tcc.getNumberOfTracks() == 2)
-    tcc.showEllipses(0)
+
+    # test save/load 
+    tcc.save('testMovingClusters.pckl')
+    f = open('testMovingClusters.pckl')
+    tcc2 = pickle.load(f)
+    print 'number of tracks: ', tcc2.getNumberOfTracks()
+    print tcc2
+    tcc2.showEllipses(0)
 
 
 if __name__ == '__main__':
