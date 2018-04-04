@@ -96,7 +96,7 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         """
         # merge overlapping clusters
-        #new_clusters = reduce(new_clusters)
+        ###new_clusters = reduce(new_clusters)
 
         index = len(self.clusters)
 
@@ -269,7 +269,7 @@ class TimeConnectedClusters:
         return found_track_id, found_time_index
 
 
-    def showEllipses(self, track_id, time_inds=None):
+    def showEllipses(self, track_id, time_inds=[]):
         """
         Show all the cluster ellipses of track track_id at time time_index
         @param track_id track ID
@@ -298,6 +298,9 @@ class TimeConnectedClusters:
             ellipses = [self.clusters[j].ellipse \
                             for j in track.get(ti, [])]
 
+            if len(ellipses) == 0:
+                print 'WARNING: no cluster at time index '.format(ti)
+
             for j in range(len(ellipses)):
 
                 el = ellipses[j]
@@ -308,6 +311,10 @@ class TimeConnectedClusters:
                 xc, yc = el.getCentre()
                 pylab.plot(xc, yc, '+', c=color)
 
+        pylab.title('Track {} (netcdf {}) time indices {} -> {}'.format(track_id, 
+                                                            track_id + 1,
+                                                            time_inds[0], 
+                                                            time_inds[-1]))
         pylab.show()
 
 
