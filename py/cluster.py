@@ -62,6 +62,16 @@ class Cluster:
         return otherCluster.ellipse.isPointInsideExt(self.ellipse.getCentre())
 
 
+    def isEllipseInsideOf(self, otherCluster, frac):
+        """
+        Return True if the fraction of this ellipse inside another ellipse is superior
+        to frac
+        """
+        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
+        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
+        return len(self.cells.intersection(otherCluster.cells)) >= frac * min(len(self.cells), len(otherCluster.cells))
+
+
     def getCentre(self):
         """
         Get the centre 
@@ -193,14 +203,31 @@ def testTimes():
     assert(c2.getNumberOfCells() == 1)
     print 'testTimes intersection: ', c2
 
+def testInsideEllipse():
+    rect0 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),
+             (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4),
+             (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5),
+             (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6)}
+    rect1 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
+    rect2 = {(4, 7), (4, 7), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
+    c0 = Cluster(rect0)
+    c1 = Cluster(rect1)
+    c2 = Cluster(rect2)
+    if c1.isEllipseInsideOf(c0,1.0):
+        print 'c1 is inside of c0'
+    if c0.isEllipseInsideOf(c1,1.0):
+        print 'c0 is inside of c1'
+    if c2.isEllipseInsideOf(c1,0.8):
+        print 'c2 is inside of c1'
+
 
 if __name__ == '__main__':
-    test1()
-    testHorizLine()
-    testDipole()
-    testRectangle()
-    testRectangleSlanted()
-    testRandom()
-    testPlusEqual()
-    testTimes()
-
+#    test1()
+#    testHorizLine()
+#    testDipole()
+#    testRectangle()
+#    testRectangleSlanted()
+#    testRandom()
+#    testPlusEqual()
+#    testTimes()
+    testInsideEllipse()
