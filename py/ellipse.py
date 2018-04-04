@@ -48,20 +48,27 @@ class Ellipse:
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
         # average radii from the centre
-        self.a = max(0.5, math.sqrt(eigenvals[0]))
-        self.b = max(0.5, math.sqrt(eigenvals[1]))
+        a, b = numpy.sqrt(eigenvals)
+        self.a = max(0.5, a)
+        self.b = max(0.5, b)
 
         # compute the total area
         area = len(cells)
 
-	# extend the axis to match the cluster's area
+	    # extend the axis to match the cluster's area
         const = math.sqrt(area /(math.pi * self.a * self.b))
+        a *= const
+        b *= const
         self.a *= const
         self.b *= const
 
         # add halo to the axes if need be
-        self.aExt = max(min_ellipse_axis, self.a)
-        self.bExt = max(min_ellipse_axis, self.b)
+        #self.aExt = max(min_ellipse_axis, self.a)
+        #self.bExt = max(min_ellipse_axis, self.b)
+        # smootg transition
+        self.aExt = min_ellipse_axis*math.exp(-a) + self.a
+        self.bExt = min_ellipse_axis*math.exp(-b) + self.b
+
 
 
     def getPolyline(self, numSegments=32):
