@@ -1,14 +1,37 @@
 import numpy
 import matplotlib
 import time
-from time_connected_clusters import TimeConnectedClusters
+from time_connected_clusters import TimeConnectedClusters, reduce
 from cluster import Cluster
 import pickle
+import copy
 
 
 """
 Test TimeConnectedClusters
 """
+
+def testReduce1():
+    rect1 = {(2+i, 3) for i in range(10)}.union({(2+i, 4) for i in range(10)})
+    # same rectangle but slightly shifted to the right
+    rect2 = {(3+i, 3) for i in range(10)}.union({(3+i, 4) for i in range(10)})
+    # now shift up
+    rect3 = {(3+i, 4) for i in range(10)}.union({(3+i, 5) for i in range(10)})
+    clusters = [Cluster(rect1), Cluster(rect2), Cluster(rect3)]
+    reduce(clusters)
+    assert(len(clusters) == 1)
+
+
+def testReduce2():
+    rect1 = {(2+i, 3) for i in range(10)}.union({(2+i, 4) for i in range(10)})
+    # same rectangle but slightly shifted to the right
+    rect2 = {(13+i, 23) for i in range(10)}.union({(13+i, 24) for i in range(10)})
+    # now shift up
+    rect3 = {(23+i, 34) for i in range(10)}.union({(23+i, 35) for i in range(10)})
+    clusters = [Cluster(rect1), Cluster(rect2), Cluster(rect3)]
+    reduce(clusters)
+    assert(len(clusters) == 3)
+
 
 def testRectangle():
     rectangle = {(2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (4, 4)}
@@ -492,6 +515,8 @@ def testMovingClusters():
 
 
 if __name__ == '__main__':
+    testReduce1()
+    testReduce2()
     testRectangle()
     testIndRectangles()
     testTwoMergingRectangles()

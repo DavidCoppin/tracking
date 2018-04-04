@@ -6,33 +6,35 @@ import math
 import pickle
     
 
-def reduce(cluster_list):
+def __reduceOne(cluster_list):
     """
     Reduce the list of clusters by merging overlapping clusters
-    @param cluster_list input cluster list
-    @return output cluster list
+    @param cluster_list in/out cluster list
+    @return True if the list was reduced
     """
-    res = copy.deepcopy(cluster_list)
     n = len(cluster_list)
-    remove_indices = []
-
     for i in range(n):
-        cli = res[i]
-
+        cli = cluster_list[i]
         for j in range(i + 1, n):
             clj = cluster_list[j]
 
             if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
-                # add clj to cli and tag clj for removal
                 cli += clj
-                remove_indices.append(j)
+                del cluster_list[j]
+                return True
 
-    # remove the tagged clusters
-    remove_indices.reverse()
-    for i in remove_indices:
-        del res[i]
+    return False
 
-    return res
+
+def reduce(cluster_list):
+    """
+    Fully reduce until no more reduction can be applied 
+    @param cluster_list in/out cluster list
+    """
+    go = True
+    while go:
+        go = __reduceOne(cluster_list)
+
 
 
 """
@@ -96,7 +98,7 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         """
         # merge overlapping clusters
-        ###new_clusters = reduce(new_clusters)
+        reduce(new_clusters)
 
         index = len(self.clusters)
 
