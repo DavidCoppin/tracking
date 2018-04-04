@@ -3,7 +3,7 @@ import matplotlib
 import time
 from time_connected_clusters import TimeConnectedClusters, reduce
 from cluster import Cluster
-import pickle
+import cPickle
 import copy
 
 
@@ -507,7 +507,7 @@ def testMovingClusters():
     # test save/load 
     tcc.save('testMovingClusters.pckl')
     f = open('testMovingClusters.pckl')
-    tcc2 = pickle.load(f)
+    tcc2 = cPickle.load(f)
     print 'number of tracks: ', tcc2.getNumberOfTracks()
     print tcc2
     tcc2.showEllipses(track_id=0, time_inds=[0, 1])

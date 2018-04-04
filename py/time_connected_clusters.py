@@ -3,7 +3,7 @@ import numpy as np
 import netCDF4
 import copy
 import math
-import pickle
+import cPickle
     
 
 def __reduceOne(cluster_list):
@@ -326,7 +326,7 @@ class TimeConnectedClusters:
         @param filename file name
         """
         f = open(filename, 'w')
-        pickle.dump(self, f)
+        cPickle.dump(self, f)
 
 
     def getNumberOfTracks(self):
