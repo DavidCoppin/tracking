@@ -487,19 +487,20 @@ def testMovingClusters():
     tcc2 = pickle.load(f)
     print 'number of tracks: ', tcc2.getNumberOfTracks()
     print tcc2
-    tcc2.showEllipses(0)
+    tcc2.showEllipses(track_id=0, time_inds=[0, 1])
+    tcc2.showEllipses(track_id=0, time_inds=[])
 
 
 if __name__ == '__main__':
-    #testRectangle()
-    #testIndRectangles()
-    #testTwoMergingRectangles()
-    #testOnlyFuse()
-    #testOnlySplit()
-    #testSplittingInTwo()
-    #testSplitMulti()
-    #testSeveralFuse()
-    #testProbMinFuse()
-    #testOverlap()
+    testRectangle()
+    testIndRectangles()
+    testTwoMergingRectangles()
+    testOnlyFuse()
+    testOnlySplit()
+    testSplittingInTwo()
+    testSplitMulti()
+    testSeveralFuse()
+    testProbMinFuse()
+    testOverlap()
     testMovingClusters()
 

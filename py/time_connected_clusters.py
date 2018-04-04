@@ -313,8 +313,8 @@ class TimeConnectedClusters:
 
         pylab.title('Track {} (netcdf {}) time indices {} -> {}'.format(track_id, 
                                                             track_id + 1,
-                                                            time_inds[0], 
-                                                            time_inds[-1]))
+                                                            t_inds[0], 
+                                                            t_inds[-1]))
         pylab.show()
 
 
