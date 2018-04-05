@@ -24,7 +24,8 @@ def __reduceOne(cluster_list, frac):
                 del cluster_list[j]
                 return True
 
-            if cli.isEllipseInsideOf(clj, frac):
+            elif cli.isEllipseInsideOf(clj, frac):
+                print 'cli isEllipseInsideOf clj', cli, clj
                 cli += clj
                 del cluster_list[j]
                 return True
