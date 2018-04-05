@@ -49,27 +49,33 @@ class Cluster:
 
     def isCentreInsideOf(self, otherCluster):
         """
-        Return True if this ellipse' centre is inside the other cluster's ellipse
+        Check if this ellipse' centre is inside the other cluster's ellipse
+        @param otherCluster other cluster
+        @return True if inside
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
 
 
     def isCentreInsideOfExt(self, otherCluster):
         """
-        Return True if this ellipse' centre is inside the other cluster's extended ellipse
-        @note the extended ellipse is the ellipse with minimum axes lengths
+        Check if this ellipse' centre is inside the other cluster's extended ellipse
+        @param otherCluster other cluster
+        @return True if inside
         """
         return otherCluster.ellipse.isPointInsideExt(self.ellipse.getCentre())
 
 
     def isEllipseInsideOf(self, otherCluster, frac):
         """
-        Return True if the fraction of this ellipse inside another ellipse is superior
-        to frac
+        Check if fraction of this cluster is inside another cluster 
+        @param otherCluster other cluster
+        @param frac fraction of min area of self and otherCluster
+        @return True if at least frac of self is in otherCluster
         """
 #        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
 #        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
-        return len(self.cells.intersection(otherCluster.cells)) >= frac * min(len(self.cells), len(otherCluster.cells))
+        min_area = min(len(self.cells), len(otherCluster.cells))
+        return len(self.cells.intersection(otherCluster.cells)) >= frac * min_area
 
 
     def getCentre(self):
