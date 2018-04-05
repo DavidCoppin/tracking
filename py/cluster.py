@@ -245,26 +245,26 @@ def testAngle():
     rect1 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
     rect2 = {(4, 6), (4, 7), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
     rect3 = {(2, 2), (2, 3), (3, 2), (3, 3), (3, 4), (4, 3), (4, 4)}
-    rect4 = {(2, 2), (3, 2), (4, 2)}
+    rect4 = {(2, 2), (2, 3), (2, 4), (1, 4)}
     c0 = Cluster(rect0)
     c1 = Cluster(rect1)
     c2 = Cluster(rect2)
     c3 = Cluster(rect3)
     c4 = Cluster(rect4)
-    ell0 = Ellipse(c0.cells, min_ellipse_axis=1)
-    print ell0.centre,ell0.a,ell0.b,ell0.angle
-    ell0.show()
-    ell1 = Ellipse(c1.cells, min_ellipse_axis=1)
-    print ell1.centre,ell1.a,ell1.b,ell1.angle
-    ell1.show()
-    ell2 = Ellipse(c2.cells, min_ellipse_axis=1)
-    print ell2.centre,ell2.a,ell2.b,ell2.angle
+    ell0 = Ellipse(c0.cells, min_ellipse_axis=6)
+    print 'c0', ell0.centre,ell0.a,ell0.b,ell0.angle
+#    ell0.show()
+    ell1 = Ellipse(c1.cells, min_ellipse_axis=6)
+    print 'c1', ell1.centre,ell1.a,ell1.b,ell1.angle
+#    ell1.show()
+    ell2 = Ellipse(c2.cells, min_ellipse_axis=6)
+    print 'c2', ell2.centre,ell2.a,ell2.b,ell2.angle
     ell2.show()
-    ell3 = Ellipse(c3.cells, min_ellipse_axis=1)
-    print ell3.centre,ell3.a,ell3.b,ell3.angle
+    ell3 = Ellipse(c3.cells, min_ellipse_axis=6)
+    print 'c3', ell3.centre,ell3.a,ell3.b,ell3.angle
     ell3.show()
-    ell4 = Ellipse(c4.cells, min_ellipse_axis=1)
-    print ell4.centre,ell4.a,ell4.b,ell4.angle
+    ell4 = Ellipse(c4.cells, min_ellipse_axis=6)
+    print 'c4', ell4.centre,ell4.a,ell4.b,ell4.angle
     ell4.show()
 
 
