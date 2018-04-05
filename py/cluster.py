@@ -67,8 +67,8 @@ class Cluster:
         Return True if the fraction of this ellipse inside another ellipse is superior
         to frac
         """
-        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
-        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
+#        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
+#        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
         return len(self.cells.intersection(otherCluster.cells)) >= frac * min(len(self.cells), len(otherCluster.cells))
 
 

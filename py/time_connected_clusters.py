@@ -6,10 +6,11 @@ import math
 import cPickle
     
 
-def __reduceOne(cluster_list):
+def __reduceOne(cluster_list, frac):
     """
     Reduce the list of clusters by merging overlapping clusters
     @param cluster_list in/out cluster list
+    @param frac: threshold for overlapping ellipses to be reduced
     @return True if the list was reduced
     """
     n = len(cluster_list)
@@ -23,17 +24,23 @@ def __reduceOne(cluster_list):
                 del cluster_list[j]
                 return True
 
+            if cli.isEllipseInsideOf(clj, frac):
+                cli += clj
+                del cluster_list[j]
+                return True
+
     return False
 
 
-def reduce(cluster_list):
+def reduce(cluster_list, frac):
     """
     Fully reduce until no more reduction can be applied 
     @param cluster_list in/out cluster list
+    @param frac: threshold for overlapping ellipses to be reduced
     """
     go = True
     while go:
-        go = __reduceOne(cluster_list)
+        go = __reduceOne(cluster_list, frac)
 
 
 
@@ -92,13 +99,13 @@ class TimeConnectedClusters:
             del self.cluster_connect[track_id]
 
 
-    def addTime(self, new_clusters):
+    def addTime(self, new_clusters, frac):
         """
         Add time entry
         @param new_clusters list of new clusters
         """
         # merge overlapping clusters
-        reduce(new_clusters)
+        reduce(new_clusters, frac)
 
         index = len(self.clusters)
 
@@ -379,7 +386,7 @@ def testNoCluster():
 def testOneCluster():
     tcc = TimeConnectedClusters()
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
-    tcc.addTime([c0])
+    tcc.addTime([c0],0.8)
     print 'One cluster'
     print tcc
 
@@ -401,10 +408,10 @@ def testTwoClustersAtTime0():
     tcc = TimeConnectedClusters()
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 1), (1, 2), (2, 2)})
-    tcc.addTime([c0, c1])
+    tcc.addTime([c0, c1], 0.8)
     print tcc
     c3 = Cluster({(4,3), (7,3)})
-    tcc.addTime([c3])
+    tcc.addTime([c3], 0.8)
     print tcc
     tcc.writeFile('twoClusters.nc')
     print 'Two clusters'

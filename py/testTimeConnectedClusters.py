@@ -38,9 +38,9 @@ def testRectangle():
     clusters = [Cluster(rectangle)]
 
     tcc = TimeConnectedClusters()
-    tcc.addTime(clusters)
+    tcc.addTime(clusters, 0.8)
     print tcc
-    tcc.addTime(clusters)
+    tcc.addTime(clusters, 0.8)
     print tcc
     tcc.writeFile('rectangle.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
@@ -51,9 +51,9 @@ def testIndRectangles():
     rect3 = {(3, 4), (4, 4), (5, 4), (3, 5), (4, 5), (5, 5)}
 
     tcc = TimeConnectedClusters()
-    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    tcc.addTime([Cluster(rect1), Cluster(rect2)], 0.8)
     print tcc
-    tcc.addTime([Cluster(rect3)])
+    tcc.addTime([Cluster(rect3)], 0.8)
     print tcc
     tcc.writeFile('independant_rectangles.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
@@ -78,9 +78,9 @@ def testTwoMergingRectangles():
     # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should 
     # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
     tcc = TimeConnectedClusters()
-    tcc.addTime([c0, c1])
+    tcc.addTime([c0, c1], 0.8)
     print tcc
-    tcc.addTime([c2])
+    tcc.addTime([c2], 0.8)
     print tcc
     tcc.writeFile('two_merging_rectangles.nc', i_minmax=(0, 10), j_minmax=(0, 8))
     assert(tcc.getNumberOfTracks() == 1)
@@ -108,7 +108,7 @@ def testOnlyFuse():
     print 'time step {}: adding cluster with centre {} and {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c0.getCentre(), 
                                                                        c1.getCentre())
-    tcc.addTime([c1, c0])
+    tcc.addTime([c1, c0], 0.8)
     print tcc
 
     if c2.isCentreInsideOf(c0):
@@ -121,7 +121,7 @@ def testOnlyFuse():
         print 'c1 is inside c2'
     print 'time step {}: adding cluster with centre {}'.format(tcc.getNumberOfTimeSteps(),
                                                                        c2.getCentre())
-    tcc.addTime([c2])
+    tcc.addTime([c2], 0.8)
     print tcc
     tcc.writeFile('only_fuse.nc', i_minmax=(0, 10), j_minmax=(0, 8))
     assert(tcc.getNumberOfTracks() == 1)
@@ -136,9 +136,9 @@ def testOnlySplit():
     # Result expected: all clusters should get same id: 1 ==> connectivity [{0: [0], 1: [1, 2]}]
     # Problem : cluster 2 keeps its id
     tcc = TimeConnectedClusters()
-    tcc.addTime([Cluster(rect3)])
+    tcc.addTime([Cluster(rect3)], 0.8)
     print tcc
-    tcc.addTime([Cluster(rect1), Cluster(rect2)])
+    tcc.addTime([Cluster(rect1), Cluster(rect2)], 0.8)
     print tcc
     tcc.writeFile('only_split.nc', i_minmax=(0, 10), j_minmax=(0, 8))
 
@@ -148,9 +148,9 @@ def testSplittingInTwo():
     circ2 = {(3, 8), (3, 9), (4, 7), (4, 8), (4, 10), (5, 7), (5, 8), (5, 9), (5, 10), (6, 8), (6, 9)}
     circ3 = {(3, 3), (4, 2), (4, 3), (4, 4), (5, 3)}
     tcc = TimeConnectedClusters()
-    tcc.addTime([Cluster(rect1)])
+    tcc.addTime([Cluster(rect1)], 0.8)
     print tcc
-    tcc.addTime([Cluster(circ2), Cluster(circ3)])
+    tcc.addTime([Cluster(circ2), Cluster(circ3)], 0.8)
     print tcc
     tcc.writeFile('splitting_in_two.nc', i_minmax=(0, 10), j_minmax=(0, 8))
     # expected result: 
@@ -217,9 +217,9 @@ def testOverlap():
     if c1.isCentreInsideOf(c0):
         print 'c1 is inside c0'
     tcc = TimeConnectedClusters()
-    tcc.addTime([c0, c1])
+    tcc.addTime([c0, c1], 0.8)
     print tcc
-    tcc.addTime([c0])
+    tcc.addTime([c0], 0.8)
     print tcc
     tcc.writeFile('overlap.nc', i_minmax=(0, 10), j_minmax=(0, 8))
     assert(tcc.getNumberOfTracks() == 1)
@@ -249,8 +249,7 @@ def testDigits():
     tcc = TimeConnectedClusters()
 
     # add a couple of times
-    tcc.addTime(clusters)
-    #tcc.addTime(clusters)
+    tcc.addTime(clusters, 0.8)
 
     print tcc
 
@@ -292,7 +291,7 @@ def testSeveralFuse():
                                                                          c0.getCentre(),
                                                                          c2.getCentre(),
                                                                          c5.getCentre())
-    tcc.addTime([c1, c0, c2, c5])
+    tcc.addTime([c1, c0, c2, c5], 0.8)
     assert(tcc.getNumberOfTracks() == 4)
     print tcc
 
@@ -302,7 +301,7 @@ def testSeveralFuse():
                                                                          c0.getCentre(),
                                                                          c3.getCentre(),
                                                                          c6.getCentre())
-    tcc.addTime([c0, c3, c6])
+    tcc.addTime([c0, c3, c6], 0.8)
     assert(tcc.getNumberOfTracks() == 3)
     print tcc
     tr_id5, t_indx5 = tcc.findCluster(5)
@@ -323,7 +322,7 @@ def testSeveralFuse():
                                                                      c5.getCentre())
     c7 = c4
     c8 = c5
-    tcc.addTime([c7, c8])
+    tcc.addTime([c7, c8], 0.8)
     #       connectivity [{0: [0, 2, 1], 1: [5, 4], 2: [7]}, {0: [3], 1: [6], 2: [8]}] at t2
     assert(tcc.getNumberOfTracks() == 2)
     tr_id0, t_indx0 = tcc.findCluster(0)
@@ -382,8 +381,8 @@ def testProbMinFuse():
     print 'time step {}: adding clusters with centres {} {}'.format(tcc1.getNumberOfTimeSteps(),
                                                                          c0.getCentre(),
                                                                          c1.getCentre())
-    tcc1.addTime([c0, c1])
-    tcc2.addTime([c1, c0]) # change the order
+    tcc1.addTime([c0, c1], 0.8)
+    tcc2.addTime([c1, c0], 0.8) # change the order
     assert(tcc1.getNumberOfTracks() == 2)
     assert(tcc2.getNumberOfTracks() == 2)
     tr_id0, t_indx0 = tcc1.findCluster(0)
@@ -399,8 +398,8 @@ def testProbMinFuse():
     # time_index = 1
     print 'time step {}: adding clusters with centres {}'.format(tcc1.getNumberOfTimeSteps,
                                                                          c2.getCentre())
-    tcc1.addTime([c2])
-    tcc2.addTime([c2])
+    tcc1.addTime([c2], 0.8)
+    tcc2.addTime([c2], 0.8)
     tr_id0, t_indx0 = tcc1.findCluster(0)
     tr_id1, t_indx1 = tcc1.findCluster(1)
     tr_id2, t_indx2 = tcc1.findCluster(2)
@@ -449,20 +448,20 @@ def testSplitMulti():
     tcc = TimeConnectedClusters()
 #    print 'time step {}: adding clusters with centres {}'.format(tcc.getNumberOfTimeSt>
 #                                                                         c0.getCentre())
-    tcc.addTime([c0])
+    tcc.addTime([c0], 0.8)
     print tcc
 #    print 'time step {}: adding clusters with centres {} {} {}'.format(tcc.getNumberOfTimeSteps>
 #                                                                         c1.getCentre(),
 #                                                                         c2.getCentre(),
 #                                                                         c3.getCentre())
-    tcc.addTime([c1, c2, c3])
+    tcc.addTime([c1, c2, c3], 0.8)
     print tcc
 #    print 'time step {}: adding cluster with centres {} {} {} {}'.format(tcc.getNumberOfTimeSteps(),
 #                                                                     c4.getCentre(),
 #                                                                     c5.getCentre(),
 #                                                                     c6.getCentre(),
 #                                                                     c7.getCentre())
-    tcc.addTime([c4, c5, c6, c7])
+    tcc.addTime([c4, c5, c6, c7], 0.8)
     print tcc
     tcc.writeFile('split_multi.nc', i_minmax=(0, 15), j_minmax=(0, 10))
     assert(tcc.getNumberOfTracks() == 1)
@@ -497,9 +496,9 @@ def testMovingClusters():
     # Should have only one track because cluster 0 and 1 at t=0 merge at t=1. Should.
     # pass into fuse    # Prob: cluster 0 at=0 does not become cluster 1
     tcc = TimeConnectedClusters()
-    tcc.addTime([c0, c3])
+    tcc.addTime([c0, c3], 0.8)
     print tcc
-    tcc.addTime([c1, c2, c4, c5, c6])
+    tcc.addTime([c1, c2, c4, c5, c6], 0.8)
     print tcc
     tcc.writeFile('moving_clusters.nc', i_minmax=(0, 16), j_minmax=(0, 16))
     assert(tcc.getNumberOfTracks() == 2)
