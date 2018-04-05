@@ -47,7 +47,7 @@ class Ellipse:
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
         # get the angle:
-        self.angle = math.atan2(self.ij2AxesTransf[0, 0], self.ij2AxesTransf[0, 1])*180./numpy.pi
+        self.angle = -math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])*180./numpy.pi
 
         # average radii from the centre
         a, b = numpy.sqrt(eigenvals)
