@@ -1,6 +1,5 @@
 import numpy
 import math
-
 """
 A Class that computes the ellipse of a cloud of points
 """
@@ -47,8 +46,8 @@ class Ellipse:
         eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
-        # how to get the angle:
-        # angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])
+        # get the angle:
+        self.angle = math.atan2(self.ij2AxesTransf[0, 0], self.ij2AxesTransf[0, 1])*180./numpy.pi
 
         # average radii from the centre
         a, b = numpy.sqrt(eigenvals)
@@ -117,8 +116,8 @@ class Ellipse:
         Print object
         """
         res = """
-        Ellipse: centre = {} a = {} b = {} rotation = {}
-        """.format(self.centre, self.a, self.b, self.ij2AxesTransf)
+        Ellipse: centre = {} a = {} b = {} rotation = {} angle = {}
+        """.format(self.centre, self.a, self.b, self.ij2AxesTransf, self.angle)
         return res
 
 
@@ -284,13 +283,11 @@ def testMinEllipseAreaBig():
 
 
 if __name__ == '__main__':
-    test0()
-    test1()
-    testRectangle()
-    testRectangleSlanted()
-    testRandom()
-    testMinEllipseAxis(axis=1)
-    testMinEllipseAxis(axis=12)
+#    test0()
+#    test1()
+#    testRectangle()
+#    testRectangleSlanted()
+#    testRandom()
+#    testMinEllipseAxis(axis=1)
+#    testMinEllipseAxis(axis=12)
     testMinEllipseAxis(axis=300)
-
-
