@@ -47,6 +47,9 @@ class Ellipse:
         eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
+        # how to get the angle:
+        # angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])
+
         # average radii from the centre
         a, b = numpy.sqrt(eigenvals)
         self.a = max(0.5, a)
