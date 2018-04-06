@@ -75,13 +75,13 @@ class Ellipse:
         self.bExt = min_ellipse_axis*math.exp(-b) + self.b
 
 
-    def create_ellipse(self):
+    def create_ellipse(self, centre, a, b, angle):
         """
         create a shapely ellipse
         """
-        circ = Point(self.centre).buffer(1)
-        ell = affinity.scale(circ, int(self.a), int(self.b))
-        ellr = affinity.rotate(ell, self.angle)
+        circ = Point(centre).buffer(1)
+        ell = affinity.scale(circ, int(a), int(b))
+        ellr = affinity.rotate(ell, angle)
         return ellr
 
 
@@ -182,12 +182,12 @@ class Ellipse:
         @param otherEllipse
         @param frac fraction of min area of self and otherCluster
         """
-        ellipse1 = create_ellipse(self.ellipse)
-        ellipse2 = create_ellipse(otherEllipse.ellipse)
+        ellipse1 = self.create_ellipse(self.centre, self.a, self.b, self.angle)
+        ellipse2 = self.create_ellipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
         intersect = ellipse1.intersection(ellipse2)
-        print 'intersect.area', intersect.area
         min_area = min(ellipse1.area, ellipse2.area)
-        return len(intersect.area/min_area) >= frac
+        print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
+        return intersect.area/min_area >= frac
 
 
     def show(self, points=[], cells={}, show=True):
