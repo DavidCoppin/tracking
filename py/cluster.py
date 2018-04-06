@@ -227,8 +227,8 @@ def testInsideEllipse():
     ell3 = Ellipse(c3.cells, min_ellipse_axis=6)
     if ell1.isEllipseInsideOf(ell0,1.0):
         print 'ell1 is inside of ell0'
-#    if ell2.isEllipseInsideOf(ell1,0.8):
-#        print 'ell2 is inside of ell1'
+    if ell2.isEllipseInsideOf(ell1,0.8):
+        print 'ell2 is inside of ell1'
     if ell3.isEllipseInsideOf(ell0,0.8):
         print 'ell3 is inside of ell0'
     if ell0.isEllipseInsideOf(ell3,0.8):
@@ -275,4 +275,4 @@ if __name__ == '__main__':
 #    testPlusEqual()
 #    testTimes()
     testInsideEllipse()
-    testAngle()
+#    testAngle()

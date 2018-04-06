@@ -71,7 +71,7 @@ class Ellipse:
         self.bExt = self.b + amin*math.exp(-b/amin)
 
 
-    def create_ellipse(self, centre, a, b, angle):
+    def createEllipse(self, centre, a, b, angle):
         """
         create a shapely ellipse
         """
@@ -175,8 +175,10 @@ class Ellipse:
         @param otherEllipse
         @param frac fraction of min area of self and otherCluster
         """
-        ellipse1 = self.create_ellipse(self.centre, self.a, self.b, self.angle)
-        ellipse2 = self.create_ellipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
+        ellipse1 = self.createEllipse(self.centre, self.a, self.b, self.angle)
+        ellipse2 = self.createEllipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
+        print 'ellipse1.is_valid', ellipse1.is_valid
+        print 'ellipse2.is_valid', ellipse2.is_valid
         intersect = ellipse1.intersection(ellipse2)
         min_area = min(ellipse1.area, ellipse2.area)
         print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
