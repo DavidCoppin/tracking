@@ -175,13 +175,22 @@ class Ellipse:
         @param otherEllipse
         @param frac fraction of min area of self and otherCluster
         """
-        ellipse1 = self.createEllipse(self.centre, self.a, self.b, self.angle)
-        ellipse2 = self.createEllipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
-        print 'ellipse1.is_valid', ellipse1.is_valid
-        print 'ellipse2.is_valid', ellipse2.is_valid
+        ellipse_1 = self.createEllipse(self.centre, self.a, self.b, self.angle)
+        if ellipse_1.is_valid == False:
+            ellipse1 = ellipse_1.buffer(0)
+        else:
+            ellipse1 = ellipse_1
+        ellipse_2 = self.createEllipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
+        if ellipse_2.is_valid == False:
+            ellipse2 = ellipse_2.buffer(0)
+        else:
+            ellipse2 = ellipse_2
+#        print 'ellipse1, ellipse1.is_valid', ellipse1, ellipse1.is_valid
+#        print 'ellipse1.buffer(0)', ellipse1.buffer(0), ellipse1.buffer(0).is_valid
+#        print 'ellipse2.is_valid', ellipse2.is_valid
         intersect = ellipse1.intersection(ellipse2)
         min_area = min(ellipse1.area, ellipse2.area)
-        print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
+#        print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
         return intersect.area/min_area >= frac
 
 
