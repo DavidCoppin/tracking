@@ -231,6 +231,8 @@ def testInsideEllipse():
 #        print 'ell2 is inside of ell1'
     if ell3.isEllipseInsideOf(ell0,0.8):
         print 'ell3 is inside of ell0'
+    if ell0.isEllipseInsideOf(ell3,0.8):
+        print 'ell0 is inside of ell3'
 
 def testAngle():
     rect0 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),
