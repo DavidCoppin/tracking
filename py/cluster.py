@@ -78,16 +78,6 @@ class Cluster:
         return len(self.cells.intersection(otherCluster.cells)) >= frac * min_area
 
 
-    def isEllipseInsideOf(self, otherCluster, frac):
-        """
-        Check if fraction of this cluster is inside otherCluster
-        @param otherCluster
-        @param frac fraction of min area of self and otherCluster
-        """
-        min_area = min(len(self.cells), len(otherCluster.cells))
-        return len(self.cells.intersection(otherCluster.cells)) >= frac * min_area
-
-
     def getCentre(self):
         """
         Get the centre 
@@ -220,22 +210,29 @@ def testTimes():
     print 'testTimes intersection: ', c2
 
 def testInsideEllipse():
-    rect0 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),
-             (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4),
-             (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5),
-             (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6)}
+    rect0 = {(2, 2), (3, 2), (6, 2), (7, 2), (8, 2),
+             (2, 3), (3, 3), (6, 3), (7, 3), (8, 3),
+             (2, 4), (3, 4), (6, 4), (7, 4), (8, 4),
+             (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)}
     rect1 = {(2, 3), (3, 3), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
     rect2 = {(4, 7), (4, 7), (2, 4), (3, 4), (2, 5), (3, 5), (2, 6), (3, 6)}
+    rect3 = {(4, 3), (4, 4), (5, 3), (5, 4)}
     c0 = Cluster(rect0)
     c1 = Cluster(rect1)
     c2 = Cluster(rect2)
-    if c1.isEllipseInsideOf(c0,1.0):
-        print 'c1 is inside of c0'
-    if c0.isEllipseInsideOf(c1,1.0):
-        print 'c0 is inside of c1'
-    if c2.isEllipseInsideOf(c1,0.8):
-        print 'c2 is inside of c1'
-
+    c3 = Cluster(rect3)
+    ell0 = Ellipse(c0.cells, min_ellipse_axis=6)
+    ell1 = Ellipse(c1.cells, min_ellipse_axis=6)
+    ell2 = Ellipse(c2.cells, min_ellipse_axis=6)
+    ell3 = Ellipse(c3.cells, min_ellipse_axis=6)
+    if ell1.isEllipseInsideOf(ell0,1.0):
+        print 'ell1 is inside of ell0'
+    if ell0.isEllipseInsideOf(ell1,1.0):
+        print 'ell0 is inside of ell1'
+    if ell2.isEllipseInsideOf(ell1,0.8):
+        print 'ell2 is inside of ell1'
+    if ell3.isEllipseInsideOf(ell0,0.8):
+        print 'ell3 is inside of ell0'
 
 def testAngle():
     rect0 = {(2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3),
@@ -277,5 +274,5 @@ if __name__ == '__main__':
 #    testRandom()
 #    testPlusEqual()
 #    testTimes()
-#    testInsideEllipse()
-    testAngle()
+    testInsideEllipse()
+#    testAngle()
