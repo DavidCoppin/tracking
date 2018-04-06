@@ -24,11 +24,6 @@ class Ellipse:
         self.a = 0.
         self.b = 0.
 
-        # from the axes to ij 
-        self.axes2ijTransf = numpy.array([[1., 0.], [0., 1.]])
-        # from ij to the axes (inverse of the above
-        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
-
         iCentre = numpy.sum([c[0] for c in cells]) / area
         jCentre = numpy.sum([c[1] for c in cells]) / area
         self.centre = numpy.array([iCentre, jCentre])
@@ -46,8 +41,8 @@ class Ellipse:
         eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
         self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
 
-        # get the angle:
-        self.angle = math.atan2(self.ij2AxesTransf[0, 0], self.ij2AxesTransf[0, 1])*180./numpy.pi
+        # angle between the principal axes and the i, j directions
+        self.angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])*180./numpy.pi
 
         # average radii from the centre
         a, b = numpy.sqrt(eigenvals)
@@ -67,23 +62,31 @@ class Ellipse:
         # add halo to the axes if need be
         #self.aExt = max(min_ellipse_axis, self.a)
         #self.bExt = max(min_ellipse_axis, self.b)
-        # smootg transition
-        self.aExt = min_ellipse_axis*math.exp(-a) + self.a
-        self.bExt = min_ellipse_axis*math.exp(-b) + self.b
+        # smooth transition
+        amin = min_ellipse_axis
+        self.aExt = self.a + amin*math.exp(-a/amin)
+        self.bExt = self.b + amin*math.exp(-b/amin)
 
 
 
-    def getPolyline(self, numSegments=32):
+    def getPolyline(self, numSegments=32, a=None, b=None):
         """
         Return the ellipse as a segmented line
+        @param numSegements number of segments
+        @param a principal axis length, default to self.a
+        @param b second axis length, defaults to self.b
         @return iPts, jPts arrays
         """
+        if not a:
+            a = self.a
+        if not b:
+            b = self.b
         iPts, jPts = [], []
         dt = 2 * math.pi / float(numSegments)
         for i in range(numSegments + 1):
             th = i * dt
-            x = self.a * math.cos(th)
-            y = self.b * math.sin(th)
+            x = a * math.cos(th)
+            y = b * math.sin(th)
             # rotate back to i,j coordinates
             ij = self.axes2ijTransf.dot([x, y])
             ij += self.centre
@@ -95,20 +98,10 @@ class Ellipse:
     def getPolylineExt(self, numSegments=32):
         """
         Return the extended ellipse as a segmented line
+        @param numSegements number of segments
         @return iPts, jPts arrays
         """
-        iPts, jPts = [], []
-        dt = 2 * math.pi / float(numSegments)
-        for i in range(numSegments + 1):
-            th = i * dt
-            x = self.aExt * math.cos(th)
-            y = self.bExt * math.sin(th)
-            # rotate back to i,j coordinates
-            ij = self.axes2ijTransf.dot([x, y])
-            ij += self.centre
-            iPts.append(ij[0])
-            jPts.append(ij[1])
-        return iPts, jPts
+        return self.getPolyline(numSegments=numSegments, a=self.aExt, b=self.bExt)
 
 
     def __repr__(self):
@@ -273,7 +266,11 @@ def testRandom():
 def testMinEllipseAxis(axis=1):
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
     ell = Ellipse(cells, min_ellipse_axis=axis)
-    ell.show()
+    print 'testMinEllipseAxis angle (deg) ', ell.angle
+    print 'transf ij -> axes ', ell.ij2AxesTransf
+    print 'ellipse axes: ', ell.a, ell.b
+    print 'ellipse ext axes: ', ell.aExt, ell.bExt
+    ell.show(cells=cells)
     
 
 def testMinEllipseAreaBig():
@@ -281,13 +278,62 @@ def testMinEllipseAreaBig():
     ell = Ellipse(cells, min_ellipse_axis=120)
     ell.show()
 
+def testExt45Deg():
+    """
+    Check that the extended ellipse has the same pricipal axes directions as the
+    original ellipse
+    """
+    # very flat oblique cells
+    cells = {(i, i) for i in range(20)}
+    ell = Ellipse(cells, min_ellipse_axis=5)
+    print 'angle should about 45 +- 90 deg: ', ell.angle
+    ell.show()
+
+def testExt63Deg():
+    """
+    Check that the extended ellipse has the same pricipal axes directions as the
+    original ellipse
+    """
+    # very flat oblique cells
+    cells = {(i, 2*i) for i in range(20)}
+    ell = Ellipse(cells, min_ellipse_axis=5)
+    print 'angle should about 63 +- 90 deg: ', ell.angle
+    ell.show()
+
+def testExtHorizontal():
+    cells = {(i, 10) for i in range(20)}
+    ell = Ellipse(cells, min_ellipse_axis=5)
+    print 'angle should about 0 +- 90 deg: ', ell.angle
+    ell.show()
+
+def testExtVertical():
+    cells = {(10, i) for i in range(20)}
+    ell = Ellipse(cells, min_ellipse_axis=5)
+    print 'angle should about 90 +- 90 deg: ', ell.angle
+    ell.show()
+
+def testExtLeftOblique():
+    cells = {(50 - i, 2*i) for i in range(20)}
+    ell = Ellipse(cells, min_ellipse_axis=5)
+    print 'angle should about 117 +- 90 deg: ', ell.angle
+    ell.show()
+
+
+
 
 if __name__ == '__main__':
-#    test0()
-#    test1()
-#    testRectangle()
-#    testRectangleSlanted()
-#    testRandom()
-#    testMinEllipseAxis(axis=1)
-#    testMinEllipseAxis(axis=12)
-    testMinEllipseAxis(axis=300)
+    testExt45Deg()
+    testExt63Deg()
+    testExtHorizontal()
+    testExtVertical()
+    testExtLeftOblique()
+    testMinEllipseAxis(axis=1)
+    testMinEllipseAxis(axis=2)
+    testMinEllipseAxis(axis=5)
+    testMinEllipseAxis(axis=10)
+    testMinEllipseAxis(axis=100)
+    test0()
+    test1()
+    testRectangle()
+    testRectangleSlanted()
+    testRandom()
