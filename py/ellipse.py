@@ -1,5 +1,8 @@
 import numpy
 import math
+from shapely.geometry.point import Point
+from shapely import affinity
+from matplotlib.patches import Polygon
 """
 A Class that computes the ellipse of a cloud of points
 """
@@ -71,6 +74,15 @@ class Ellipse:
         self.aExt = min_ellipse_axis*math.exp(-a) + self.a
         self.bExt = min_ellipse_axis*math.exp(-b) + self.b
 
+
+    def create_ellipse(self):
+        """
+        create a shapely ellipse
+        """
+        circ = Point(self.centre).buffer(1)
+        ell = affinity.scale(circ, int(self.a), int(self.b))
+        ellr = affinity.rotate(ell, self.angle)
+        return ellr
 
 
     def getPolyline(self, numSegments=32):
@@ -163,6 +175,19 @@ class Ellipse:
 
         return False
 
+
+    def isEllipseInsideOf(self, otherEllipse, frac):
+        """
+        Check if fraction of this cluster is inside otherCluster
+        @param otherEllipse
+        @param frac fraction of min area of self and otherCluster
+        """
+        ellipse1 = create_ellipse(self.ellipse)
+        ellipse2 = create_ellipse(otherEllipse.ellipse)
+        intersect = ellipse1.intersection(ellipse2)
+        print 'intersect.area', intersect.area
+        min_area = min(ellipse1.area, ellipse2.area)
+        return len(intersect.area/min_area) >= frac
 
 
     def show(self, points=[], cells={}, show=True):
