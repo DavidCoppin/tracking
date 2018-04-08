@@ -84,7 +84,7 @@ class Ellipse:
     def getPolyline(self, numSegments=32, a=None, b=None):
         """
         Return the ellipse as a segmented line
-        @param numSegements number of segments
+        @param numSegments number of segments
         @param a principal axis length, default to self.a
         @param b second axis length, defaults to self.b
         @return iPts, jPts arrays
