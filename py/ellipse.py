@@ -110,7 +110,7 @@ class Ellipse:
     def getPolylineExt(self, numSegments=32):
         """
         Return the extended ellipse as a segmented line
-        @param numSegements number of segments
+        @param numSegments number of segments
         @return iPts, jPts arrays
         """
         return self.getPolyline(numSegments=numSegments, a=self.aExt, b=self.bExt)

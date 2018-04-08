@@ -160,10 +160,10 @@ class Cluster:
         Print object
         """
         res = """
-        Cluster: num cells = {} box = {} ellipse centre = {} a = {} b = {} transf = {}
+        Cluster: num cells = {} box = {} ellipse centre = {} a = {} b = {} transf = {} angle = {}
         """.format(len(self.cells), self.box, \
             self.ellipse.centre, self.ellipse.a, self.ellipse.b, \
-            self.ellipse.ij2AxesTransf)
+            self.ellipse.ij2AxesTransf, self.ellipse.angle)
         return res
 
 
