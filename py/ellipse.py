@@ -27,17 +27,20 @@ class Ellipse:
         self.a = 0.
         self.b = 0.
 
-        iCentre = numpy.sum([c[0] for c in cells]) / area
-        jCentre = numpy.sum([c[1] for c in cells]) / area
+        iInds = numpy.array([c[0] for c in cells], numpy.float64)
+        jInds = numpy.array([c[1] for c in cells], numpy.float64)
+
+        iCentre = iInds.sum() / area
+        jCentre = jInds.sum() / area
         self.centre = numpy.array([iCentre, jCentre])
 
         # compute inertia tensor (symmetric)
-        for i in range(2):
-            ci = self.centre[i]
-            for j in range(2):
-                cj = self.centre[j]
-                inertia[i, j] = numpy.sum( \
-                        [(ij[i] - ci)*(ij[j] - cj) for ij in cells])
+        iInds -= iCentre
+        jInds -= jCentre
+        inertia[0, 0] = numpy.sum(iInds * iInds)
+        inertia[0, 1] = numpy.sum(iInds * jInds)
+        inertia[1, 0] = inertia[0, 1]
+        inertia[1, 1] = numpy.sum(jInds * jInds)
 
         # the set of eigenvectors is the rotation matrix from ij space to the 
         # inertial tensor's principal axes
