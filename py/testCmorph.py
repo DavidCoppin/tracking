@@ -13,7 +13,7 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, frac_ellipse, save=False):
+def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, frac_ellipse, suffix, save=False):
     """
     Checking that we can create a time connected cluster from image
     """
@@ -52,7 +52,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, frac_el
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     f.close()
-    tcc.writeFile('cmorph.nc', i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    tcc.writeFile('cmorph.nc'+str(suffix), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
     if save:
         tcc.save('cmorph.pckl')
 
@@ -67,6 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('-lats', dest='lats', default='300:550', help='Min and max latitude indices LATMIN,LATMAX')
     parser.add_argument('-min_axis', dest='min_axis', type=float, default=6, help='Min ellipse axis in pixels')
     parser.add_argument('-frac_ellipse', dest='frac_ellipse', type=float, default=0.8, help='Threshold to merge overlapping ellipses')
+    parser.add_argument('-suffix', dest='suffix', default='', help='suffix for output')
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -85,5 +86,5 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_axis, args.frac_ellipse, args.save)
+    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.min_axis, args.frac_ellipse, args.suffix, args.save)
 

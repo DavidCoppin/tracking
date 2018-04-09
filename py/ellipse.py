@@ -180,14 +180,18 @@ class Ellipse:
             ellipse1 = ellipse_1.buffer(0)
         else:
             ellipse1 = ellipse_1
+        if ellipse1.is_empty:
+            return False
         ellipse_2 = self.createEllipse(otherEllipse.centre, otherEllipse.a, otherEllipse.b, otherEllipse.angle)
         if ellipse_2.is_valid == False:
             ellipse2 = ellipse_2.buffer(0)
         else:
             ellipse2 = ellipse_2
-#        print 'ellipse1, ellipse1.is_valid', ellipse1, ellipse1.is_valid
+        if ellipse2.is_empty:
+            return False
+#       print 'ellipse1.is_valid', ellipse1.is_valid
 #        print 'ellipse1.buffer(0)', ellipse1.buffer(0), ellipse1.buffer(0).is_valid
-#        print 'ellipse2.is_valid', ellipse2.is_valid
+#       print 'ellipse2.is_valid', ellipse2.is_valid
         intersect = ellipse1.intersection(ellipse2)
         min_area = min(ellipse1.area, ellipse2.area)
 #        print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
