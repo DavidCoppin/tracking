@@ -54,7 +54,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, frac_el
     f.close()
     tcc.writeFile('cmorph.nc_'+str(suffix), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
     if save:
-        tcc.save('cmorph.pckl')
+        tcc.save('cmorph.pckl_'+str(suffix))
 
 
 if __name__ == '__main__':

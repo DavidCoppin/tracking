@@ -25,14 +25,14 @@ def __reduceOne(cluster_list, frac):
                 del cluster_list[j]
                 return True
 
-            elif (cli.isCentreInsideOf(clj) or clj.isCentreInsideOf(cli)) :
-                elli = Ellipse(cli.cells, min_ellipse_axis=2)
-                ellj = Ellipse(clj.cells, min_ellipse_axis=2)
-                if elli.isEllipseInsideOf(ellj, frac):
-                    #print 'cli isEllipseInsideOf clj', cli, clj
-                    cli += clj
-                    del cluster_list[j]
-                    return True
+#            elif (cli.isCentreInsideOf(clj) or clj.isCentreInsideOf(cli)) :
+#                elli = Ellipse(cli.cells, min_ellipse_axis=2)
+#                ellj = Ellipse(clj.cells, min_ellipse_axis=2)
+#                if elli.isEllipseInsideOf(ellj, frac):
+#                    #print 'cli isEllipseInsideOf clj', cli, clj
+#                    cli += clj
+#                    del cluster_list[j]
+#                    return True
 
     return False
 
