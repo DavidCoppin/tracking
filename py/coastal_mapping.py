@@ -73,7 +73,7 @@ class CoastalMapping:
     def fillIslands(self,slm):
         """
         Fills in islands up to a certain size
-	@param slm: land-sea mask
+	    @param slm: land-sea mask
         @return array with big islands filled with 
         """
         slm = np.ma.masked_where(slm==0,slm).filled(255)

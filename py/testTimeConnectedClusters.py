@@ -243,7 +243,7 @@ def testDigits():
     # Version with Class
 #    clusters = extractClusters.extractPoints(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
     # Version inside testTimeConnecteClusters
-    clusters = extractClusters(numpy.flipud(data), thresh_min=0., thresh_max=2.5)
+    clusters = extractClusters(data, thresh_min=0., thresh_max=2.5)
     print clusters
 
     tcc = TimeConnectedClusters()

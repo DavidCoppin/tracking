@@ -44,15 +44,15 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, min_ellipse_axis, frac_el
         for t in xrange(48) :
             print 'nb_day, t', nb_day, t
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
-            clusters = FeatureExtractor(numpy.flipud(data), thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
+            clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
 #            print clusters
             tcc.addTime(clusters,frac_ellipse)
-
+        os.remove(newfilename)
     # write to file
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     f.close()
-    tcc.writeFile('cmorph.nc'+str(suffix), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    tcc.writeFile('cmorph.nc_'+str(suffix), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
     if save:
         tcc.save('cmorph.pckl')
 

@@ -241,7 +241,7 @@ class TimeConnectedClusters:
         t_index = f.createVariable('t_index', 'i4', ('tDim',))
 
         # check ordering!!
-        nb_var = f.createVariable('nb', 'i4', ('tDim', 'jDim', 'iDim'))
+        nb_var = f.createVariable('nb', 'i4', ('tDim', 'iDim', 'jDim'))
 
         # write the data
         i_index[:] = np.arange(iMin, iMax + 1)
@@ -249,7 +249,7 @@ class TimeConnectedClusters:
         t_index[:] = np.arange(0, self.t_index)
 
         # data buffer, check ordering!!
-        data = np.zeros((self.t_index, num_j, num_i), np.int32)
+        data = np.zeros((self.t_index, num_i, num_j), np.int32)
 
         for track_id in range(self.getNumberOfTracks()):
             for t_index in range(self.t_index):
@@ -260,7 +260,7 @@ class TimeConnectedClusters:
                     jis = [c[1] - jMin for c in cl.cells]
                     iis = [c[0] - iMin for c in cl.cells]
                     # check ordering!!
-                    data[tis, jis, iis] = track_id + 1
+                    data[tis, iis, jis] = track_id + 1
         # now write all the data in one go
         nb_var[:] = data
 
