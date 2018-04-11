@@ -108,10 +108,12 @@ class TimeConnectedClusters:
         """
         Add time entry
         @param new_clusters list of new clusters
+        @param frac TO DESCRIBE
         """
         # merge overlapping clusters
         reduce(new_clusters, frac)
 
+	# current number of clusters
         index = len(self.clusters)
 
         # special case if first time step
@@ -132,6 +134,7 @@ class TimeConnectedClusters:
 
         for new_cl in new_clusters:
 
+            # the tack Id that we need ot assign this cluster to
             new_track_id = -1
 
             # add the cluster
