@@ -5,6 +5,7 @@ import netCDF4
 import copy
 import math
 import cPickle
+import functools
     
 
 def __reduceOne(cluster_list, frac):
@@ -124,6 +125,7 @@ class TimeConnectedClusters:
             return 
 
         # assign the new clusters to existing tracks
+        new_track_ids = set() # new cluster index to track id
 
         for new_cl_index in range(len(new_clusters)):
 
@@ -163,27 +165,51 @@ class TimeConnectedClusters:
                 self.cluster_connect[new_track_id][self.t_index] = \
                                self.cluster_connect[new_track_id].get(self.t_index, []) + [index]
 
-            # backward tracking
+            new_track_ids.add(new_track_id)
+
+            # update self.cluster's index
+            index += 1
+
+        # backward tracking
+        # go through each new track and see if the track should 
+        # be merged with another track. The condition for a merge is
+        # when there are clusters at previous time that are inside the 
+        # the track's big cluster
+
+        new_track_ids_to_fuse = {}
+        for new_track_id in new_track_ids:
+
+            # compute the big cluster at current time for this new track
+            new_track = self.cluster_connect[new_track_id]
+            new_clusters = [self.clusters[i] for i in new_track[self.t_index]]
+            # merge all the cells across clusters
+            all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in new_clusters])
+            big_cluster = Cluster(all_cells)
+
             track_ids_to_fuse = set()
-            for track_id in range(num_tracks):
+            for track_id in range(self.getNumberOfTracks()):
 
                 if track_id == new_track_id:
                     # skip self
                     continue
 
+                # get the clusters at the previous time for this track 
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
 
-                    # is the centre of old_cl inside the ellipse of new_cl?
-                    if old_cl.isCentreInsideOfExt(new_cl):
+                    if old_cl.isClusterInsideOf(big_cluster, frac=0.9):
                         track_ids_to_fuse.add(track_id)
 
+            new_track_ids_to_fuse[new_track_id] = track_ids_to_fuse
+
+
+        # fuse the tracks that were selected
+        """
             if track_ids_to_fuse:
                 track_ids_to_fuse.add(new_track_id)
                 self.fuse(track_ids_to_fuse)
+                """
 
-            # update self.cluster's index
-            index += 1
 
         # done with assigning, update the time index
         self.t_index += 1
