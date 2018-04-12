@@ -51,9 +51,12 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
             # Extract clusters with watershed
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
-            for n in Cluster(clusters):
+            #print fe
+            for cl in clusters:
                 # Apply large mask to remove clusters too far away from islands
-                print cl.cells, cl
+                print 'cl', cl
+                print 'cl.cells', cl.cells, len(cl.cells)
+                print 'Cluster(cm.lArea)', Cluster(cm.lArea)
                 if cl.isClusterInsideOf(cm.lArea, 0.9):
                     pass
                 else:
