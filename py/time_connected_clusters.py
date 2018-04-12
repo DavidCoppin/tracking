@@ -125,7 +125,9 @@ class TimeConnectedClusters:
 
         # assign the new clusters to existing tracks
 
-        for new_cl in new_clusters:
+        for new_cl_index in range(len(new_clusters)):
+
+            new_cl = new_clusters[new_cl_index]
 
             # the tack Id that we need ot assign this cluster to
             new_track_id = -1
@@ -180,7 +182,7 @@ class TimeConnectedClusters:
                 track_ids_to_fuse.add(new_track_id)
                 self.fuse(track_ids_to_fuse)
 
-            # update the cluster index
+            # update self.cluster's index
             index += 1
 
         # done with assigning, update the time index
