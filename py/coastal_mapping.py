@@ -51,10 +51,15 @@ class CoastalMapping:
         mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
         #Get the caostal area via inverse Box-counting
-        self.lArea = self.createCoastalArea(mask_coast,lzone,1)
-        self.sArea = self.createCoastalArea(mask_coast,szone,1)
-        self.sArea[np.where(slm_fill>=1)] = 1
-
+        lArea = self.createCoastalArea(mask_coast,lzone,1)
+        sArea = self.createCoastalArea(mask_coast,szone,1)
+        sArea[np.where(slm_fill>=1)] = 1
+        self.lArea = zip(*np.where(lArea == 1))
+        self.sArea = zip(*np.where(sArea == 1))
+        #mpl.contourf(lArea)
+        #mpl.show()
+        #mpl.contourf(sArea)
+        #mpl.show()
 
     def findCoastline(self,data,smooth_radius=2.5):
         """

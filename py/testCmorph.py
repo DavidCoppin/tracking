@@ -51,23 +51,38 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
             # Extract clusters with watershed
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
-            #print fe
+            new_clusters = clusters
+            n=0
             for cl in clusters:
                 # Apply large mask to remove clusters too far away from islands
-                print 'cl', cl
-                print 'cl.cells', cl.cells, len(cl.cells)
-                print 'Cluster(cm.lArea)', Cluster(cm.lArea)
-                if cl.isClusterInsideOf(cm.lArea, 0.9):
+#                print 'cl', cl
+#                print 'cl.cells', cl.cells, len(cl.cells)
+#                print 'Cluster(cm.lArea).cells', Cluster(cm.lArea).cells
+                if cl.isClusterInsideOf(Cluster(cm.sArea), 0.9):
                     pass
                 else:
-                    new_clusters[new_clusters==clusters[cl]]=0
-            new_clusters = Cluster.isClusterInsideOf(clusters, cm.lArea, 0.9)
+                    new_clusters.remove(cl)
+                    n=n+1
+                    print 'n', n
+#                   print 'cl removed', cl
+            print 'len(clusters), len(new_clusters)', len(clusters), len(new_clusters)
+            test_clusters = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+            test_new_clusters = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+            test_lArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+            test_sArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+            for cl in clusters:
+                test_clusters[numpy.argwhere(cl.cells)]=1
+            for new_cl in new_clusters:
+                test_clusters[numpy.argwhere(new_cl.cells)]=1
+#            test_lArea[numpy.where(Cluster(cm.lArea).cells)]=1
+#            test_sArea[numpy.where(Cluster(cm.sArea).cells)]=1
+            print 'numpy.max(test_clusters), numpy.max(test_new_clusters)', numpy.max(test_clusters), numpy.max(test_new_clusters)
             mpl.subplot(1,2,1)
-            mpl.contourf(np.flipud(clusters))
-            mpl.contour(np.flipud(cm.lArea))
+            mpl.contourf(numpy.flipud(test_clusters))
+#            mpl.contour(numpy.flipud(test_lArea))
             mpl.subplot(1,2,2)
-            mpl.contourf(np.flipud(new_clusters))
-            mpl.contour(np.flipud(cm.lArea))
+            mpl.contourf(numpy.flipud(test_new_clusters))
+#            mpl.contour(numpy.flipud(test_lArea))
             mpl.show()
             sys.exit()
 #            print clusters
