@@ -78,17 +78,10 @@ class TimeConnectedClusters:
         """
         Fuse track Ids. Only the first track ID will survive, all other track Ids
         will be folded into the first one
-        @param track_ids list of track Ids
+        @param track_ids set of track Ids
         """
 
-        # remove duplicates
-        trs = set(track_ids)
-
-        if len(trs) <= 1:
-            # nothing to do
-            return
-
-        tr_ids = list(trs)
+        tr_ids = list(track_ids)
         tr_ids.sort()
         track_id0 = tr_ids[0]
         cl_conn0 = self.cluster_connect[track_id0]
@@ -169,7 +162,7 @@ class TimeConnectedClusters:
                                self.cluster_connect[new_track_id].get(self.t_index, []) + [index]
 
             # backward tracking
-            track_ids_to_fuse = []
+            track_ids_to_fuse = set()
             for track_id in range(num_tracks):
 
                 if track_id == new_track_id:
@@ -181,10 +174,11 @@ class TimeConnectedClusters:
 
                     # is the centre of old_cl inside the ellipse of new_cl?
                     if old_cl.isCentreInsideOfExt(new_cl):
-                        track_ids_to_fuse.append(track_id)
+                        track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
-                self.fuse(track_ids_to_fuse + [new_track_id])
+                track_ids_to_fuse.add(new_track_id)
+                self.fuse(track_ids_to_fuse)
 
             # update the cluster index
             index += 1
