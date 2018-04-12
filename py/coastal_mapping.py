@@ -31,6 +31,7 @@ class CoastalMapping:
         self.reso = reso
         self.min_size = min_size
         self.max_size = max_size
+        print type(self.reso), self.reso
         if self.reso==8:
             print dataname
             slm = nc(dataname).variables['lsm'][lat_slice,lon_slice]

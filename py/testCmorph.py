@@ -15,14 +15,13 @@ import bz2
 from datetime import datetime,timedelta as td
 
 def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_axis, frac_ellipse, \
-                szone, lzone, min_size, max_size, suffix, save=False):
+                suffix, szone, lzone, min_size, max_size, save=False):
     """
     Checking that we can create a time connected cluster from image
     """
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
     # Get the two coastal masks
-    print 'lsm', lsm
     cm = CoastalMapping(lsm, numpy.int(reso), lat_slice, lon_slice, numpy.int(szone), \
                          numpy.int(lzone), numpy.int(min_size), numpy.int(max_size))
     llat = minmax_lats[1] - minmax_lats[0]
@@ -52,8 +51,14 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
             # Extract clusters with watershed
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
-            # Apply large mask to remove clusters too far away from islands
-            new_clusters = Clusters.isClusterInsideOf(clusters, cm.lArea, 0.9)
+            for n in Cluster(clusters):
+                # Apply large mask to remove clusters too far away from islands
+                print cl.cells, cl
+                if cl.isClusterInsideOf(cm.lArea, 0.9):
+                    pass
+                else:
+                    new_clusters[new_clusters==clusters[cl]]=0
+            new_clusters = Cluster.isClusterInsideOf(clusters, cm.lArea, 0.9)
             mpl.subplot(1,2,1)
             mpl.contourf(np.flipud(clusters))
             mpl.contour(np.flipud(cm.lArea))
@@ -93,11 +98,11 @@ if __name__ == '__main__':
     parser.add_argument('-frac_ellipse', dest='frac_ellipse', type=float, default=0.8, \
                            help='Threshold to merge overlapping ellipses')
     parser.add_argument('-suffix', dest='suffix', default='', help='suffix for output')
-    parser.add_argument('-sz', dest='sz', default='6', help='small distance to coast in pixels')
-    parser.add_argument('-lz', dest='lz', default='50', help='large distance to coast in pixels')
-    parser.add_argument('-smin', dest='smin', default='300', help='area below which islands \
+    parser.add_argument('-sz', dest='szone', default='6', help='small distance to coast in pixels')
+    parser.add_argument('-lz', dest='lzone', default='50', help='large distance to coast in pixels')
+    parser.add_argument('-smin', dest='min_size', default='300', help='area below which islands \
                            are deleted in km2')
-    parser.add_argument('-smax', dest='smax', default='800000', help='max area of filled \
+    parser.add_argument('-smax', dest='max_size', default='800000', help='max area of filled \
                            islands in km2')
     args = parser.parse_args()
 
@@ -117,7 +122,7 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.min_axis, args.reso, \
-                args.frac_ellipse, args.suffix, args.sz, args.lz, args.smin, args.smax, \
-                args.save)
+    testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.reso, args.min_axis, \
+                args.frac_ellipse, args.suffix, args.szone, args.lzone, args.min_size, \
+                args.max_size, args.save)
 
