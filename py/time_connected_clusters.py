@@ -80,6 +80,7 @@ class TimeConnectedClusters:
         Fuse track Ids. Only the first track ID will survive, all other track Ids
         will be folded into the first one
         @param track_ids set of track Ids
+        @return track Ids marked for deletion
         """
 
         tr_ids = list(track_ids)
@@ -91,11 +92,9 @@ class TimeConnectedClusters:
             for t_index, cl_list in self.cluster_connect[track_id].items():
                 cl_conn0[t_index] = cl_conn0.get(t_index, []) + cl_list
 
-        # remove all the merged tracks
+        # return the track Ids marked for deletion
         n = len(tr_ids)
-        for i in range(n - 1, 0, -1):
-            track_id = tr_ids[i]
-            del self.cluster_connect[track_id]
+        return [tr_ids[i] for i in range(n - 1, 0, -1)]
 
 
     def addTime(self, new_clusters, frac):
@@ -176,7 +175,7 @@ class TimeConnectedClusters:
         # when there are clusters at previous time that are inside the 
         # the track's big cluster
 
-        new_track_ids_to_fuse = {}
+        new_track_ids_to_fuse = []
         for new_track_id in new_track_ids:
 
             # compute the big cluster at current time for this new track
@@ -197,18 +196,45 @@ class TimeConnectedClusters:
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
 
-                    if old_cl.isClusterInsideOf(big_cluster, frac=0.9):
+                    if old_cl.isCentreInsideOf(big_cluster): #ClusterInsideOf(big_cluster, frac=0.9):
                         track_ids_to_fuse.add(track_id)
 
-            new_track_ids_to_fuse[new_track_id] = track_ids_to_fuse
-
-
-        # fuse the tracks that were selected
-        """
             if track_ids_to_fuse:
                 track_ids_to_fuse.add(new_track_id)
-                self.fuse(track_ids_to_fuse)
-                """
+                new_track_ids_to_fuse.append(track_ids_to_fuse)
+
+        # reduce list of tracks to fuse by looking at common track Ids between
+        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
+        # removal in delete_elem
+        delete_elem = set()
+        n = len(new_track_ids_to_fuse)
+        for i in range(n):
+            li = new_track_ids_to_fuse[i]
+            for j in range(i + 1, n):
+                lj = new_track_ids_to_fuse[j]
+                if li.intersection(lj):
+                    # there is an intersection, join the two
+                    new_track_ids_to_fuse[i] = li.union(lj)
+                    # and tag lj for removal
+                    delete_elem.add(j)
+
+        # remove the tagged elements, working your way backwards
+        delete_elem = list(delete_elem)
+        delete_elem.sort(reverse=True)
+        for i in delete_elem:
+            del new_track_ids_to_fuse[i]
+
+        # now fuse
+        delete_track_ids = []
+        #print '*** delete_elem = ', delete_elem, ' new_track_ids_to_fuse = ', new_track_ids_to_fuse
+        for ids_to_fuse in new_track_ids_to_fuse:
+            #print '*** ids_to_fuse = ', ids_to_fuse
+            delete_track_ids += self.fuse(ids_to_fuse)
+
+        # now delete the track Ids that were fused
+        delete_track_ids.sort(reverse=True)
+        for i in delete_track_ids:
+            del self.cluster_connect[i]
 
 
         # done with assigning, update the time index
