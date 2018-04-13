@@ -38,8 +38,9 @@ def testABC():
     ntot = data.shape[0] * data.shape[1]
     print 'data has {} non-zeros values out of {}'.format(nz, ntot)
 
-    fe = FeatureExtractor(data, thresh_min=0.9, thresh_max=0.99)
+    fe = FeatureExtractor(data, thresh_low=0, thresh_high=4)
     cs = fe.getClusters()
+    print 'fe', fe
     print 'number of features: {}'.format(len(cs))
     for c in cs:
         print c
