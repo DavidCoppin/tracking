@@ -65,16 +65,13 @@ class Cluster:
         return otherCluster.ellipse.isPointInsideExt(self.ellipse.getCentre())
 
 
-    def isClusterInsideOf(self, mask, frac):
+    def isClusterInsideOf(self, otherCluster, frac=0.99):
         """
-        Check if fraction of this cluster is inside mask 
-        @param mask coastal mask
+        Check if fraction of this cluster is inside other cluster 
         @param frac fraction of min area of self
-        @return True if at least frac of self is in mask
+        @return True if at least frac is inside
         """
-#        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
-#        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
-        min_area = min(len(self.cells))
+        min_area = min(len(self.cells), len(otherCluster.cells))
         return len(self.cells.intersection(otherCluster.cells)) >= frac * min_area
 
 
