@@ -206,6 +206,15 @@ class TimeConnectedClusters:
         # reduce list of tracks to fuse by looking at common track Ids between
         # the elements of new_track_ids_to_fuse. These elements will be tagged for 
         # removal in delete_elem
+        self._fuseAll(new_track_ids_to_fuse)
+ 
+
+        # done with assigning, update the time index
+        self.t_index += 1
+
+    def _fuseAll(self, new_track_ids_to_fuse):
+        """
+        """
         delete_elem = set()
         n = len(new_track_ids_to_fuse)
         for i in range(n):
@@ -236,9 +245,6 @@ class TimeConnectedClusters:
         for i in delete_track_ids:
             del self.cluster_connect[i]
 
-
-        # done with assigning, update the time index
-        self.t_index += 1
 
 
     def getMinMaxIndices(self):
