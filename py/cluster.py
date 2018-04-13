@@ -74,7 +74,7 @@ class Cluster:
         """
 #        print 'len(self.cells.intersection(otherCluster.cells))', len(self.cells.intersection(otherCluster.cells))
 #        print 'frac * min(len(self.cells), len(otherCluster.cells))', frac * min(len(self.cells), len(otherCluster.cells))
-        min_area = len(self.cells)
+        min_area = min(len(self.cells), len(mask.cells))
         return len(self.cells.intersection(mask.cells)) >= frac * min_area
 
 

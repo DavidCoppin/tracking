@@ -51,42 +51,41 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             data = f.variables["CMORPH"][t, lat_slice, lon_slice]
             # Extract clusters with watershed
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
-            new_clusters = clusters
-            n=0
-            for cl in clusters:
-                # Apply large mask to remove clusters too far away from islands
-#                print 'cl', cl
-#                print 'cl.cells', cl.cells, len(cl.cells)
-#                print 'Cluster(cm.lArea).cells', Cluster(cm.lArea).cells
-                if cl.isClusterInsideOf(Cluster(cm.sArea), 0.9):
+#            print 'len(clusters) av', len(clusters)
+#            test_clusters_av = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+#            for cl in clusters:
+#                for n in range(len(cl.cells)):
+#                    test_clusters_av[list(cl.cells)[n][0], list(cl.cells)[n][1]]=1
+            # Delete clusters outside of lArea
+            delete_cluster_indx = []
+            for i in range(len(clusters)):
+                cl = clusters[i]
+                if cl.isClusterInsideOf(Cluster(cm.lArea), 0.9):
                     pass
                 else:
-                    new_clusters.remove(cl)
-                    n=n+1
-                    print 'n', n
-#                   print 'cl removed', cl
-            print 'len(clusters), len(new_clusters)', len(clusters), len(new_clusters)
-            test_clusters = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-            test_new_clusters = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-            test_lArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-            test_sArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-            for cl in clusters:
-                test_clusters[numpy.argwhere(cl.cells)]=1
-            for new_cl in new_clusters:
-                test_clusters[numpy.argwhere(new_cl.cells)]=1
-#            test_lArea[numpy.where(Cluster(cm.lArea).cells)]=1
-#            test_sArea[numpy.where(Cluster(cm.sArea).cells)]=1
-            print 'numpy.max(test_clusters), numpy.max(test_new_clusters)', numpy.max(test_clusters), numpy.max(test_new_clusters)
-            mpl.subplot(1,2,1)
-            mpl.contourf(numpy.flipud(test_clusters))
-#            mpl.contour(numpy.flipud(test_lArea))
-            mpl.subplot(1,2,2)
-            mpl.contourf(numpy.flipud(test_new_clusters))
-#            mpl.contour(numpy.flipud(test_lArea))
-            mpl.show()
-            sys.exit()
-#            print clusters
-            tcc.addTime(new_clusters,frac_ellipse)
+                    delete_cluster_indx.append(i)
+
+            delete_cluster_indx.sort(reverse=True)
+            for i in delete_cluster_indx:
+                del clusters[i]
+
+#            test_clusters_ap = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+#            test_lArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+#            test_sArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
+#            for cl in clusters:
+#                for n in range(len(cl.cells)):
+#                    test_clusters_ap[list(cl.cells)[n][0], list(cl.cells)[n][1]]=1
+#            mpl.subplot(1,2,1)
+#            mpl.contourf(numpy.flipud(data))
+#            mpl.contour(numpy.flipud(test_clusters_av))
+#            mpl.contour(numpy.flipud(test_sArea))
+#            mpl.subplot(1,2,2)
+#            mpl.contourf(numpy.flipud(data))
+#            mpl.contour(numpy.flipud(test_clusters_ap))
+#            mpl.contour(numpy.flipud(test_sArea))
+#            mpl.show()
+#            sys.exit()
+            tcc.addTime(clusters,frac_ellipse)
         os.remove(newfilename)
     # write to file
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
@@ -102,11 +101,11 @@ if __name__ == '__main__':
     parser.add_argument('-w', action='store_true', help='Print copyright')
     parser.add_argument('-save', dest='save', action='store_true', help='Save time connected clusters \
                            object for debugging')
-    parser.add_argument('-d1', dest='date1', default='2010-01-12', help='Start date YYYY-MM-DD')
-    parser.add_argument('-d2', dest='date2', default='2010-01-13', help='End date YYYY-MM-DD')
-    parser.add_argument('-lons', dest='lons', default='1450:1700', help='Min and max longitude \
+    parser.add_argument('-d1', dest='date1', default='2010-02-19', help='Start date YYYY-MM-DD')
+    parser.add_argument('-d2', dest='date2', default='2010-02-21', help='End date YYYY-MM-DD')
+    parser.add_argument('-lons', dest='lons', default='1700:2200', help='Min and max longitude \
                            indices LONMIN,LONMAX')
-    parser.add_argument('-lats', dest='lats', default='300:550', help='Min and max latitude \
+    parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
                            indices LATMIN,LATMAX')
     parser.add_argument('-min_axis', dest='min_axis', type=float, default=6, help='Min ellipse \
                            axis in pixels')
