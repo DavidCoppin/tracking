@@ -106,7 +106,7 @@ class TimeConnectedClusters:
         # merge overlapping clusters
         reduce(new_clusters, frac)
 
-	# current number of clusters
+        # current number of clusters
         index = len(self.clusters)
 
         # special case if first time step
@@ -123,7 +123,31 @@ class TimeConnectedClusters:
             self.t_index += 1
             return 
 
-        # assign the new clusters to existing tracks
+
+        new_track_ids = self._forwardTracking(new_clusters)
+
+        new_track_ids_to_fuse = self._backwardTracking(new_track_ids)
+
+        # reduce list of tracks to fuse by looking at common track Ids between
+        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
+        # removal in delete_elem
+        self._fuseAll(new_track_ids_to_fuse)
+ 
+        # done with assigning, update the time index
+        self.t_index += 1
+
+
+    def _forwardTracking(self, new_clusters):
+        """
+        Forward tracking: assign new clusters to existing tracks
+        @param new_clusters new clusters
+        @return set of track Ids to which the new clusters belong
+        """
+
+        # current number of clusters
+        index = len(self.clusters)
+
+        # set of track Ids to which the new clusters will be assigned to
         new_track_ids = set() # new cluster index to track id
 
         for new_cl_index in range(len(new_clusters)):
@@ -169,20 +193,30 @@ class TimeConnectedClusters:
             # update self.cluster's index
             index += 1
 
-        # backward tracking
+        return new_track_ids
+
+
+    def _backwardTracking(self, new_track_ids):
+        """
+        Backward tracking: 
+        @param new_track_ids list of track Ids to which 
+                             _forwardTracking associated
+                             the clusters
+        @return list of new track Ids that will need to be fused
+        """
         # go through each new track and see if the track should 
-        # be merged with another track. The condition for a merge is
-        # when there are clusters at previous time that are inside the 
-        # the track's big cluster
+        # be merged with another track. Two tracks are tagged for a fuse if 
+        # cluster at time t - dt is inside the group of clusters at time t
 
         new_track_ids_to_fuse = []
         for new_track_id in new_track_ids:
 
-            # compute the big cluster at current time for this new track
+            # compute the big cluster at new_track_id
             new_track = self.cluster_connect[new_track_id]
             new_clusters = [self.clusters[i] for i in new_track[self.t_index]]
             # merge all the cells across clusters
             all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in new_clusters])
+            # this will also compute the ellipse
             big_cluster = Cluster(all_cells)
 
             track_ids_to_fuse = set()
@@ -192,7 +226,7 @@ class TimeConnectedClusters:
                     # skip self
                     continue
 
-                # get the clusters at the previous time for this track 
+                # get the clusters in track_id at the previous time 
                 old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in [self.clusters[i] for i in old_cluster_inds]:
 
@@ -203,18 +237,17 @@ class TimeConnectedClusters:
                 track_ids_to_fuse.add(new_track_id)
                 new_track_ids_to_fuse.append(track_ids_to_fuse)
 
-        # reduce list of tracks to fuse by looking at common track Ids between
-        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
-        # removal in delete_elem
-        self._fuseAll(new_track_ids_to_fuse)
- 
+        return new_track_ids_to_fuse
 
-        # done with assigning, update the time index
-        self.t_index += 1
 
     def _fuseAll(self, new_track_ids_to_fuse):
         """
+        Apply fuse method to a list of track branches to merge
+        @param new_track_ids_to_fuse list of sets
         """
+
+        # create union of tracks to merge and tage the merged tracks
+        # removal
         delete_elem = set()
         n = len(new_track_ids_to_fuse)
         for i in range(n):
@@ -227,7 +260,7 @@ class TimeConnectedClusters:
                     # and tag lj for removal
                     delete_elem.add(j)
 
-        # remove the tagged elements, working your way backwards
+        # remove the tagged elements, working our way backwards
         delete_elem = list(delete_elem)
         delete_elem.sort(reverse=True)
         for i in delete_elem:
