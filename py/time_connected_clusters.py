@@ -38,7 +38,7 @@ def __reduceOne(cluster_list, frac):
     return False
 
 
-def reduce(cluster_list, frac):
+def reduce(cluster_list, frac=1.0):
     """
     Fully reduce until no more reduction can be applied 
     @param cluster_list in/out cluster list
