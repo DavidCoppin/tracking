@@ -1,6 +1,6 @@
 from netCDF4 import Dataset as nc
 import argparse
-import numpy
+import numpy as np
 import matplotlib.pyplot as mpl
 import time
 from time_connected_clusters import TimeConnectedClusters
@@ -22,14 +22,14 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
     # Get the two coastal masks
-    cm = CoastalMapping(lsm, numpy.int(reso), lat_slice, lon_slice, numpy.int(szone), \
-                         numpy.int(lzone), numpy.int(min_size), numpy.int(max_size))
+    cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
+                         np.int(lzone), np.int(min_size), np.int(max_size))
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
-    precip = numpy.zeros((llat,llon))
+    precip = np.zeros((llat,llon))
     print 'dates', dates
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
@@ -53,7 +53,8 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             print 'nb_day, t', nb_day, t
             data = all_data[t]
             # Extract clusters with watershed
-            clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
+            clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5, \
+            mask=np.flipud(cm.lArea), frac=0.8).getClusters(min_ellipse_axis)
             # Delete clusters outside of lArea
 #            delete_cluster_indx = []
 #            for i in range(len(clusters)):
@@ -108,13 +109,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # get the lat-lon box
-    print numpy.array(args.lons.split(':'))
+    print np.array(args.lons.split(':'))
     try:
-        minmax_lons = numpy.array(args.lons.split(':')).astype(numpy.int)
+        minmax_lons = np.array(args.lons.split(':')).astype(np.int)
     except:
         raise RuntimeError, 'Wrong specification of longitude bound indices, use -lons LONMIN:LONMAX'
     try:
-        minmax_lats = numpy.array(args.lats.split(':')).astype(numpy.int)
+        minmax_lats = np.array(args.lats.split(':')).astype(np.int)
     except:
         raise RuntimeError, 'Wrong specification of latitude bound indices, use -lats LATMIN:LATMAX'
     try:

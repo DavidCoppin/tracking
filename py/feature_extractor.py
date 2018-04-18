@@ -16,6 +16,7 @@ from scipy import ndimage
 from skimage.morphology import watershed
 from cluster import Cluster
 import cv2
+import itertools
 
 """
 A Class that extracts the clusters from the original data using watershed algorithm from opencv
@@ -23,14 +24,18 @@ A Class that extracts the clusters from the original data using watershed algori
 
 class FeatureExtractor:
 
-    def __init__(self, data, thresh_low, thresh_high):
+    def __init__(self, data, thresh_low, thresh_high, mask, frac):
         """
         Extract clusters from an image data
         @param data
         @param thresh_low
         @param thresh_high
+        @param mask
+        @param frac: overlap threshold for mask
         @return list of clusters
         """
+        self.mask = mask
+        self.frac = frac
 	    # remove data below minimum threshold
         ma_data = numpy.ma.masked_where(data <= thresh_low, data)
         # build black and white image with lower threshold to create borders for watershed
@@ -51,7 +56,27 @@ class FeatureExtractor:
         markers[border == 255] = 255
         # label each feature
         self.labels = watershed(-data, markers, mask=bw_data)
-    
+        # remove clusters outside of mask
+        self.labels = self.removeLargeScale()
+
+
+    def removeLargeScale(self):
+        """
+        Remove clusters outside of the mask
+        """
+        new_label = numpy.zeros_like(self.labels)
+        nb=1
+        for label in numpy.unique(self.labels):
+            # if the label is zero, we are examining the 'background'
+            if label == 0:
+                continue
+            labeled = numpy.zeros_like(self.mask)
+            labeled[numpy.where(self.labels == label)] = 1
+            if self.mask[numpy.where(labeled==1)].mean() >= self.frac:
+                new_label[numpy.where(self.labels == label)] = nb
+                nb = nb+1
+        return new_label
+
 
     def getClusters(self, min_ellipse_axis=1):
         """
