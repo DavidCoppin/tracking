@@ -239,12 +239,10 @@ class TimeConnectedClusters:
                     # skip self
                     continue
 
-                # get the clusters in track_id at the previous time 
-                old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
-                for old_cl in [self.clusters[i] for i in old_cluster_inds]:
-
-                    if old_cl.isClusterInsideOf(big_cluster, frac=0.9): #isCentreInsideOf(big_cluster):
-                        track_ids_to_fuse.add(track_id)
+                # get the big cluster in track_id at the previous time
+                old_big_cluster = old_big_clusters[track_id]
+                if old_big_cluster and old_big_cluster.isClusterInsideOf(big_cluster, frac=0.9):
+                    track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
                 track_ids_to_fuse.add(new_track_id)
