@@ -196,6 +196,20 @@ class TimeConnectedClusters:
         return new_track_ids
 
 
+    def getBigClusterAt(self, track_id, t_index):
+        """
+        Construct a big cluster from all the track_id clusters at time t_index
+        @param track_id track Id
+        @param t_index time index
+        @return one big cluster representing the merge of all smaller clusters
+        """
+        clusters = [self.clusters[i] for i in self.cluster_connect[track_id].get(t_index, [])]
+        if not clusters:
+            return None
+        all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in clusters])
+        return Cluster(all_cells)
+
+
     def _backwardTracking(self, new_track_ids):
         """
         Backward tracking: 
@@ -208,16 +222,15 @@ class TimeConnectedClusters:
         # be merged with another track. Two tracks are tagged for a fuse if 
         # cluster at time t - dt is inside the group of clusters at time t
 
+        # create a big cluster for 
+        numTracks = self.getNumberOfTracks()
+        old_big_clusters = {track_id: self.getBigClusterAt(track_id, self.t_index - 1) for track_id in range(numTracks)}
+
         new_track_ids_to_fuse = []
         for new_track_id in new_track_ids:
 
             # compute the big cluster at new_track_id
-            new_track = self.cluster_connect[new_track_id]
-            new_clusters = [self.clusters[i] for i in new_track[self.t_index]]
-            # merge all the cells across clusters
-            all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in new_clusters])
-            # this will also compute the ellipse
-            big_cluster = Cluster(all_cells)
+            big_cluster = self.getBigClusterAt(new_track_id, self.t_index)
 
             track_ids_to_fuse = set()
             for track_id in range(self.getNumberOfTracks()):
