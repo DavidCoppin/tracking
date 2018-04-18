@@ -26,15 +26,6 @@ def __reduceOne(cluster_list, frac):
                 del cluster_list[j]
                 return True
 
-#            elif (cli.isCentreInsideOf(clj) or clj.isCentreInsideOf(cli)) :
-#                elli = Ellipse(cli.cells, min_ellipse_axis=2)
-#                ellj = Ellipse(clj.cells, min_ellipse_axis=2)
-#                if elli.isEllipseInsideOf(ellj, frac):
-#                    #print 'cli isEllipseInsideOf clj', cli, clj
-#                    cli += clj
-#                    del cluster_list[j]
-#                    return True
-
     return False
 
 
@@ -103,7 +94,9 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         @param frac TO DESCRIBE
         """
-        # merge overlapping clusters
+        # merge overlapping clusters, this will reduce the number of 
+        # clusters to track but should have no influence on the 
+        # final result
         reduce(new_clusters, frac)
 
         # current number of clusters
@@ -222,18 +215,25 @@ class TimeConnectedClusters:
         # be merged with another track. Two tracks are tagged for a fuse if 
         # cluster at time t - dt is inside the group of clusters at time t
 
-        # create a big cluster for 
-        numTracks = self.getNumberOfTracks()
-        old_big_clusters = {track_id: self.getBigClusterAt(track_id, self.t_index - 1) for track_id in range(numTracks)}
+        # create big clusters for each of the track_ids that are present at
+        # the previous time step
+        old_big_clusters = {}
+        for track_id in range(self.getNumberOfTracks()):
+        	cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
+        	if cluster_ids:
+        		old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
 
+        # find the tracks to fuse
         new_track_ids_to_fuse = []
+
+        # iterate over each the tracks the new clusters belong to
         for new_track_id in new_track_ids:
 
-            # compute the big cluster at new_track_id
+            # big cluster in new_track_id at the present time
             big_cluster = self.getBigClusterAt(new_track_id, self.t_index)
 
             track_ids_to_fuse = set()
-            for track_id in range(self.getNumberOfTracks()):
+            for track_id in old_big_clusters:
 
                 if track_id == new_track_id:
                     # skip self
@@ -241,11 +241,14 @@ class TimeConnectedClusters:
 
                 # get the big cluster in track_id at the previous time
                 old_big_cluster = old_big_clusters[track_id]
-                if old_big_cluster and old_big_cluster.isClusterInsideOf(big_cluster, frac=0.9):
+                if old_big_clusters[track_id].isClusterInsideOf(big_cluster, frac=0.9):
+                	# tag this cluster for later fuse with new_track_id
                     track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
+            	# add new_track_id to the set
                 track_ids_to_fuse.add(new_track_id)
+                # store
                 new_track_ids_to_fuse.append(track_ids_to_fuse)
 
         return new_track_ids_to_fuse
