@@ -29,6 +29,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     tcc = TimeConnectedClusters()
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
+    precip = numpy.zeros((llat,llon))
     print 'dates', dates
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
@@ -46,52 +47,35 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             f = nc(newfilename)
         except RuntimeError:
             f = nc(newfilename.replace('-','_'))
+        all_data = f.variables["CMORPH"][:, lat_slice, lon_slice]
+        all_time = f.variables["time"][:]
         for t in xrange(48) :
             print 'nb_day, t', nb_day, t
-            data = f.variables["CMORPH"][t, lat_slice, lon_slice]
+            data = all_data[t]
             # Extract clusters with watershed
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5).getClusters(min_ellipse_axis)
-#            print 'len(clusters) av', len(clusters)
-#            test_clusters_av = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-#            for cl in clusters:
-#                for n in range(len(cl.cells)):
-#                    test_clusters_av[list(cl.cells)[n][0], list(cl.cells)[n][1]]=1
             # Delete clusters outside of lArea
-            delete_cluster_indx = []
-            for i in range(len(clusters)):
-                cl = clusters[i]
-                if cl.isClusterInsideOf(Cluster(cm.lArea), 0.9):
-                    pass
-                else:
-                    delete_cluster_indx.append(i)
+#            delete_cluster_indx = []
+#            for i in range(len(clusters)):
+#                cl = clusters[i]
+#                if cl.isClusterInsideOf(Cluster(cm.lArea), 0.9):
+#                    pass
+#                else:
+#                    delete_cluster_indx.append(i)
 
-            delete_cluster_indx.sort(reverse=True)
-            for i in delete_cluster_indx:
-                del clusters[i]
-
-#            test_clusters_ap = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-#            test_lArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-#            test_sArea = numpy.zeros((numpy.shape(data)[0], numpy.shape(data)[1]))
-#            for cl in clusters:
-#                for n in range(len(cl.cells)):
-#                    test_clusters_ap[list(cl.cells)[n][0], list(cl.cells)[n][1]]=1
-#            mpl.subplot(1,2,1)
-#            mpl.contourf(numpy.flipud(data))
-#            mpl.contour(numpy.flipud(test_clusters_av))
-#            mpl.contour(numpy.flipud(test_sArea))
-#            mpl.subplot(1,2,2)
-#            mpl.contourf(numpy.flipud(data))
-#            mpl.contour(numpy.flipud(test_clusters_ap))
-#            mpl.contour(numpy.flipud(test_sArea))
-#            mpl.show()
-#            sys.exit()
+#            delete_cluster_indx.sort(reverse=True)
+#            for i in delete_cluster_indx:
+#                del clusters[i]
             tcc.addTime(clusters,frac_ellipse)
+        tcc.getPrecip(all_data, all_time)
         os.remove(newfilename)
     # write to file
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+    unit = f.variables["time"].units
     f.close()
-    tcc.writeFile('cmorph.nc_'+str(suffix), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    tcc.writeFile('cmorph.nc_'+str(suffix), unit, lat, lon, i_minmax=(0, len(lat)), \
+                   j_minmax=(0, len(lon)))
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
 
