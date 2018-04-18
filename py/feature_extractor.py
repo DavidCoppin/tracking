@@ -16,7 +16,6 @@ from scipy import ndimage
 from skimage.morphology import watershed
 from cluster import Cluster
 import cv2
-import itertools
 
 """
 A Class that extracts the clusters from the original data using watershed algorithm from opencv
