@@ -219,6 +219,59 @@ class TimeConnectedClusters:
         return i_min, j_min, i_max, j_max
 
 
+    def removeTracksByValidMask(self, valid_mask, frac):
+        """
+        Remove the tracks that never overlap with the valid mask
+        @param valid_mask is 1 over the regions where we keep the tracks
+        @param frac threshold for the min fraction of overlap (0 <= frac <= 1)
+        """
+
+        # store the track ids that need to be removed
+        remove_track_ids = []
+
+        # geet the data sizes and create array
+        iMin, jMin, iMax, jMax = self.getMinMaxIndices()
+        num_i = iMax - iMin
+        num_j = jMax - jMin
+        data = np.zeros((num_i, num_j), np.int32)
+
+        # iterate over each track id
+        for track_id in range(self.getNumberOfTracks()):
+
+            found_overlap = False
+
+            # iterate over each time step
+            for t_index in self.cluster_connect:
+
+                # get all the clusters in track_id at this time
+                clusters = self.getClusters(track_id, t_index)
+
+                for cl in clusters:
+
+                    # build the list of i and j cells
+                    jis = [c[1] - jMin for c in cl.cells]
+                    iis = [c[0] - iMin for c in cl.cells]
+
+                    # set the data to 1 over the clusters' cells
+                    data[iis, jis] = 1
+
+                # check if data overlaps with mask
+                if mask[np.where(data == 1)].mean() >= frac:
+                    # want to keep this track
+                    found_overlap = True
+                    # exit time loop
+                    break
+
+            if not found:
+                # no overlap so tag for removal
+                remove_track_ids.append(track_id)
+        
+        # remove the tracks that were tagged for removal
+        # walking our way back from the end
+        remove_track_ids.sort(reverse=True)
+        for i in remove_track_ids:
+            del self.cluster_connect[i]
+
 
     def writeFile(self, filename, unit, lat, lon, i_minmax=[], j_minmax=[]):
         """
@@ -236,13 +289,13 @@ class TimeConnectedClusters:
         if i_minmax:
             iMin = min(iMin, i_minmax[0])
             iMax = max(iMax, i_minmax[1])
-        num_i = iMax - iMin #+ 1
+        num_i = iMax - iMin 
         f.createDimension('lat', size=num_i)
 
         if j_minmax:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
-        num_j = jMax - jMin #+ 1
+        num_j = jMax - jMin 
         f.createDimension('lon', size=num_j)
 
         # infinite dimension
@@ -446,9 +499,10 @@ def testOneCluster():
 def testReduceNonOverlapping():
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
     c1 = Cluster({(1, 3), (1, 4), (2, 4)})
-    reduced_list = reduce([c0, c1])
-    print 'input list non-overlapping', [c0, c1]
-    print 'output list non-overlapping', reduced_list
+    cs = [c0, c1]
+    print 'input list non-overlapping', cs
+    reduce(cs)
+    print 'output list non-overlapping', cs
 
 def testReduceOverlapping():
     c0 = Cluster({(1, 1), (2, 1), (2, 2)})
