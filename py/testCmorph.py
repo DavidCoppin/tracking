@@ -24,6 +24,8 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
+    mpl.contourf(np.flipud(cm.sArea))
+    mpl.show()
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
@@ -52,21 +54,9 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
         for t in xrange(48) :
             print 'nb_day, t', nb_day, t
             data = all_data[t]
-            # Extract clusters with watershed
+            # Extract clusters with watershed and remove large-scale clusters
             clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5, \
             mask=np.flipud(cm.lArea), frac=0.8).getClusters(min_ellipse_axis)
-            # Delete clusters outside of lArea
-#            delete_cluster_indx = []
-#            for i in range(len(clusters)):
-#                cl = clusters[i]
-#                if cl.isClusterInsideOf(Cluster(cm.lArea), 0.9):
-#                    pass
-#                else:
-#                    delete_cluster_indx.append(i)
-
-#            delete_cluster_indx.sort(reverse=True)
-#            for i in delete_cluster_indx:
-#                del clusters[i]
             tcc.addTime(clusters,frac_ellipse)
         tcc.getPrecip(all_data, all_time)
         os.remove(newfilename)
@@ -75,7 +65,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     unit = f.variables["time"].units
     f.close()
-    tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=0.1)
+    tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=0.4)
     tcc.writeFile('cmorph.nc_'+str(suffix), unit, lat, lon, i_minmax=(0, len(lat)), \
                    j_minmax=(0, len(lon)))
     if save:

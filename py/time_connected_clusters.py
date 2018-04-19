@@ -364,7 +364,12 @@ class TimeConnectedClusters:
                 # check if data overlaps with mask
                 if valid_mask[np.where(data == 1)].mean() >= frac:
                     print 'in true track_id, t_index, valid_mask[np.where(data == 1)].mean()', \
-                               track_id, t_index, valid_mask[np.where(data == 1)].mean()
+                              track_id, t_index, valid_mask[np.where(data == 1)].mean()
+                    print 'valid_mask[np.where(data == 1)]', valid_mask[np.where(data == 1)]
+                    print 'np.where(data == 1)', np.where(data == 1)
+#                if (data*valid_mask).sum() >= frac * data.sum():
+#                    print 'in true track_id, t_index, (data*valid_mask).sum()/data.sum()', \
+#                               track_id, t_index, (data*valid_mask).sum()/data.sum()
                     # want to keep this track
                     found_overlap = True
                     # exit time loop
