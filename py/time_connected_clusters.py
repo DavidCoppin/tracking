@@ -348,6 +348,7 @@ class TimeConnectedClusters:
         for track_id in range(self.getNumberOfTracks()):
 
             found_overlap = False
+            data *= 0 # set data to zero
 
             # iterate over each time step
             for t_index in self.cluster_connect[track_id]:
@@ -363,10 +364,10 @@ class TimeConnectedClusters:
 
                 # check if data overlaps with mask
                 if valid_mask[np.where(data == 1)].mean() >= frac:
-                    print 'in true track_id, t_index, valid_mask[np.where(data == 1)].mean()', \
-                              track_id, t_index, valid_mask[np.where(data == 1)].mean()
-                    print 'valid_mask[np.where(data == 1)]', valid_mask[np.where(data == 1)]
-                    print 'np.where(data == 1)', np.where(data == 1)
+#                    print 'in true track_id, t_index, valid_mask[np.where(data == 1)].mean()', \
+#                              track_id, t_index, valid_mask[np.where(data == 1)].mean()
+#                    print 'valid_mask[np.where(data == 1)]', valid_mask[np.where(data == 1)]
+#                    print 'np.where(data == 1)', np.where(data == 1)
 #                if (data*valid_mask).sum() >= frac * data.sum():
 #                    print 'in true track_id, t_index, (data*valid_mask).sum()/data.sum()', \
 #                               track_id, t_index, (data*valid_mask).sum()/data.sum()
