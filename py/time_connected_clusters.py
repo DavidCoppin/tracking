@@ -5,6 +5,7 @@ import netCDF4
 import copy
 import math
 import cPickle
+import functools
     
 
 def __reduceOne(cluster_list, frac):
@@ -25,19 +26,10 @@ def __reduceOne(cluster_list, frac):
                 del cluster_list[j]
                 return True
 
-#            elif (cli.isCentreInsideOf(clj) or clj.isCentreInsideOf(cli)) :
-#                elli = Ellipse(cli.cells, min_ellipse_axis=2)
-#                ellj = Ellipse(clj.cells, min_ellipse_axis=2)
-#                if elli.isEllipseInsideOf(ellj, frac):
-#                    #print 'cli isEllipseInsideOf clj', cli, clj
-#                    cli += clj
-#                    del cluster_list[j]
-#                    return True
-
     return False
 
 
-def reduce(cluster_list, frac):
+def reduce(cluster_list, frac=1.0):
     """
     Fully reduce until no more reduction can be applied 
     @param cluster_list in/out cluster list
@@ -96,6 +88,7 @@ class TimeConnectedClusters:
         Fuse track Ids. Only the first track ID will survive, all other track Ids
         will be folded into the first one
         @param track_ids set of track Ids
+        @return track Ids marked for deletion
         """
 
         tr_ids = list(track_ids)
@@ -107,11 +100,9 @@ class TimeConnectedClusters:
             for t_index, cl_list in self.cluster_connect[track_id].items():
                 cl_conn0[t_index] = cl_conn0.get(t_index, []) + cl_list
 
-        # remove all the merged tracks
+        # return the track Ids marked for deletion
         n = len(tr_ids)
-        for i in range(n - 1, 0, -1):
-            track_id = tr_ids[i]
-            del self.cluster_connect[track_id]
+        return [tr_ids[i] for i in range(n - 1, 0, -1)]
 
 
     def addTime(self, new_clusters, frac):
@@ -120,10 +111,12 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         @param frac TO DESCRIBE
         """
-        # merge overlapping clusters
+        # merge overlapping clusters, this will reduce the number of 
+        # clusters to track but should have no influence on the 
+        # final result
         reduce(new_clusters, frac)
 
-	# current number of clusters
+        # current number of clusters
         index = len(self.clusters)
 
         # special case if first time step
@@ -140,9 +133,36 @@ class TimeConnectedClusters:
             self.t_index += 1
             return 
 
-        # assign the new clusters to existing tracks
 
-        for new_cl in new_clusters:
+        new_track_ids = self._forwardTracking(new_clusters)
+
+        new_track_ids_to_fuse = self._backwardTracking(new_track_ids)
+
+        # reduce list of tracks to fuse by looking at common track Ids between
+        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
+        # removal in delete_elem
+        self._fuseAll(new_track_ids_to_fuse)
+ 
+        # done with assigning, update the time index
+        self.t_index += 1
+
+
+    def _forwardTracking(self, new_clusters):
+        """
+        Forward tracking: assign new clusters to existing tracks
+        @param new_clusters new clusters
+        @return set of track Ids to which the new clusters belong
+        """
+
+        # current number of clusters
+        index = len(self.clusters)
+
+        # set of track Ids to which the new clusters will be assigned to
+        new_track_ids = set() # new cluster index to track id
+
+        for new_cl_index in range(len(new_clusters)):
+
+            new_cl = new_clusters[new_cl_index]
 
             # the tack Id that we need ot assign this cluster to
             new_track_id = -1
@@ -178,30 +198,117 @@ class TimeConnectedClusters:
                 self.cluster_connect[new_track_id][self.t_index] = \
                                self.cluster_connect[new_track_id].get(self.t_index, []) + [index]
 
-            # backward tracking
+            new_track_ids.add(new_track_id)
+
+            # update self.cluster's index
+            index += 1
+
+        return new_track_ids
+
+
+    def getBigClusterAt(self, track_id, t_index):
+        """
+        Construct a big cluster from all the track_id clusters at time t_index
+        @param track_id track Id
+        @param t_index time index
+        @return one big cluster representing the merge of all smaller clusters
+        """
+        clusters = [self.clusters[i] for i in self.cluster_connect[track_id].get(t_index, [])]
+        if not clusters:
+            return None
+        all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in clusters])
+        return Cluster(all_cells)
+
+
+    def _backwardTracking(self, new_track_ids):
+        """
+        Backward tracking: 
+        @param new_track_ids list of track Ids to which 
+                             _forwardTracking associated
+                             the clusters
+        @return list of new track Ids that will need to be fused
+        """
+        # go through each new track and see if the track should 
+        # be merged with another track. Two tracks are tagged for a fuse if 
+        # cluster at time t - dt is inside the group of clusters at time t
+
+        # create big clusters for each of the track_ids that are present at
+        # the previous time step
+        old_big_clusters = {}
+        for track_id in range(self.getNumberOfTracks()):
+        	cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
+        	if cluster_ids:
+        		old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+
+        # find the tracks to fuse
+        new_track_ids_to_fuse = []
+
+        # iterate over each the tracks the new clusters belong to
+        for new_track_id in new_track_ids:
+
+            # big cluster in new_track_id at the present time
+            big_cluster = self.getBigClusterAt(new_track_id, self.t_index)
+
             track_ids_to_fuse = set()
-            for track_id in range(num_tracks):
+            for track_id in old_big_clusters:
 
                 if track_id == new_track_id:
                     # skip self
                     continue
 
-                old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
-                for old_cl in [self.clusters[i] for i in old_cluster_inds]:
-
-                    # is the centre of old_cl inside the ellipse of new_cl?
-                    if old_cl.isCentreInsideOfExt(new_cl):
-                        track_ids_to_fuse.add(track_id)
+                # get the big cluster in track_id at the previous time
+                old_big_cluster = old_big_clusters[track_id]
+                if old_big_clusters[track_id].isClusterInsideOf(big_cluster, frac=0.9):
+                	# tag this cluster for later fuse with new_track_id
+                    track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
+            	# add new_track_id to the set
                 track_ids_to_fuse.add(new_track_id)
-                self.fuse(track_ids_to_fuse)
+                # store
+                new_track_ids_to_fuse.append(track_ids_to_fuse)
 
-            # update the cluster index
-            index += 1
+        return new_track_ids_to_fuse
 
-        # done with assigning, update the time index
-        self.t_index += 1
+
+    def _fuseAll(self, new_track_ids_to_fuse):
+        """
+        Apply fuse method to a list of track branches to merge
+        @param new_track_ids_to_fuse list of sets
+        """
+
+        # create union of tracks to merge and tage the merged tracks
+        # removal
+        delete_elem = set()
+        n = len(new_track_ids_to_fuse)
+        for i in range(n):
+            li = new_track_ids_to_fuse[i]
+            for j in range(i + 1, n):
+                lj = new_track_ids_to_fuse[j]
+                if li.intersection(lj):
+                    # there is an intersection, join the two
+                    new_track_ids_to_fuse[i] = li.union(lj)
+                    # and tag lj for removal
+                    delete_elem.add(j)
+
+        # remove the tagged elements, working our way backwards
+        delete_elem = list(delete_elem)
+        delete_elem.sort(reverse=True)
+        for i in delete_elem:
+            del new_track_ids_to_fuse[i]
+
+        # now fuse
+        delete_track_ids = []
+        #print '*** delete_elem = ', delete_elem, ' new_track_ids_to_fuse = ', new_track_ids_to_fuse
+        for ids_to_fuse in new_track_ids_to_fuse:
+            #print '*** ids_to_fuse = ', ids_to_fuse
+            delete_track_ids += self.fuse(ids_to_fuse)
+
+        # now delete the track Ids that were fused
+        delete_track_ids.sort(reverse=True)
+        for i in delete_track_ids:
+            del self.cluster_connect[i]
+
 
 
     def getMinMaxIndices(self):
@@ -231,8 +338,10 @@ class TimeConnectedClusters:
 
         # geet the data sizes and create array
         iMin, jMin, iMax, jMax = self.getMinMaxIndices()
-        num_i = iMax - iMin
-        num_j = jMax - jMin
+        # getMinMax returns the min/max indices, so need to add 1
+        # to get the sizes
+        num_i = iMax - iMin + 1
+        num_j = jMax - jMin + 1
         data = np.zeros((num_i, num_j), np.int32)
 
         # iterate over each track id
@@ -241,36 +350,34 @@ class TimeConnectedClusters:
             found_overlap = False
 
             # iterate over each time step
-            for t_index in self.cluster_connect:
+            for t_index in self.cluster_connect[track_id]:
 
                 # get all the clusters in track_id at this time
                 clusters = self.getClusters(track_id, t_index)
-
                 for cl in clusters:
-
                     # build the list of i and j cells
-                    jis = [c[1] - jMin for c in cl.cells]
-                    iis = [c[0] - iMin for c in cl.cells]
-
+                    iis = np.array([c[0] - iMin for c in cl.cells])
+                    jis = np.array([c[1] - jMin for c in cl.cells])
                     # set the data to 1 over the clusters' cells
                     data[iis, jis] = 1
 
                 # check if data overlaps with mask
-                if mask[np.where(data == 1)].mean() >= frac:
+                if valid_mask[np.where(data == 1)].mean() >= frac:
                     # want to keep this track
                     found_overlap = True
                     # exit time loop
                     break
 
-            if not found:
+            if not found_overlap:
                 # no overlap so tag for removal
                 remove_track_ids.append(track_id)
         
         # remove the tracks that were tagged for removal
-        # walking our way back from the end
+        # walking our way back from the end. Should we remove 
+        # the clusters first?
         remove_track_ids.sort(reverse=True)
-        for i in remove_track_ids:
-            del self.cluster_connect[i]
+        for track_id in remove_track_ids:
+            del self.cluster_connect[track_id]
 
 
     def writeFile(self, filename, unit, lat, lon, i_minmax=[], j_minmax=[]):
@@ -461,7 +568,7 @@ class TimeConnectedClusters:
 
     def getClusters(self, track_id, time_index):
         """
-        Get the clusters of given ID at time index
+        Get the clusters of given track Id at time index
         @param track_id track Id
         @param time_index
         @return list of clusters

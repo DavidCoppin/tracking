@@ -389,9 +389,9 @@ def testProbMinFuse():
     tr_id1, t_indx1 = tcc1.findCluster(1)
     print 'cluster 0 is in track {} at time index {}'.format(tr_id0, t_indx0)
     print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
-    print '>>> tcc1'
+    print 'tcc1:' 
     print tcc1
-    print '<<< tcc2'
+    print 'tcc2:'
     print tcc2
 
     #
@@ -406,9 +406,9 @@ def testProbMinFuse():
     print 'cluster 0 is in track {} at time index {}'.format(tr_id0, t_indx0)
     print 'cluster 1 is in track {} at time index {}'.format(tr_id1, t_indx1)
     print 'cluster 2 is in track {} at time index {}'.format(tr_id2, t_indx2)
-    print '>>> tcc1'
+    print 'tcc1: '
     print tcc1
-    print '<<< tcc2'
+    print 'tcc2: '
     print tcc2
     # run some checks
     assert(tcc1.getNumberOfTracks() == tcc2.getNumberOfTracks() == 1)

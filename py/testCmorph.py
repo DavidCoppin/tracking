@@ -75,7 +75,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     unit = f.variables["time"].units
     f.close()
-    tcc.removeTracksByValidMask(valid_mask=cm.sArea, frac=0.9)
+    tcc.removeTracksByValidMask(valid_mask=cm.sArea, frac=0.1)
     tcc.writeFile('cmorph.nc_'+str(suffix), unit, lat, lon, i_minmax=(0, len(lat)), \
                    j_minmax=(0, len(lon)))
     if save:
