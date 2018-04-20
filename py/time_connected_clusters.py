@@ -58,9 +58,6 @@ class TimeConnectedClusters:
         # flat list of clusters
         self.clusters = []
 
-        # precipitation data
-        self.precip = []
-
         # list of dictionaries. Each dictionary represents clusters across time which share the same 
         # ID. 
         self.cluster_connect = []
@@ -68,20 +65,9 @@ class TimeConnectedClusters:
         # current time index
         self.t_index = 0
 
-        # time
-        self.time = []
+        # 3D array of clusters
+        self.data = []
 
-
-    def getPrecip(self, var, time):
-        """
-        Store precipitation data and append it
-        """
-        if np.shape(self.precip)[0]==0:
-            self.precip = var
-            self.time = time
-        else:
-            self.precip = np.vstack([self.precip, var])
-            self.time = np.append(self.time, time)
 
     def fuse(self, track_ids):
         """
@@ -389,9 +375,9 @@ class TimeConnectedClusters:
             del self.cluster_connect[track_id]
 
 
-    def writeFile(self, filename, unit, lat, lon, i_minmax=[], j_minmax=[]):
+    def toArray(self, i_minmax=[], j_minmax=[]):
         """
-        Write data to netcdf file
+        Convert clusters in tcc into 3D array
         @param filename file name
         @param i_minmax min/max lat indices
         @param j_minmax min/max lon indices
@@ -405,65 +391,15 @@ class TimeConnectedClusters:
         if i_minmax:
             iMin = min(iMin, i_minmax[0])
             iMax = max(iMax, i_minmax[1])
-        num_i = iMax - iMin 
-        f.createDimension('lat', size=num_i)
+        num_i = iMax - iMin + 1
 
         if j_minmax:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
-        num_j = jMax - jMin 
-        f.createDimension('lon', size=num_j)
-
-        # infinite dimension
-        time = f.createDimension('time', size=None)
-
-        # create variables
-
-        i_index = f.createVariable('lat', 'f', ('lat',) ,zlib=True,complevel=9,\
-                     least_significant_digit=4)
-        f.variables['lat'].units='degrees_north'
-        f.variables['lat'].standard_name='latitude'
-        f.variables['lat'].axis='Y'
-        f.variables['lat'].long_name='latitude'
-
-        j_index = f.createVariable('lon', 'f', ('lon',), zlib=True,complevel=9,\
-                     least_significant_digit=4)
-        f.variables['lon'].units='degrees_east'
-        f.variables['lon'].standard_name='longitude'
-        f.variables['lon'].axis='X'
-        f.variables['lon'].long_name='longitude'
-
-        t_index = f.createVariable('time', 'f', ('time',), zlib=True,complevel=9,\
-                     least_significant_digit=4)
-        f.variables['time'].axis='T'
-        f.variables['time'].calendar='standard'
-        f.variables['time'].units=unit
-
-        # check ordering!!
-        precip = f.createVariable('cprec','f',('time','lat','lon'),zlib=True,complevel=9,\
-                    least_significant_digit=4)
-        f.variables['cprec'].girdtype='lonlat'
-        f.variables['cprec'].code=999
-        f.variables['cprec'].long_name='detected coastal precipitation'
-        f.variables['cprec'].standard_name= 'detected_precipitation'
-        f.variables['cprec'].short_name='cprec'
-        f.variables['cprec'].units='mm/h'
-
-        nb_var = f.createVariable('nb', 'i4', ('time', 'lat', 'lon'))
-        f.variables['nb'].girdtype='lonlat'
-        f.variables['nb'].code=0
-        f.variables['nb'].long_name='identification number of the clusters'
-        f.variables['nb'].standard_name= 'number of the clusters'
-        f.variables['nb'].short_name='nb'
-        f.variables['nb'].units='no unit'
-
-        # write the data
-        i_index[:] = lat[:] #np.arange(iMin, iMax + 1)  #lat[:]
-        j_index[:] = lon[:] #np.arange(jMin, jMax + 1)  #lon[:]
-        t_index[:] = self.time[:] #np.arange(0, self.t_index)
+        num_j = jMax - jMin + 1
 
         # data buffer, check ordering!!
-        data = np.zeros((self.t_index, num_i, num_j), np.int32)
+        self.data = np.zeros((self.t_index, num_i, num_j), np.int32)
 
         for track_id in range(self.getNumberOfTracks()):
             for t_index in range(self.t_index):
@@ -474,14 +410,8 @@ class TimeConnectedClusters:
                     jis = [c[1] - jMin for c in cl.cells]
                     iis = [c[0] - iMin for c in cl.cells]
                     # check ordering!!
-                    data[tis, iis, jis] = track_id + 1
-        # now write all the data in one go
-        mask=np.zeros((self.t_index, num_i, num_j))
-        mask[np.where(data != 0)] = 1
-        precip[:] = self.precip*mask 
-        nb_var[:] = data
+                    self.data[tis, iis, jis] = track_id + 1
 
-        f.close()
 
     def findCluster(self, cluster_id):
         """
