@@ -537,15 +537,15 @@ class TimeConnectedClusters:
                 el = ellipses[j]
                 iPts, jPts = el.getPolyline()
                 iPtsExt, jPtsExt = el.getPolylineExt()
-                pylab.plot(iPts, jPts, '-', c=color)
-                pylab.plot(iPtsExt, jPtsExt, '.', c=color)
+                pylab.plot(jPts, iPts, '-', c=color)
+                pylab.plot(jPtsExt, iPtsExt, '.', c=color)
                 xc, yc = el.getCentre()
-                pylab.plot(xc, yc, '+', c=color)
+                pylab.plot(yc, xc, '+', c=color)
 
-        pylab.title('Track {} (netcdf {}) time indices {} -> {}'.format(track_id, 
+        pylab.title('Track {} (netcdf {}) time frames {} -> {}'.format(track_id, 
                                                             track_id + 1,
-                                                            t_inds[0], 
-                                                            t_inds[-1]))
+                                                            t_inds[0]+1, 
+                                                            t_inds[-1]+1))
         pylab.show()
 
 

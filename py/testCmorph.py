@@ -21,7 +21,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     """
     #####################################################
     ### Parameters that need to be added as arguments ###
-    frac_mask = 0.9
+    frac_mask = 0.8
     min_prec = 0.
     max_prec = 2.5
     #####################################################
