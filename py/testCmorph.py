@@ -19,6 +19,13 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     """
     Checking that we can create a time connected cluster from image
     """
+    #####################################################
+    ### Parameters that need to be added as arguments ###
+    frac_mask = 0.9
+    min_prec = 0.
+    max_prec = 2.5
+    #####################################################
+
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
     # Get the two coastal masks
@@ -51,12 +58,12 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             f = nc(newfilename.replace('-','_'))
         all_data = f.variables["CMORPH"][:, lat_slice, lon_slice]
         all_time = f.variables["time"][:]
-        for t in xrange(48) :
+        for t in xrange(len(all_time)) :
             print 'nb_day, t', nb_day, t
             data = all_data[t]
             # Extract clusters with watershed and remove large-scale clusters
-            clusters = FeatureExtractor(data, thresh_low=0., thresh_high=2.5, \
-            mask=np.flipud(cm.lArea), frac=0.8).getClusters(min_ellipse_axis)
+            clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
+            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_ellipse_axis)
             tcc.addTime(clusters,frac_ellipse)
         tcc.getPrecip(all_data, all_time)
         os.remove(newfilename)
@@ -65,7 +72,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
     unit = f.variables["time"].units
     f.close()
-    tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=0.9)
+    tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     tcc.writeFile('cmorph.nc_'+str(suffix), unit, lat, lon, i_minmax=(0, len(lat)), \
                    j_minmax=(0, len(lon)))
     if save:
