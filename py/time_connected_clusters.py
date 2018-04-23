@@ -327,6 +327,21 @@ class TimeConnectedClusters:
         return i_min, j_min, i_max, j_max
 
 
+    def getCells(self, track_id, t_index):
+        """
+        Get the cluster cellss
+        @param track_id track Id
+        @param t_index time index
+        @return the i and j cells as separate arrays
+        """
+        ijs = []
+        for cl in self.getClusters(track_id, t_index):
+            ijs += list(cl.cells)
+        iis = np.array([ij[0] for ij in ijs])
+        jjs = np.array([ij[1] for ij in ijs])
+        return iis, jjs
+
+
     def removeTracksByValidMask(self, valid_mask, frac):
         """
         Remove the tracks that never overlap with the valid mask
@@ -337,49 +352,23 @@ class TimeConnectedClusters:
         # store the track ids that need to be removed
         remove_track_ids = []
 
-        # geet the data sizes and create array
-        iMin, jMin, iMax, jMax = self.getMinMaxIndices()
-        # getMinMax returns the min/max indices, so need to add 1
-        # to get the sizes
-        num_i = iMax - iMin + 1
-        num_j = jMax - jMin + 1
-        data = np.zeros((num_i, num_j), np.int32)
-
         # iterate over each track id
         for track_id in range(self.getNumberOfTracks()):
 
             found_overlap = False
-            data *= 0 # set data to zero
 
             # iterate over each time step
             for t_index in self.cluster_connect[track_id]:
 
-                # get all the clusters in track_id at this time
-                clusters = self.getClusters(track_id, t_index)
-                for cl in clusters:
-                    # build the list of i and j cells
-                    iis = np.array([c[0] - iMin for c in cl.cells])
-                    jis = np.array([c[1] - jMin for c in cl.cells])
-                    # set the data to 1 over the clusters' cells
-                    data[iis, jis] = 1
+                iis, jjs = self.getCells(track_id, t_index)
 
-                # check if data overlaps with mask
-                if valid_mask[np.where(data == 1)].mean() >= frac:
-#                    print 'in true track_id, t_index, valid_mask[np.where(data == 1)].mean()', \
-#                              track_id, t_index, valid_mask[np.where(data == 1)].mean()
-#                    print 'valid_mask[np.where(data == 1)]', valid_mask[np.where(data == 1)]
-#                    print 'np.where(data == 1)', np.where(data == 1)
-#                if (data*valid_mask).sum() >= frac * data.sum():
-#                    print 'in true track_id, t_index, (data*valid_mask).sum()/data.sum()', \
-#                               track_id, t_index, (data*valid_mask).sum()/data.sum()
-                    # want to keep this track
+                numOverlap = valid_mask[iis, jjs].sum()
+                if numOverlap >= frac*len(iis):
                     found_overlap = True
-                    # exit time loop
                     break
+                
 
             if not found_overlap:
-#                print 't_index, track_id', t_index, track_id
-                # no overlap so tag for removal
                 remove_track_ids.append(track_id)
         
         # remove the tracks that were tagged for removal
