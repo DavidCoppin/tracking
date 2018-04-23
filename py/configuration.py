@@ -25,7 +25,7 @@ class Configuration(dict):
             file = f.readlines()
             f.close()
         except IOError:
-            print "Could not open %s: No such file or directory"
+            print "Could not open {}: No such file or directory".format(filename)
             return
         self.__get(file)
         for key,value in self.iteritems():
@@ -43,13 +43,15 @@ class Configuration(dict):
                 pass
 
 
-    def __setattr__(self,k,v):
+    def __setattr__(self, k, v):
         """
-        Set class attribute
+        Set attribute
+        @param k key
+        @param v value
         """
         if k in self.keys():
             self[k] = v
-        elif not hasattr(self,k):
+        elif not hasattr(self, k):
             self[k] = v
         else:
             raise AttributeError, "Cannot set '%s', class attribute already exists" % (k, )
