@@ -31,8 +31,8 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
-#    mpl.contourf(np.flipud(cm.sArea))
-#    mpl.show()
+    mpl.contourf(np.flipud(cm.sArea))
+    mpl.show()
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
