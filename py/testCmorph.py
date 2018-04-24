@@ -7,6 +7,8 @@ from time_connected_clusters import TimeConnectedClusters
 from feature_extractor import FeatureExtractor
 from cluster import Cluster
 from coastal_mapping import CoastalMapping
+from output_file import OutputFile
+from configuration import Configuration
 #from scipy import ndimage
 #from skimage.morphology import watershed
 #import cv2
@@ -14,8 +16,13 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_axis, frac_ellipse, \
-                suffix, szone, lzone, min_size, max_size, save=False):
+def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_axis, min_prec, \
+                max_prec, frac_mask, frac_ellipse, suffix, szone, lzone, min_size, max_size, \
+                save=False):
+
+    ### Need to choose if we import parameters as arguments from testCmorph or if we use 
+    ### configuration.py to do that for us
+    C=Configuration('config.py')
     """
     Checking that we can create a time connected cluster from image
     """
@@ -36,6 +43,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
+    of = OutputFile()
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
     precip = np.zeros((llat,llon))
@@ -65,7 +73,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
             mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_ellipse_axis)
             tcc.addTime(clusters,frac_ellipse)
-        tcc.getPrecip(all_data, all_time)
+        of.getPrecip(all_data, all_time)
         os.remove(newfilename)
     # write to file
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
@@ -95,8 +103,14 @@ if __name__ == '__main__':
     parser.add_argument('-lsm', dest='lsm', default='Data/LSM/Cmorph_slm_8km.nc', help='path to \
                            land-sea data')
     parser.add_argument('-reso', dest='reso', default='8', help='resolution of the dataset in km')
+    parser.add_argument('-precmin', dest='min_prec', type=float, default='0.', \
+                           help='low threshold for watershed on precipitation data')
+    parser.add_argument('-precmax', dest='max_prec', type=float, default='2.5', \
+                           help='high threshold for watershed on precipitation data')
+    parser.add_argument('-frac_mask', dest='frac_mask', type=float, default=0.8, \
+                           help='threshold to keep tracks once clusters overlap with mask')
     parser.add_argument('-frac_ellipse', dest='frac_ellipse', type=float, default=0.8, \
-                           help='Threshold to merge overlapping ellipses')
+                           help='threshold to merge overlapping ellipses')
     parser.add_argument('-suffix', dest='suffix', default='', help='suffix for output')
     parser.add_argument('-sz', dest='szone', default='6', help='small distance to coast in pixels')
     parser.add_argument('-lz', dest='lzone', default='50', help='large distance to coast in pixels')
@@ -123,6 +137,6 @@ if __name__ == '__main__':
         sys.stdout.write(helpstring+'\n')
         sys.exit()
     testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.reso, args.min_axis, \
-                args.frac_ellipse, args.suffix, args.szone, args.lzone, args.min_size, \
-                args.max_size, args.save)
+                args.min_prec, args.max_prec, args.frac_mask, args.frac_ellipse, \
+                args.suffix, args.szone, args.lzone, args.min_size, args.max_size, args.save)
 
