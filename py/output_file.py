@@ -1,4 +1,4 @@
-from time_connected_cluster import TimeConnectedClusters
+from time_connected_clusters import TimeConnectedClusters
 import numpy as np
 import netCDF4
 
