@@ -24,6 +24,8 @@ class OutputFile:
     def getPrecip(self, var, time):
         """
         Store precipitation data and append it
+        @param var data
+        @param time time index
         """
         if np.shape(self.precip)[0]==0:
             self.precip = var
@@ -77,7 +79,7 @@ class OutputFile:
 
         precip = f.createVariable('cprec','f',('time','lat','lon'),zlib=True,complevel=9,\
                     least_significant_digit=4)
-        f.variables['cprec'].girdtype='lonlat'
+        f.variables['cprec'].gridtype='lonlat'
         f.variables['cprec'].code=999
         f.variables['cprec'].long_name='detected coastal precipitation'
         f.variables['cprec'].standard_name= 'detected_precipitation'
@@ -85,7 +87,7 @@ class OutputFile:
         f.variables['cprec'].units='mm/h'
 
         nb_var = f.createVariable('nb', 'i4', ('time', 'lat', 'lon'))
-        f.variables['nb'].girdtype='lonlat'
+        f.variables['nb'].gridtype='lonlat'
         f.variables['nb'].code=0
         f.variables['nb'].long_name='identification number of the clusters'
         f.variables['nb'].standard_name= 'number of the clusters'
