@@ -383,7 +383,7 @@ class TimeConnectedClusters:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin + 1
-        print 'self.t_index, num_i, num_j', self.t_index, num_i, num_j
+#        print 'self.t_index, num_i, num_j', self.t_index, num_i, num_j
         # data buffer, check ordering!!
         self.data = np.zeros((self.t_index, num_i, num_j), np.int32)
 
@@ -397,6 +397,7 @@ class TimeConnectedClusters:
                     iis = [c[0] - iMin for c in cl.cells]
                     # check ordering!!
                     self.data[tis, iis, jis] = track_id + 1
+        return self.data
 
 
     def findCluster(self, cluster_id):
