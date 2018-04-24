@@ -383,7 +383,7 @@ class TimeConnectedClusters:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin + 1
-
+        print 'self.t_index, num_i, num_j', self.t_index, num_i, num_j
         # data buffer, check ordering!!
         self.data = np.zeros((self.t_index, num_i, num_j), np.int32)
 

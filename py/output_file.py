@@ -100,9 +100,9 @@ class OutputFile:
         t_index[:] = self.time[:]
 
         # get 3D array of clusters from TimeConnectedClusters
-        data = TimeConnectedClusters().toArray(i_minmax=[], j_minmax=[])
+        data = TimeConnectedClusters().toArray(i_minmax, j_minmax)
         # now write all the data in one go
-        mask=np.zeros((self.time, num_i, num_j))
+        mask=np.zeros((len(self.time), num_i, num_j))
         mask[np.where(data != 0)] = 1
         precip[:] = self.precip*mask 
         nb_var[:] = data
