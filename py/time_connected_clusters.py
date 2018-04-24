@@ -370,8 +370,6 @@ class TimeConnectedClusters:
         @param i_minmax min/max lat indices
         @param j_minmax min/max lon indices
         """
-        f = netCDF4.Dataset(filename, 'w')
-
         # create dimensions
 
         iMin, jMin, iMax, jMax = self.getMinMaxIndices()
