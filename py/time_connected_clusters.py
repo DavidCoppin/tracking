@@ -363,7 +363,7 @@ class TimeConnectedClusters:
             del self.cluster_connect[track_id]
 
 
-    def toArray(self, i_minmax=[], j_minmax=[]):
+    def toArray(self, time, i_minmax=[], j_minmax=[]):
         """
         Convert clusters in tcc into 3D array
         @param filename file name
@@ -377,22 +377,21 @@ class TimeConnectedClusters:
         if i_minmax:
             iMin = min(iMin, i_minmax[0])
             iMax = max(iMax, i_minmax[1])
-        num_i = iMax - iMin + 1
+        num_i = iMax - iMin #+ 1
 
         if j_minmax:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
-        num_j = jMax - jMin + 1
+        num_j = jMax - jMin #+ 1
 #        print 'self.t_index, num_i, num_j', self.t_index, num_i, num_j
         # data buffer, check ordering!!
-        self.data = np.zeros((self.t_index, num_i, num_j), np.int32)
-
+        self.data = np.zeros((len(time), num_i, num_j), np.int32)
         for track_id in range(self.getNumberOfTracks()):
-            for t_index in range(self.t_index):
-                clusters = self.getClusters(track_id, t_index)
+            for time_index in range(time):
+                clusters = self.getClusters(track_id, time_index)
                 for cl in clusters:
                     n_cells = cl.getNumberOfCells()
-                    tis = [t_index] * n_cells
+                    tis = [time_index] * n_cells
                     jis = [c[1] - jMin for c in cl.cells]
                     iis = [c[0] - iMin for c in cl.cells]
                     # check ordering!!

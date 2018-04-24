@@ -98,13 +98,14 @@ class OutputFile:
         i_index[:] = lat[:]
         j_index[:] = lon[:]
         t_index[:] = self.time[:]
-
         # get 3D array of clusters from TimeConnectedClusters
-        data = TimeConnectedClusters().toArray(i_minmax, j_minmax)
+        data = TimeConnectedClusters().toArray(self.time, i_minmax, j_minmax)
+        print 'np.shape(data)', np.shape(data)
+        print 'np.max(data)', np.max(data)
         # now write all the data in one go
         mask=np.zeros((len(self.time), num_i, num_j))
         mask[np.where(data != 0)] = 1
-        precip[:] = self.precip*mask 
+        precip[:] = self.precip*mask
         nb_var[:] = data
 
         f.close()
