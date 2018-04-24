@@ -300,9 +300,7 @@ class TimeConnectedClusters:
 
         # now fuse
         delete_track_ids = []
-        #print '*** delete_elem = ', delete_elem, ' new_track_ids_to_fuse = ', new_track_ids_to_fuse
         for ids_to_fuse in new_track_ids_to_fuse:
-            #print '*** ids_to_fuse = ', ids_to_fuse
             delete_track_ids += self.fuse(ids_to_fuse)
 
         # now delete the track Ids that were fused
