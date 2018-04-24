@@ -64,16 +64,16 @@ class FeatureExtractor:
         Remove clusters outside of the mask
         """
         new_label = numpy.zeros_like(self.labels)
-        labeled = numpy.zeros_like(self.mask)
-        nb=1
+        nb = 1
         for label in numpy.unique(self.labels):
             # if the label is zero, we are examining the 'background'
             if label == 0:
                 continue
-            labeled *= 0 # initialize
+            # get the indices of this feature
             inds = numpy.where(self.labels == label)
-            labeled[inds] = 1
-            if self.mask[numpy.where(labeled==1)].mean() >= self.frac:
+            # number of cells for this feature
+            num_label_elems = len(inds[0])
+            if self.mask[inds].sum() >= self.frac * num_label_elems:
                 new_label[inds] = nb
                 nb += 1
         return new_label
