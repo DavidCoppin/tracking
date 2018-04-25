@@ -10,7 +10,7 @@ after the clusters have been transformed into arrays
 
 class OutputFile:
 
-    def __init__(self):
+    def __init__(self, data):
         """
         Constructor
         """
@@ -19,6 +19,9 @@ class OutputFile:
 
         # time
         self.time = []
+
+        # keep time connected clusters
+        self.tcc = data
 
 
     def getPrecip(self, var, time):
@@ -99,9 +102,7 @@ class OutputFile:
         j_index[:] = lon[:]
         t_index[:] = self.time[:]
         # get 3D array of clusters from TimeConnectedClusters
-        data = TimeConnectedClusters().toArray(self.time, i_minmax, j_minmax)
-        print 'np.shape(data)', np.shape(data)
-        print 'np.max(data)', np.max(data)
+        data = self.tcc.toArray(self.time, i_minmax, j_minmax)
         # now write all the data in one go
         mask=np.zeros((len(self.time), num_i, num_j))
         mask[np.where(data != 0)] = 1

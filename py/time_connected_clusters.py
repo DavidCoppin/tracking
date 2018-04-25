@@ -387,7 +387,7 @@ class TimeConnectedClusters:
         # data buffer, check ordering!!
         self.data = np.zeros((len(time), num_i, num_j), np.int32)
         for track_id in range(self.getNumberOfTracks()):
-            for time_index in range(time):
+            for time_index in range(len(time)):
                 clusters = self.getClusters(track_id, time_index)
                 for cl in clusters:
                     n_cells = cl.getNumberOfCells()
