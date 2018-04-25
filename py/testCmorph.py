@@ -8,29 +8,44 @@ from feature_extractor import FeatureExtractor
 from cluster import Cluster
 from coastal_mapping import CoastalMapping
 from output_file import OutputFile
-from configuration import Configuration
-#from scipy import ndimage
-#from skimage.morphology import watershed
-#import cv2
+import configparser
 import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_axis, min_prec, \
-                max_prec, frac_mask, frac_ellipse, suffix, szone, lzone, min_size, max_size, \
-                save=False):
+def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
 
-    ### Need to choose if we import parameters as arguments from testCmorph or if we use 
+    ### Need to choose if we import parameters as arguments from testCmorph or if we use
     ### configuration.py to do that for us
-    C=Configuration('config.py')
-    """
-    Checking that we can create a time connected cluster from image
-    """
-    #####################################################
-    ### Parameters that need to be added as arguments ###
-    frac_mask = 0.8
-    min_prec = 0.
-    max_prec = 2.5
+    config_full = configparser.ConfigParser()
+    config_full.read('clusters.cfg')
+    print config_full.sections()
+    C = config_full['clusters']  # config parser expects sections
+    # Read values from config.cfg
+    lsm = C.get('lsm_path')
+    print 'lsm', lsm
+    reso = C.getint('reso')
+    print 'reso', reso
+    min_prec = C.getfloat('min_prec')
+    max_prec = C.getfloat('max_prec')
+    print 'min_prec, max_prec', min_prec, max_prec
+    szone = C.getint('szone')
+    lzone = C.getint('lzone')
+    print 'szone, lzone', szone, lzone
+    frac_mask = C.getfloat('frac_mask')
+    frac_ellipse = C.getfloat('frac_ellipse')
+    print 'frac_mask, frac_ellipse', frac_mask, frac_ellipse
+    min_axis = C.getint('min_axis')
+    print 'min_axis', min_axis
+    min_size = C.getint('min_size')
+    max_size = C.getint('max_size')
+    print 'min_size, max_size', min_size, max_size
+    print "units are", C['units']
+    save = C.getboolean('save')
+    # variables can be accessed like `C['units']` or `C.get('units')` for a string
+    #   `C.getboolean('save')` for boolean values, `C.getfloat('max_prec')` for float
+    #   and C.getint('reso') for integer. If a value doesn't exist an exception will be raised
+    #   You would have to parse the strings to change $PWD still
     #####################################################
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
@@ -71,7 +86,7 @@ def testCmorph(lsm, fyear, lyear, minmax_lons, minmax_lats, reso, min_ellipse_ax
             data = all_data[t]
             # Extract clusters with watershed and remove large-scale clusters
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
-            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_ellipse_axis)
+            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
         of.getPrecip(all_data, all_time)
         os.remove(newfilename)
@@ -136,7 +151,7 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.reso, args.min_axis, \
-                args.min_prec, args.max_prec, args.frac_mask, args.frac_ellipse, \
-                args.suffix, args.szone, args.lzone, args.min_size, args.max_size, args.save)
-
+#    testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.reso, args.min_axis, \
+#                args.min_prec, args.max_prec, args.frac_mask, args.frac_ellipse, \
+#                args.suffix, args.szone, args.lzone, args.min_size, args.max_size, args.save)
+    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.suffix)
