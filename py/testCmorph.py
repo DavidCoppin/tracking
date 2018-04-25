@@ -18,7 +18,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     ### Need to choose if we import parameters as arguments from testCmorph or if we use
     ### configuration.py to do that for us
     config_full = configparser.ConfigParser()
-    config_full.read('clusters.cfg')
+    config_full.read('config.cfg')
     print config_full.sections()
     C = config_full['clusters']  # config parser expects sections
     # Read values from config.cfg
