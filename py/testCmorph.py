@@ -26,8 +26,8 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     print 'lsm', lsm
     reso = C.getint('reso')
     print 'reso', reso
-    min_prec = C.getfloat('min_prec')
-    max_prec = C.getfloat('max_prec')
+    min_prec = C.getfloat('min_prec', 0)
+    max_prec = C.getfloat('max_prec', 3)
     print 'min_prec, max_prec', min_prec, max_prec
     szone = C.getint('szone')
     lzone = C.getint('lzone')
