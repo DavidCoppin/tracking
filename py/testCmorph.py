@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 from netCDF4 import Dataset as nc
 import argparse
 import numpy as np
@@ -23,12 +22,8 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     print config_full.sections()
     C = config_full['clusters']  # config parser expects sections
     # Read values from config.cfg
-    lsm = C.get('lsm_path')
+    lsm = os.path.expandvars(C.get('lsm_path'))
     print 'lsm', lsm
-    lsm = os.path.expandvars(lsm)
-    print 'lsm', lsm
-    #lsm = os.path.expandvars(C.get('lsm_path’))
-    #print 'lsm', lsm
     reso = C.getint('reso')
     print 'reso', reso
     min_prec = C.getfloat('min_prec', 0)
