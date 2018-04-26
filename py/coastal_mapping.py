@@ -31,12 +31,11 @@ class CoastalMapping:
         self.reso = reso
         self.min_size = min_size
         self.max_size = max_size
-        print type(self.reso), self.reso
         if self.reso==8:
             print dataname
             slm = nc(dataname).variables['lsm'][lat_slice,lon_slice]
         else :
-            print 'WTF reso', reso, self.reso
+            print 'prob reso', reso, self.reso
             slm_3d = nc(dataname).variables['lsmask'][:,:,:]
             len_lat = np.shape(slm_3d)[1]
             slm_short = slm_3d[:,len_lat/6:len_lat-len_lat/6,:] # remove first and last 30 degres

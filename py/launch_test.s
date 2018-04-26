@@ -11,7 +11,10 @@
 #python testCmorph.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -suffix sumatra
 
 ## Test Madagascar
-python testCmorph.py -d1 1999-01-01 -d2 1999-01-04 -lons 250:750 -lats 0:300 -suffix madag
+#python testCmorph.py -d1 1999-01-01 -d2 1999-01-01 -lons 250:750 -lats 0:300 -suffix madag
+
+## Larger area
+python -m cProfile testCmorph.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all
 
 ## Plot ellipses
 #python plotEllipses.py -n 162 -f cmorph.pckl_png -t 50:100

@@ -4,7 +4,7 @@ import netCDF4
 
 
 """
-Write file with two variables: cprec (coastal precipitation) and nb (indexing of clusters) 
+Write file with two variables: cprec (coastal precipitation) and nb (indexing of clusters)
 after the clusters have been transformed into arrays
 """
 
