@@ -1,7 +1,9 @@
 from time_connected_clusters import TimeConnectedClusters
 import numpy as np
 import netCDF4
-
+from netCDF4 import Dataset as nc
+import bz2
+import os
 
 """
 Write file with two variables: cprec (coastal precipitation) and nb (indexing of clusters)
@@ -24,35 +26,31 @@ class OutputFile:
         self.tcc = data
 
 
-    def getPrecip(self, var, time):
+    def getTime(self, time):
         """
         Store precipitation data and append it
         @param var data
         @param time time index
         """
-        if np.shape(self.precip)[0]==0:
-            self.precip = var
-            self.time = time
-        else:
-            self.precip = np.vstack([self.precip, var])
-            self.time = np.append(self.time, time)
+        self.time = np.append(self.time, time)
 
 
-    def writeFile(self, filename, unit, lat, lon, i_minmax=[], j_minmax=[]):
+    def writeFile(self, suffix, old_filename, data, ini, end ,unit, minmax_lats, minmax_lons):
         """
         Write data to netcdf file
-        @param filename file name
-        @param i_minmax min/max lat indices
-        @param j_minmax min/max lon indices
+        @param new_filename new file name
+        @param 
+        @param 
         """
-        f = netCDF4.Dataset(filename, 'w')
+        new_filename = 'tracking'+str(old_filename[-18:-7])+'_'+str(suffix)
+        f = netCDF4.Dataset(new_filename, 'w')
 
         # create dimensions
 
-        num_i = len(lat)
+        num_i = minmax_lats[1]-minmax_lats[0]
         f.createDimension('lat', size=num_i)
 
-        num_j = len(lon)
+        num_j = minmax_lons[1]-minmax_lons[0]
         f.createDimension('lon', size=num_j)
 
         # infinite dimension
@@ -97,16 +95,27 @@ class OutputFile:
         f.variables['nb'].short_name='nb'
         f.variables['nb'].units='no unit'
 
-        # write the data
-        i_index[:] = lat[:]
-        j_index[:] = lon[:]
-        t_index[:] = self.time[:]
-        # get 3D array of clusters from TimeConnectedClusters
-        data = self.tcc.toArray(self.time, i_minmax, j_minmax)
+        # write the output
+        zipfile = bz2.BZ2File(old_filename)
+        data_unzip = zipfile.read()
+        filename = old_filename[:-4]
+        open(filename, 'wb').write(data_unzip)
+        try:
+            ori = nc(filename)
+        except RuntimeError:
+            ori = nc(filename.replace('-','_'))
+        var = ori.variables["CMORPH"][:, minmax_lats[0]:minmax_lats[1], minmax_lons[0]:minmax_lons[1]]
+        os.remove(filename)
+
+        i_index[:] = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
+        j_index[:] = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+        t_index[:] = self.time[ini:end]
         # now write all the data in one go
-        mask=np.zeros((len(self.time), num_i, num_j))
+        mask=np.zeros((end-ini, num_i, num_j))
+        print 'ini, end, np.shape(data)', ini, end, np.shape(data[ini:end])
         mask[np.where(data != 0)] = 1
-        precip[:] = self.precip*mask
+        print 'np.shape(mask)', np.shape(mask)
+        precip[:] = var * mask
         nb_var[:] = data
 
         f.close()

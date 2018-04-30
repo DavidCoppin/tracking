@@ -50,10 +50,12 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
+    print 'lat_slice, lon_slice', lat_slice, lon_slice
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
-#    mpl.contourf(np.flipud(cm.sArea))
+    mpl.contourf(np.flipud(cm.sArea))
+#    mpl.savefig('mask_'+str(suffix)+'.png')
 #    mpl.show()
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
@@ -63,6 +65,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
     precip = np.zeros((llat,llon))
     print 'dates', dates
+    list_filename=[]
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
         filename=os.path.join('Data/CMORPH/Cmorph-' \
@@ -71,6 +74,8 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
         # Open the file
         filename = filename.replace('--','-').replace('__','_')
         print 'filename', filename
+        list_filename = np.append(list_filename, filename)
+        print 'list_filename', list_filename
         zipfile = bz2.BZ2File(filename)
         data_unzip = zipfile.read()
         newfilename = filename[:-4]
@@ -88,7 +93,8 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
             mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
-        of.getPrecip(all_data, all_time)
+        of.getTime(all_time)
+        del all_data
         os.remove(newfilename)
     # write to file
     lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
@@ -96,8 +102,15 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     unit = f.variables["time"].units
     f.close()
     tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
-    of.writeFile('cmorph.nc_'+str(suffix), unit, lat, lon, i_minmax=(0, len(lat)), \
-                   j_minmax=(0, len(lon)))
+    # get 3D array of clusters from TimeConnectedClusters
+    tracks = tcc.toArray(of.time, i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    for nb_day in xrange(len(dates)):
+        print 'write_output, nb_day', nb_day
+        name = list_filename[nb_day]
+        ini = nb_day*48
+        end = (nb_day+1)*48
+        of.writeFile(str(suffix), list_filename[nb_day], tracks[ini:end], ini, end, unit, minmax_lats, \
+                   minmax_lons)
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
 
