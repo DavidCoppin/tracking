@@ -35,22 +35,23 @@ class OutputFile:
         self.time = np.append(self.time, time)
 
 
-    def writeFile(self, suffix, old_filename, data, ini, end ,unit, minmax_lats, minmax_lons):
+    def writeFile(self, suffix, old_filename, data, lat, lon, ini, end ,unit, lat_slice, \
+                       lon_slice):
         """
         Write data to netcdf file
         @param new_filename new file name
-        @param 
-        @param 
+        @param latitude
+        @param longitude
+        @param ini and end: indicates the timesteps when the data needs to be written
         """
         new_filename = 'tracking'+str(old_filename[-18:-7])+'_'+str(suffix)
         f = netCDF4.Dataset(new_filename, 'w')
 
         # create dimensions
-
-        num_i = minmax_lats[1]-minmax_lats[0]
+        num_i = len(lat)
         f.createDimension('lat', size=num_i)
 
-        num_j = minmax_lons[1]-minmax_lons[0]
+        num_j = len(lon)
         f.createDimension('lon', size=num_j)
 
         # infinite dimension
@@ -104,17 +105,15 @@ class OutputFile:
             ori = nc(filename)
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
-        var = ori.variables["CMORPH"][:, minmax_lats[0]:minmax_lats[1], minmax_lons[0]:minmax_lons[1]]
+        var = ori.variables["CMORPH"][:, lat_slice, lon_slice]
         os.remove(filename)
 
-        i_index[:] = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
-        j_index[:] = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+        i_index[:] = lat[:]
+        j_index[:] = lon[:]
         t_index[:] = self.time[ini:end]
         # now write all the data in one go
         mask=np.zeros((end-ini, num_i, num_j))
-        print 'ini, end, np.shape(data)', ini, end, np.shape(data[ini:end])
         mask[np.where(data != 0)] = 1
-        print 'np.shape(mask)', np.shape(mask)
         precip[:] = var * mask
         nb_var[:] = data
 

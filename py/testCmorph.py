@@ -50,7 +50,6 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
-    print 'lat_slice, lon_slice', lat_slice, lon_slice
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
@@ -109,8 +108,8 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
         name = list_filename[nb_day]
         ini = nb_day*48
         end = (nb_day+1)*48
-        of.writeFile(str(suffix), list_filename[nb_day], tracks[ini:end], ini, end, unit, minmax_lats, \
-                   minmax_lons)
+        of.writeFile(str(suffix), list_filename[nb_day], tracks[ini:end], lat, lon, ini, end, \
+                      unit, lat_slice, lon_slice)
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
 
