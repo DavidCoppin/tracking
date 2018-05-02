@@ -13,7 +13,8 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
+@profile
+def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
 
     ### Need to choose if we import parameters as arguments from testCmorph or if we use
     ### configuration.py to do that for us
@@ -29,23 +30,18 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     min_prec = C.getfloat('min_prec', 0)
     max_prec = C.getfloat('max_prec', 3)
     print 'min_prec, max_prec', min_prec, max_prec
-    szone = C.getint('szone')
-    lzone = C.getint('lzone')
+    szone = C.getint('szone', 8)
+    lzone = C.getint('lzone', 50)
     print 'szone, lzone', szone, lzone
-    frac_mask = C.getfloat('frac_mask')
-    frac_ellipse = C.getfloat('frac_ellipse')
+    frac_mask = C.getfloat('frac_mask', 1.0)
+    frac_ellipse = C.getfloat('frac_ellipse', 1.0)
     print 'frac_mask, frac_ellipse', frac_mask, frac_ellipse
-    min_axis = C.getint('min_axis')
+    min_axis = C.getint('min_axis', 6)
     print 'min_axis', min_axis
-    min_size = C.getint('min_size')
-    max_size = C.getint('max_size')
+    min_size = C.getint('min_size', 0)
+    max_size = C.getint('max_size', 800000)
     print 'min_size, max_size', min_size, max_size
-    print "units are", C['units']
     save = C.getboolean('save')
-    # variables can be accessed like `C['units']` or `C.get('units')` for a string
-    #   `C.getboolean('save')` for boolean values, `C.getfloat('max_prec')` for float
-    #   and C.getint('reso') for integer. If a value doesn't exist an exception will be raised
-    #   You would have to parse the strings to change $PWD still
     #####################################################
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
@@ -53,7 +49,7 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
-    mpl.contourf(np.flipud(cm.sArea))
+#    mpl.contourf(np.flipud(cm.sArea))
 #    mpl.savefig('mask_'+str(suffix)+'.png')
 #    mpl.show()
     llat = minmax_lats[1] - minmax_lats[0]
@@ -74,7 +70,6 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
         filename = filename.replace('--','-').replace('__','_')
         print 'filename', filename
         list_filename = np.append(list_filename, filename)
-        print 'list_filename', list_filename
         zipfile = bz2.BZ2File(filename)
         data_unzip = zipfile.read()
         newfilename = filename[:-4]
@@ -85,21 +80,23 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
             f = nc(newfilename.replace('-','_'))
         all_data = f.variables["CMORPH"][:, lat_slice, lon_slice]
         all_time = f.variables["time"][:]
+        # Store once and for all lat, lon, unit
+        if nb_day == 0:
+            lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
+            lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+            unit = f.variables["time"].units
+        f.close()
         for t in xrange(len(all_time)) :
             print 'nb_day, t', nb_day, t
             data = all_data[t]
             # Extract clusters with watershed and remove large-scale clusters
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
-            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
+                           mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
         of.getTime(all_time)
-        del all_data
         os.remove(newfilename)
-    # write to file
-    lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
-    lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
-    unit = f.variables["time"].units
-    f.close()
+        del all_data, data, clusters, data_unzip
+    # Remove tracks in large mask but never in small
     tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     # get 3D array of clusters from TimeConnectedClusters
     tracks = tcc.toArray(of.time, i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
@@ -117,34 +114,13 @@ def testCmorph(fyear, lyear, minmax_lons, minmax_lats, suffix):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tracking.')
     parser.add_argument('-w', action='store_true', help='Print copyright')
-    parser.add_argument('-save', dest='save', action='store_true', help='Save time connected clusters \
-                           object for debugging')
     parser.add_argument('-d1', dest='date1', default='2010-02-19', help='Start date YYYY-MM-DD')
     parser.add_argument('-d2', dest='date2', default='2010-02-21', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1700:2200', help='Min and max longitude \
                            indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
                            indices LATMIN,LATMAX')
-    parser.add_argument('-min_axis', dest='min_axis', type=float, default=6, help='Min ellipse \
-                           axis in pixels')
-    parser.add_argument('-lsm', dest='lsm', default='Data/LSM/Cmorph_slm_8km.nc', help='path to \
-                           land-sea data')
-    parser.add_argument('-reso', dest='reso', default='8', help='resolution of the dataset in km')
-    parser.add_argument('-precmin', dest='min_prec', type=float, default='0.', \
-                           help='low threshold for watershed on precipitation data')
-    parser.add_argument('-precmax', dest='max_prec', type=float, default='2.5', \
-                           help='high threshold for watershed on precipitation data')
-    parser.add_argument('-frac_mask', dest='frac_mask', type=float, default=0.8, \
-                           help='threshold to keep tracks once clusters overlap with mask')
-    parser.add_argument('-frac_ellipse', dest='frac_ellipse', type=float, default=0.8, \
-                           help='threshold to merge overlapping ellipses')
     parser.add_argument('-suffix', dest='suffix', default='', help='suffix for output')
-    parser.add_argument('-sz', dest='szone', default='6', help='small distance to coast in pixels')
-    parser.add_argument('-lz', dest='lzone', default='50', help='large distance to coast in pixels')
-    parser.add_argument('-smin', dest='min_size', default='300', help='area below which islands \
-                           are deleted in km2')
-    parser.add_argument('-smax', dest='max_size', default='800000', help='max area of filled \
-                           islands in km2')
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -163,7 +139,4 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-#    testCmorph(args.lsm, fyear,lyear,minmax_lons, minmax_lats, args.reso, args.min_axis, \
-#                args.min_prec, args.max_prec, args.frac_mask, args.frac_ellipse, \
-#                args.suffix, args.szone, args.lzone, args.min_size, args.max_size, args.save)
-    testCmorph(fyear,lyear,minmax_lons, minmax_lats, args.suffix)
+    tracking(fyear,lyear,minmax_lons, minmax_lats, args.suffix)

@@ -34,7 +34,7 @@ class OutputFile:
         """
         self.time = np.append(self.time, time)
 
-
+    @profile
     def writeFile(self, suffix, old_filename, data, lat, lon, ini, end ,unit, lat_slice, \
                        lon_slice):
         """
@@ -116,6 +116,6 @@ class OutputFile:
         mask[np.where(data != 0)] = 1
         precip[:] = var * mask
         nb_var[:] = data
-
+        del var, mask, data_unzip
         f.close()
 
