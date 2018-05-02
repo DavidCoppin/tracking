@@ -34,7 +34,6 @@ class OutputFile:
         """
         self.time = np.append(self.time, time)
 
-    @profile
     def writeFile(self, suffix, old_filename, data, lat, lon, ini, end ,unit, lat_slice, \
                        lon_slice):
         """
