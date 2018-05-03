@@ -17,6 +17,7 @@ from skimage.morphology import watershed
 from cluster import Cluster
 import cv2
 from scipy.sparse import csr_matrix
+import matplotlib.pyplot as mpl
 
 """
 A Class that extracts the clusters from the original data using watershed algorithm from opencv
@@ -96,13 +97,14 @@ class FeatureExtractor:
         inds = self.getIndicesSparse(self.labels)
         # inds[0] is the background, we don't want it
 #        inds = np.delete(inds2, (0), axis=0)
-        for num in range(len(inds)-1):
-            num_elems = len(inds[num+1])
+        for num in range(1, len(inds)):
+            num_elems = len(inds[num])
 #            print 'inds[nb]', inds[num]
-            if self.mask[inds[num+1]].sum() >= self.frac * num_elems:
-                new_label[inds[num+1]] = nb
+            if self.mask[inds[num]].sum() >= self.frac * num_elems:
+                new_label[inds[num]] = nb
                 nb += 1
         return new_label
+
 
     def getClusters(self, min_ellipse_axis=1):
         """
@@ -119,7 +121,24 @@ class FeatureExtractor:
                 cells = {(iVals[i], jVals[i]) for i in range(len(iVals))}
                 res.append(Cluster(cells, min_ellipse_axis))
         return res
-    
+
+
+    def newgetClusters(self, min_ellipse_axis=1):
+        """
+        Get the features as clusters
+        @param min_ellipse_cluster min ellipse axis size
+        @return list of clusters, each cluster is a feature
+        """
+        res = []
+        inds = self.getIndicesSparse(self.labels)
+        # inds[0] is the background, we don't want it
+        for num in range(1, len(inds)):
+            num_elems = len(inds[num])
+            if num_elems > 0:
+                # store as a set
+                cells = {(inds[num][0][i], inds[num][1][i]) for i in range(len(inds[num][0]))}
+                res.append(Cluster(cells, min_ellipse_axis))
+        return res
 
 
 #############################################################################################

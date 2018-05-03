@@ -89,7 +89,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
             data = all_data[t]
             # Extract clusters with watershed and remove large-scale clusters
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
-                           mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
+                           mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
         of.getTime(all_time)
         os.remove(newfilename)
