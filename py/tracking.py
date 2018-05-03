@@ -57,7 +57,6 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
     of = OutputFile(tcc)
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
-    precip = np.zeros((llat,llon))
     print 'dates', dates
     list_filename=[]
     for nb_day in xrange(len(dates)):
