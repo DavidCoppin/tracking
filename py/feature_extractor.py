@@ -17,7 +17,6 @@ from skimage.morphology import watershed
 from cluster import Cluster
 import cv2
 from scipy.sparse import csr_matrix
-import matplotlib.pyplot as mpl
 
 """
 A Class that extracts the clusters from the original data using watershed algorithm from opencv

@@ -142,12 +142,15 @@ class Ellipse:
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
-        
+
         # rotate the coordinates to align them to the principal axes
         ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
         eps = 1.e-12
 
-        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
+        ptPrimeAbs[0] /=  self.a + eps
+        ptPrimeAbs[1] /=  self.b + eps
+##        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
+        if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1] < 1.0:
             # inside
             return True
 
@@ -163,9 +166,11 @@ class Ellipse:
   
         # rotate the coordinates to align them to the principal axes
         ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
-        eps = 1.e-12
 
-        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
+        ptPrimeAbs[0] /= self.aExt
+        ptPrimeAbs[1] /= self.bExt
+##        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
+        if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1] < 1.0:
             # inside
             return True
 

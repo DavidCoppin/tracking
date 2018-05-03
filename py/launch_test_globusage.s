@@ -14,8 +14,8 @@
 #python tracking_memory.py -d1 1999-01-01 -d2 1999-01-04 -lons 250:750 -lats 0:300 -suffix madag_3.0-8
 
 ## Test Maritime Continent
-python -m cProfile -o output.pstats tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 python gprof2dot.py --colour-nodes-by-selftime -f pstats output.pstats | dot -Tpng -o output.png
+python -m cProfile -o output.pstats tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 sh5util -j "${SLURM_JOB_ID}" -o profile.h5
 python profile_plot.py profile.h5
 
