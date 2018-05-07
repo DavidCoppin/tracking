@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import math
 from shapely.geometry.point import Point
 from shapely import affinity
@@ -18,7 +18,7 @@ class Ellipse:
         n = len(cells)
         area = float(n)
 
-        inertia = numpy.zeros((2, 2), numpy.float64)
+        inertia = np.zeros((2, 2), np.float64)
 
         # centre of cluster
         self.centre = []
@@ -27,31 +27,31 @@ class Ellipse:
         self.a = 0.
         self.b = 0.
 
-        iInds = numpy.array([c[0] for c in cells], numpy.float64)
-        jInds = numpy.array([c[1] for c in cells], numpy.float64)
+        iInds = np.array([c[0] for c in cells], np.float64)
+        jInds = np.array([c[1] for c in cells], np.float64)
 
         iCentre = iInds.sum() / area
         jCentre = jInds.sum() / area
-        self.centre = numpy.array([iCentre, jCentre])
+        self.centre = np.array([iCentre, jCentre])
 
         # compute inertia tensor (symmetric)
         iInds -= iCentre
         jInds -= jCentre
-        inertia[0, 0] = numpy.sum(iInds * iInds)
-        inertia[0, 1] = numpy.sum(iInds * jInds)
+        inertia[0, 0] = np.sum(iInds * iInds)
+        inertia[0, 1] = np.sum(iInds * jInds)
         inertia[1, 0] = inertia[0, 1]
-        inertia[1, 1] = numpy.sum(jInds * jInds)
+        inertia[1, 1] = np.sum(jInds * jInds)
 
         # the set of eigenvectors is the rotation matrix from ij space to the 
         # inertial tensor's principal axes
-        eigenvals, self.axes2ijTransf = numpy.linalg.eig(inertia)
-        self.ij2AxesTransf = numpy.transpose(self.axes2ijTransf)
+        eigenvals, self.axes2ijTransf = np.linalg.eig(inertia)
+        self.ij2AxesTransf = np.transpose(self.axes2ijTransf)
 
         # angle between the principal axes and the i, j directions
-        self.angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])*180./numpy.pi
+        self.angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])*180./np.pi
 
         # average radii from the centre
-        a, b = numpy.sqrt(eigenvals)
+        a, b = np.sqrt(eigenvals)
         self.a = max(0.5, a)
         self.b = max(0.5, b)
 
@@ -151,6 +151,7 @@ class Ellipse:
         ptPrimeAbs[1] /=  self.b + eps
 ##        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
         if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1]) < 1.0:
+#        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
             # inside
             return True
 
@@ -165,12 +166,18 @@ class Ellipse:
         """
   
         # rotate the coordinates to align them to the principal axes
+        print 'np.shape(self.ij2AxesTransf)', np.shape(self.ij2AxesTransf), self.ij2AxesTransf
+        print 'np.shape(point)', np.shape(point), point
+        print 'np.shape(self.centre)', np.shape(self.centre), self.centre
+        print 'point - self.centre', point - self.centre
         ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
-
+        print 'np.shape(ptPrimeAbs)', np.shape(ptPrimeAbs), ptPrimeAbs
+        sys.exit()
         ptPrimeAbs[0] /= self.aExt
         ptPrimeAbs[1] /= self.bExt
 ##        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
         if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1]) < 1.0:
+#        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
             # inside
             return True
 
@@ -220,7 +227,7 @@ class Ellipse:
         patches = []
         for c in cells:
             i, j = c
-            pts = numpy.array([[i-0.5, j-0.5], [i+0.5, j-0.5], [i+0.5, j+0.5], [i-0.5, j+0.5]])
+            pts = np.array([[i-0.5, j-0.5], [i+0.5, j-0.5], [i+0.5, j+0.5], [i-0.5, j+0.5]])
             patch = matplotlib.patches.Polygon(pts, closed=True)
             patches.append(patch)
         p = matplotlib.collections.PatchCollection(patches, alpha=0.4)
@@ -266,24 +273,24 @@ def testRectangle():
 
     pts = []
     # these points should be inside
-    pt = numpy.array([1., 0.5])
+    pt = np.array([1., 0.5])
     assert(ell.isPointInside(pt))
     pts.append(pt)
 
-    pt = numpy.array([1.8, 0.5])
+    pt = np.array([1.8, 0.5])
     assert(ell.isPointInside(pt))
     pts.append(pt)
 
-    pt = numpy.array([1., 0.99])
+    pt = np.array([1., 0.99])
     assert(ell.isPointInside(pt))
     pts.append(pt)
 
     # these points should be outside
-    pt = numpy.array([1.82, 0.5])
+    pt = np.array([1.82, 0.5])
     #assert(not ell.isPointInside(pt))
     pts.append(pt)
 
-    pt = numpy.array([1., 1.01])
+    pt = np.array([1., 1.01])
     #assert(not ell.isPointInside(pt))
     pts.append(pt)
 
@@ -299,7 +306,7 @@ def testRectangleSlanted():
     print(ell)
 
     # create lots of random points
-    pts = [numpy.array([-2. + 6*random.random(), -1. + 3*random.random()]) for i in range(1000)]
+    pts = [np.array([-2. + 6*random.random(), -1. + 3*random.random()]) for i in range(1000)]
 
     ell.show(pts, cells)
 

@@ -44,7 +44,7 @@ class FeatureExtractor:
         bw_data = tmp_data.astype(np.uint8)
         border = cv2.dilate(bw_data, None, iterations=5)
         border -= cv2.erode(border, None)
-    
+
         # remove data below minimum threshold
         ma_conv = np.ma.masked_where(data <= thresh_high, data)
 	    # build black and white image with high threshold to serve as markers for watershed	
