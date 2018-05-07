@@ -18,7 +18,7 @@
 #python -m cProfile -o output.pstats tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 
 ## Larger area
-python -m cProfile tracking_memory.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all
+python -m cProfile tracking.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all
 
 ## Profiling
 sh5util -j "${SLURM_JOB_ID}" -o profile.h5
