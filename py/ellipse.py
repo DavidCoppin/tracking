@@ -166,13 +166,7 @@ class Ellipse:
         """
   
         # rotate the coordinates to align them to the principal axes
-        print 'np.shape(self.ij2AxesTransf)', np.shape(self.ij2AxesTransf), self.ij2AxesTransf
-        print 'np.shape(point)', np.shape(point), point
-        print 'np.shape(self.centre)', np.shape(self.centre), self.centre
-        print 'point - self.centre', point - self.centre
         ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
-        print 'np.shape(ptPrimeAbs)', np.shape(ptPrimeAbs), ptPrimeAbs
-        sys.exit()
         ptPrimeAbs[0] /= self.aExt
         ptPrimeAbs[1] /= self.bExt
 ##        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
