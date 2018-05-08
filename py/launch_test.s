@@ -14,7 +14,7 @@
 #python tracking.py -d1 1999-01-01 -d2 1999-01-04 -lons 250:750 -lats 0:300 -suffix madag_3.0-8
 
 ## Test Maritime Continent
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 550:650 -suffix cm
+python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 
 ## Larger area
 #python -m cProfile tracking.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all

@@ -48,9 +48,10 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
-#    mpl.contourf(np.flipud(cm.sArea))
-#    mpl.savefig('mask_'+str(suffix)+'.png')
-#    mpl.show()
+    #mpl.contourf(np.flipud(cm.lArea))
+    #mpl.savefig('mask_'+str(suffix)+'.png')
+    #mpl.show()
+    sys.exit()
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()

@@ -41,18 +41,26 @@ class CoastalMapping:
             slm_short = slm_3d[:,len_lat/6:len_lat-len_lat/6,:] # remove first and last 30 degres
             slm = slm_short.squeeze()
         new_slm = np.flipud(slm)
-        #Create the coastline and fill islands
+        # Create the coastline and fill islands
         slm_fill = self.fillIslands(new_slm.copy())
         land_fill = (1-new_slm)+slm_fill
         land_fill[np.where(land_fill>=1)] = 1
-        #Remove very small islands to speed up tracking
+        # Remove very small islands to speed up tracking
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
         mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
-        #Get the caostal area via inverse Box-counting
+        # Get the caostal area via inverse Box-counting
         self.lArea = self.createCoastalArea(mask_coast,lzone,1)
         self.sArea = self.createCoastalArea(mask_coast,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
+        # Fill in hole in mask
+        slat_box = 150 - lat_slice.start
+        elat_box = 250 - lat_slice.start
+        slon_box = 1900 - lon_slice.start
+        elon_box = 2100 - lon_slice.start
+        print np.shape(self.lArea)
+        print slat_box, elat_box, slon_box, elon_box
+        self.lArea[slat_box:elat_box,slon_box:elon_box]=1
         #self.lArea = zip(*np.where(lArea == 1))
         #self.sArea = zip(*np.where(sArea == 1))
         #mpl.contourf(lArea)
