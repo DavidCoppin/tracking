@@ -59,7 +59,9 @@ class TimeConnectedClusters:
         self.clusters = []
 
         # list of dictionaries. Each dictionary represents clusters across time which share the same 
-        # ID. 
+        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where 
+        # t_index# is the time index and cluster# is an index into self.clusters, the latter holds 
+        # the actual clusters.
         self.cluster_connect = []
 
         # current time index
