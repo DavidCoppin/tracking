@@ -13,6 +13,9 @@
 ## Test Madagascar
 #python tracking.py -d1 1999-01-01 -d2 1999-01-04 -lons 250:750 -lats 0:300 -suffix madag_3.0-8
 
+## Whole globe
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 0:5400 -lats 0:828 -suffix globe
+
 ## Test Maritime Continent
 python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 

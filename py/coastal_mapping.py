@@ -54,19 +54,11 @@ class CoastalMapping:
         self.sArea = self.createCoastalArea(mask_coast,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
         # Fill in hole in mask
-        slat_box = 150 - lat_slice.start
-        elat_box = 250 - lat_slice.start
+        slat_box = lat_slice.stop - 550
+        elat_box = lat_slice.stop - 450
         slon_box = 1900 - lon_slice.start
         elon_box = 2100 - lon_slice.start
-        print np.shape(self.lArea)
-        print slat_box, elat_box, slon_box, elon_box
         self.lArea[slat_box:elat_box,slon_box:elon_box]=1
-        #self.lArea = zip(*np.where(lArea == 1))
-        #self.sArea = zip(*np.where(sArea == 1))
-        #mpl.contourf(lArea)
-        #mpl.show()
-        #mpl.contourf(sArea)
-        #mpl.show()
 
     def findCoastline(self,data,smooth_radius=2.5):
         """
