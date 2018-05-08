@@ -45,13 +45,14 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
+    print 'lon_slice', lon_slice
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
     #mpl.contourf(np.flipud(cm.lArea))
     #mpl.savefig('mask_'+str(suffix)+'.png')
     #mpl.show()
-    sys.exit()
+    #sys.exit()
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
@@ -77,12 +78,24 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
             f = nc(newfilename)
         except RuntimeError:
             f = nc(newfilename.replace('-','_'))
-        all_data = f.variables["CMORPH"][:, lat_slice, lon_slice]
+        if lon_slice.start < lon_slice.stop:
+            all_data = f.variables["CMORPH"][:, lat_slice, lon_slice]
+        else:
+            all_data1 = f.variables["CMORPH"][:, lat_slice,lon_slice.start:]
+            all_data2 = f.variables["CMORPH"][:, lat_slice,:lon_slice.stop]
+            #print np.shape(all_data1), np.shape(all_data2)
+            all_data = np.concatenate((all_data1, all_data2), axis=2)
+            #print 'np.shape(all_data)', np.shape(all_data)
         all_time = f.variables["time"][:]
         # Store once and for all lat, lon, unit
         if nb_day == 0:
             lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
-            lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+            if lon_slice.start < lon_slice.stop:
+                lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
+            else:
+                lon1 = f.variables['lon'][minmax_lons[0]:]
+                lon2 = f.variables['lon'][:minmax_lons[1]]
+                lon = np.concatenate((lon1, lon2))
             unit = f.variables["time"].units
         f.close()
         for t in xrange(len(all_time)) :

@@ -33,7 +33,14 @@ class CoastalMapping:
         self.max_size = max_size
         if self.reso==8:
             print dataname
-            slm = nc(dataname).variables['lsm'][lat_slice,lon_slice]
+            if lon_slice.start < lon_slice.stop:
+                slm = nc(dataname).variables['lsm'][lat_slice,lon_slice]
+            else:
+                slm1 = nc(dataname).variables['lsm'][lat_slice,lon_slice.start:]
+                slm2 = nc(dataname).variables['lsm'][lat_slice,:lon_slice.stop]
+                print np.shape(slm1), np.shape(slm2)
+                slm = np.concatenate((slm1, slm2), axis=1)
+                print 'np.shape(slm)', np.shape(slm)
         else :
             print 'prob reso', reso, self.reso
             slm_3d = nc(dataname).variables['lsmask'][:,:,:]
@@ -58,7 +65,8 @@ class CoastalMapping:
         elat_box = lat_slice.stop - 450
         slon_box = 1900 - lon_slice.start
         elon_box = 2100 - lon_slice.start
-        self.lArea[slat_box:elat_box,slon_box:elon_box]=1
+        if lon_slice.start < 1900:
+            self.lArea[slat_box:elat_box,slon_box:elon_box]=1
 
     def findCoastline(self,data,smooth_radius=2.5):
         """

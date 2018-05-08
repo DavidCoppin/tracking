@@ -104,7 +104,13 @@ class OutputFile:
             ori = nc(filename)
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
-        var = ori.variables["CMORPH"][:, lat_slice, lon_slice]
+        if lon_slice.start < lon_slice.stop:
+            var = ori.variables["CMORPH"][:, lat_slice, lon_slice]
+        else:
+            var1 = ori.variables["CMORPH"][:, lat_slice, lon_slice.start:]
+            var2 = ori.variables["CMORPH"][:, lat_slice, :lon_slice.stop]
+            var = np.concatenate((var1, var2), axis=2)
+            del var1, var2
         os.remove(filename)
 
         i_index[:] = lat[:]
