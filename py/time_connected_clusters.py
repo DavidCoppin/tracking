@@ -6,6 +6,7 @@ import copy
 import math
 import cPickle
 import functools
+import uuid
     
 
 def __reduceOne(cluster_list, frac):
@@ -323,6 +324,43 @@ class TimeConnectedClusters:
     	self.cluster_connect.pop(track_id)
 
 
+    def getStartEndTimes(self, track_id):
+    	"""
+    	Get the start/end time indices
+    	@param track_id track Id
+    	@return t_beg, t_end
+    	"""
+    	t_inds = self.cluster_connect[track_id].keys()
+    	t_inds.sort()
+    	return t_inds[0], t_inds[-1]
+
+
+    def harvestDeadTracks(self, prefix):
+        """
+        Find all the tracks that are no longer alive, write the tracks into a file and remove them
+        from the connectivity list
+        @param prefix to be prepended to the file name
+        """
+        t_index_min = self.LARGE_INT
+        t_index_max = -self.LARGE_INT
+        dead_tracks = []
+        for track_id in range(len(self.cluster_connect)):
+            t_beg, t_end = self.getStartEndTimes(track_id)
+            if self.t_index > t_end:
+                dead_tracks.append(track_id)
+
+        # descending order of indices
+        dead_tracks.sort(reverse=True)
+
+        # write the tracks to file
+        self.saveTracks(dead_tracks, prefix=prefix+'_t{}-{}_'.format(t_beg, t_end))        
+
+        # remove the dead tracks
+        for track_id in dead_tracks:
+            self.removeTrack(track_id)
+
+
+
     def removeTracksByValidMask(self, valid_mask, frac):
         """
         Remove the tracks that never overlap with the valid mask
@@ -467,6 +505,17 @@ class TimeConnectedClusters:
         @param filename file name
         """
         f = open(filename, 'w')
+        cPickle.dump(self, f)
+
+
+    def saveTracks(self, track_id_list, prefix):
+        """
+        Save the tracks to file
+        @param track_id_list list of track Ids
+        @param prefix prefix of the file
+        """
+        f = open(prefix + str(uuid.uuid4()), 'w')
+        data = [self.cluster_connect[track_id] for track_id in track_id_list]
         cPickle.dump(self, f)
 
 

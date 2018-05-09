@@ -13,7 +13,7 @@ import sys,os,string
 import bz2
 from datetime import datetime,timedelta as td
 
-def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
+def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
 
     ### Need to choose if we import parameters as arguments from testCmorph or if we use
     ### configuration.py to do that for us
@@ -105,6 +105,12 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix):
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
                            mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
+            if harvestPeriod and t % harvestPeriod == 0:
+                tcc.harvestDeadTracks(prefix=suffix)
+        # final harvest
+        if harvestPeriod:
+            all_tracks = [i for i in range(tcc.getNumberOfTracks())]
+            tcc.saveTracks(all_tracks, prefix=suffix + '_final_')
         of.getTime(all_time)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
@@ -132,7 +138,9 @@ if __name__ == '__main__':
                            indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
                            indices LATMIN,LATMAX')
-    parser.add_argument('-suffix', dest='suffix', default='', help='suffix for output')
+    parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
+    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=0, 
+                         help='Number of time steps before dead tracks area saved to disk (0 for no harvest)')
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -151,4 +159,4 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    tracking(fyear,lyear,minmax_lons, minmax_lats, args.suffix)
+    tracking(fyear,lyear,minmax_lons, minmax_lats, args.suffix, harvestPeriod=args.harvestPeriod)
