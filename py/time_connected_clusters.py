@@ -315,6 +315,14 @@ class TimeConnectedClusters:
         return iis, jjs
 
 
+    def removeTrack(self, track_id):
+    	"""
+    	Remove a track 
+    	@param track_id track Id
+    	"""
+    	self.cluster_connect.pop(track_id)
+
+
     def removeTracksByValidMask(self, valid_mask, frac):
         """
         Remove the tracks that never overlap with the valid mask
@@ -345,11 +353,11 @@ class TimeConnectedClusters:
                 remove_track_ids.append(track_id)
         
         # remove the tracks that were tagged for removal
-        # walking our way back from the end. Should we remove 
-        # the clusters first?
+        # walking our way back from the end.
         remove_track_ids.sort(reverse=True)
         for track_id in remove_track_ids:
-            del self.cluster_connect[track_id]
+        	self.removeTrack(track_id)
+            
 
 
     def toArray(self, time, i_minmax=[], j_minmax=[]):
