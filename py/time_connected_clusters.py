@@ -55,13 +55,12 @@ class TimeConnectedClusters:
         """
         Constructor
         """
-        # flat list of clusters
-        self.clusters = []
+        # number of clusters
+        self.num_clusters = 0
 
         # list of dictionaries. Each dictionary represents clusters across time which share the same 
         # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where 
-        # t_index# is the time index and cluster# is an index into self.clusters, the latter holds 
-        # the actual clusters.
+        # t_index# is the time index and cluster# is a Cluster instance.
         self.cluster_connect = []
 
         # current time index
@@ -104,18 +103,13 @@ class TimeConnectedClusters:
         # final result
         reduce(new_clusters, frac)
 
-        # current number of clusters
-        index = len(self.clusters)
-
         # special case if first time step
         if self.t_index == 0:
             # there is no past
             # just create a new track for each cluster
             for new_cl in new_clusters:
-
-                self.clusters.append(new_cl)
-                self.cluster_connect.append({self.t_index: [index]})
-                index += 1
+                self.cluster_connect.append({self.t_index: [new_cl]})
+                self.num_clusters += 1
 
             # done
             self.t_index += 1
@@ -139,11 +133,8 @@ class TimeConnectedClusters:
         """
         Forward tracking: assign new clusters to existing tracks
         @param new_clusters new clusters
-        @return set of track Ids to which the new clusters belong
+        @return set of track Ids to which the new clusters belong to
         """
-
-        # current number of clusters
-        index = len(self.clusters)
 
         # set of track Ids to which the new clusters will be assigned to
         new_track_ids = set() # new cluster index to track id
@@ -152,11 +143,8 @@ class TimeConnectedClusters:
 
             new_cl = new_clusters[new_cl_index]
 
-            # the tack Id that we need ot assign this cluster to
+            # the track Id that we need to assign this cluster to
             new_track_id = -1
-
-            # add the cluster
-            self.clusters.append(new_cl)
 
             # find out if this cluster belongs to an existing track. This is equivalent to 
             # forward tracking
@@ -164,32 +152,31 @@ class TimeConnectedClusters:
             connected_clusters = []
             connected_track_ids = []
             for track_id in range(num_tracks):
-                old_cluster_inds = self.cluster_connect[track_id].get(self.t_index - 1, [])
-                for old_cl in [self.clusters[i] for i in old_cluster_inds]:
+                old_clusters = self.cluster_connect[track_id].get(self.t_index - 1, [])
+                for old_cl in old_clusters:
                     # is the centre of new_cl inside the ellipse of old_cl?
                     if new_cl.isCentreInsideOfExt(old_cl) or old_cl.isCentreInsideOfExt(new_cl):
                         connected_clusters.append(old_cl)
                         connected_track_ids.append(track_id)
 
-            # this cluster could be assigned to any of the tracks in track_ids
             if len(connected_track_ids) == 0:
                 # this cluster is on its own
                 # create a new entry 
                 new_track_id = self.getNumberOfTracks()
-                self.cluster_connect.append({self.t_index: [index]})
+                self.cluster_connect.append({self.t_index: [new_cl]})
             else:
-                # choose the track for which the distance between new_cl is smallest to 
-                # to any of the clusters of that track at t - dt
+                # choose the track for which the distance between new_cl any of the clusters 
+                # of that track at t - dt is smallest
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
                 new_track_id = connected_track_ids[i]
                 self.cluster_connect[new_track_id][self.t_index] = \
-                               self.cluster_connect[new_track_id].get(self.t_index, []) + [index]
+                               self.cluster_connect[new_track_id].get(self.t_index, []) + [new_cl]
 
             new_track_ids.add(new_track_id)
 
-            # update self.cluster's index
-            index += 1
+            # update number of clusters
+            self.num_clusters += 1
 
         return new_track_ids
 
@@ -201,7 +188,7 @@ class TimeConnectedClusters:
         @param t_index time index
         @return one big cluster representing the merge of all smaller clusters
         """
-        clusters = [self.clusters[i] for i in self.cluster_connect[track_id].get(t_index, [])]
+        clusters = self.cluster_connect[track_id].get(t_index, [])
         if not clusters:
             return None
         all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in clusters])
@@ -305,11 +292,11 @@ class TimeConnectedClusters:
         """
         i_min, j_min, i_max, j_max = self.LARGE_INT, self.LARGE_INT, -self.LARGE_INT, -self.LARGE_INT
         for track in self.cluster_connect:
-            for cl_indx_list in track.values():
-                i_min = min(i_min, min([self.clusters[k].box[0][0] for k in cl_indx_list]))
-                j_min = min(j_min, min([self.clusters[k].box[0][1] for k in cl_indx_list]))
-                i_max = max(i_max, max([self.clusters[k].box[1][0] for k in cl_indx_list]))
-                j_max = max(j_max, max([self.clusters[k].box[1][1] for k in cl_indx_list]))
+            for cl_list in track.values():
+                i_min = min(i_min, min([cl.box[0][0] for cl in cl_list]))
+                j_min = min(j_min, min([cl.box[0][1] for cl in cl_list]))
+                i_max = max(i_max, max([cl.box[1][0] for cl in cl_list]))
+                j_max = max(j_max, max([cl.box[1][1] for cl in cl_list]))
         return i_min, j_min, i_max, j_max
 
 
@@ -444,8 +431,7 @@ class TimeConnectedClusters:
             color = rgb(x)
 
             # get the ellipses
-            ellipses = [self.clusters[j].ellipse \
-                            for j in track.get(ti, [])]
+            ellipses = [cl.ellipse for cl in track.get(ti, [])]
 
             if len(ellipses) == 0:
                 print 'WARNING: no cluster at time index '.format(ti)
@@ -500,7 +486,7 @@ class TimeConnectedClusters:
         @param time_index
         @return list of clusters
         """
-        return [self.clusters[i] for i in self.cluster_connect[track_id].get(time_index, [])]
+        return self.cluster_connect[track_id].get(time_index, [])
 
 
     def __repr__(self):
@@ -508,10 +494,9 @@ class TimeConnectedClusters:
 TimeConnectedCluster: num of clusters   {}
                       num of time steps {}
                       num of tracks     {}
-                      clusters          {}
                       connectivity      {}
-        """.format(len(self.clusters), self.t_index, \
-              len(self.cluster_connect), [cl.cells for cl in self.clusters], \
+        """.format(self.num_clusters, self.t_index, \
+              len(self.cluster_connect), \
               self.cluster_connect)
         return res
 
@@ -554,7 +539,6 @@ def testTwoClustersAtTime0():
     c3 = Cluster({(4,3), (7,3)})
     tcc.addTime([c3], 0.8)
     print tcc
-    tcc.writeFile('twoClusters.nc')
     print 'Two clusters'
     print tcc    
 
