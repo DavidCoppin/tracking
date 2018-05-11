@@ -354,11 +354,13 @@ class TimeConnectedClusters:
 
 
         # write the tracks to file
+        print '... saving tracks {} t={} to {}'.format(tracks_to_harvest, t_index_min, t_index_max)
         self.saveTracks(tracks_to_harvest, 
         	            prefix=prefix+'_t{}-{}_'.format(t_index_min, t_index_max))        
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
+        print '... removing tracks {}'.format(tracks_to_harvest)
         for track_id in tracks_to_harvest:
             self.removeTrack(track_id)
 
@@ -518,6 +520,9 @@ class TimeConnectedClusters:
         @param track_id_list list of track Ids
         @param prefix prefix of the file
         """
+        if not track_id_list:
+        	# nothing to do
+        	return
         f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
         data = [self.cluster_connect[track_id] for track_id in track_id_list]
         cPickle.dump(self, f)

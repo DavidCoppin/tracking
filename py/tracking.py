@@ -105,7 +105,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
                            mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
-            if harvestPeriod and t % harvestPeriod == 0:
+            if harvestPeriod and (t + 1) % harvestPeriod == 0:
                 tcc.harvestTracks(prefix=suffix, dead_only=True)
         # final harvest
         if harvestPeriod:
