@@ -525,7 +525,7 @@ class TimeConnectedClusters:
             return
         f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
         data = [self.cluster_connect[track_id] for track_id in track_id_list]
-        cPickle.dump(self, f)
+        cPickle.dump(data, f)
 
 
     def getNumberOfTracks(self):
