@@ -6,7 +6,8 @@ import copy
 import math
 import cPickle
 import functools
-import uuid
+import tempfile
+import os
     
 
 def __reduceOne(cluster_list, frac):
@@ -405,8 +406,8 @@ class TimeConnectedClusters:
         @param i_minmax min/max lat indices
         @param j_minmax min/max lon indices
         """
-        # create dimensions
 
+        # get the sizes
         iMin, jMin, iMax, jMax = self.getMinMaxIndices()
 
         if i_minmax:
@@ -418,8 +419,10 @@ class TimeConnectedClusters:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin #+ 1
+
         # data buffer, check ordering!!
         data = np.zeros((num_times, num_i, num_j), np.int32)
+
         for track_id in range(self.getNumberOfTracks()):
             for time_index in range(num_times):
                 clusters = self.getClusters(track_id, time_index)
@@ -513,7 +516,7 @@ class TimeConnectedClusters:
         @param track_id_list list of track Ids
         @param prefix prefix of the file
         """
-        f = open(prefix + str(uuid.uuid4()), 'w')
+        f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
         data = [self.cluster_connect[track_id] for track_id in track_id_list]
         cPickle.dump(self, f)
 
