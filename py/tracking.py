@@ -117,7 +117,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     # Remove tracks in large mask but never in small
     tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     # get 3D array of clusters from TimeConnectedClusters
-    tracks = tcc.toArray(of.time, i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    tracks = tcc.toArray(len(of.time), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
     for nb_day in xrange(len(dates)):
         print 'write_output, nb_day', nb_day
         name = list_filename[nb_day]
