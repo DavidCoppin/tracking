@@ -336,10 +336,12 @@ class TimeConnectedClusters:
     	return t_inds[0], t_inds[-1]
 
 
-    def harvestTracks(self, prefix, dead_only=False):
+    def harvestTracks(self, prefix, i_minmax, j_minmax, dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
+        @param i_minmax min/max lat indices
+        @param j_minmax min/max lon indices
         @param dead_only only harvest tracks that are no longer alive, otherwise
                          harvest all the tracks
         """
@@ -355,12 +357,14 @@ class TimeConnectedClusters:
 
 
         # write the tracks to file
-        self.saveTracks(tracks_to_harvest, 
-                        prefix=prefix+'_t{}-{}_'.format(t_index_min, t_index_max))        
+        prfx = prefix + '_t{}-{}_'.format(t_index_min, t_index_max)
+        num_times = t_index_max - t_index_min + 1
+        self.saveTracks(tracks_to_harvest, num_times, i_minmax, j_minmax,
+                        prefix=prfx)
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
-        print '... removing tracks {}'.format(tracks_to_harvest)
+        print '... harvesting and removing tracks {}'.format(tracks_to_harvest)
         for track_id in tracks_to_harvest:
             self.removeTrack(track_id)
 
@@ -403,12 +407,13 @@ class TimeConnectedClusters:
             
 
 
-    def toArray(self, num_times, i_minmax=[], j_minmax=[]):
+    def toArray(self, num_times, i_minmax=[], j_minmax=[], track_id_list=None):
         """
         Convert clusters in tcc into 3D array
         @param num_times number of time indices
         @param i_minmax min/max lat indices
         @param j_minmax min/max lon indices
+        @param track_id_list list of track Ids, use None to select all tracks
         """
 
         # get the sizes
@@ -424,10 +429,14 @@ class TimeConnectedClusters:
             jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin #+ 1
 
+        track_ids = [i for i in range(self.getNumberOfTracks())]
+        if track_id_list:
+            track_ids = track_id_list
+
         # data buffer, check ordering!!
         data = np.zeros((num_times, num_i, num_j), np.int32)
 
-        for track_id in range(self.getNumberOfTracks()):
+        for track_id in track_ids:
             for time_index in range(num_times):
                 clusters = self.getClusters(track_id, time_index)
                 for cl in clusters:
@@ -514,17 +523,22 @@ class TimeConnectedClusters:
         cPickle.dump(self, f)
 
 
-    def saveTracks(self, track_id_list, prefix):
+    def saveTracks(self, track_id_list, num_times, i_minmax, j_minmax, prefix):
         """
         Save the tracks to file
         @param track_id_list list of track Ids
+        @param num_times number of time indices
+        @param i_minmax min/max lat indices
+        @param j_minmax min/max lon indices
         @param prefix prefix of the file
         """
         if not track_id_list:
             # nothing to do
             return
+        # toArray seems to produce that just pickling the clusters
+        #data = self.toArray(num_times, i_minmax, j_minmax, track_id_list)
+        data = [self.cluster_connect[tid] for tid in track_id_list]
         f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
-        data = [self.cluster_connect[track_id] for track_id in track_id_list]
         cPickle.dump(data, f)
 
 

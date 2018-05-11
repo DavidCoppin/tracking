@@ -98,6 +98,8 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
                 lon = np.concatenate((lon1, lon2))
             unit = f.variables["time"].units
         f.close()
+        i_minmax = (0, len(lat))
+        j_minmax = (0, len(lon))
         for t in xrange(len(all_time)) :
             print 'nb_day, t', nb_day, t
             data = all_data[t]
@@ -105,11 +107,15 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
                            mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
+
+            # harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
-                tcc.harvestTracks(prefix=suffix, dead_only=True)
-        # final harvest
+                tcc.harvestTracks(prefix=suffix, 
+                                  i_minmax=i_minmax, j_minmax=j_minmax, dead_only=True)
+
+        # final harvest (all tracks)
         if harvestPeriod:
-            tcc.harvestTracks(prefix=suffix)
+            tcc.harvestTracks(prefix=suffix, i_minmax=i_minmax, j_minmax=j_minmax)
         of.getTime(all_time)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
