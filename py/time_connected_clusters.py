@@ -340,23 +340,23 @@ class TimeConnectedClusters:
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
-        @param dead_only only harvest tracks that are no longer alive
+        @param dead_only only harvest tracks that are no longer alive, otherwise
+                         harvest all the tracks
         """
         t_index_min = self.LARGE_INT
         t_index_max = -self.LARGE_INT
         tracks_to_harvest = []
         for track_id in range(len(self.cluster_connect)):
             t_beg, t_end = self.getStartEndTimes(track_id)
-            if not dead_only or self.t_index > t_end:
-            	t_index_min = min(t_index_min, t_beg)
-            	t_index_max = max(t_index_max, t_end)
+            if not dead_only or t_end < self.t_index - 1:
+                t_index_min = min(t_index_min, t_beg)
+                t_index_max = max(t_index_max, t_end)
                 tracks_to_harvest.append(track_id)
 
 
         # write the tracks to file
-        print '... saving tracks {} t={} to {}'.format(tracks_to_harvest, t_index_min, t_index_max)
         self.saveTracks(tracks_to_harvest, 
-        	            prefix=prefix+'_t{}-{}_'.format(t_index_min, t_index_max))        
+                        prefix=prefix+'_t{}-{}_'.format(t_index_min, t_index_max))        
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
@@ -521,8 +521,8 @@ class TimeConnectedClusters:
         @param prefix prefix of the file
         """
         if not track_id_list:
-        	# nothing to do
-        	return
+            # nothing to do
+            return
         f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
         data = [self.cluster_connect[track_id] for track_id in track_id_list]
         cPickle.dump(self, f)
