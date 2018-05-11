@@ -106,11 +106,10 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
                            mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
             if harvestPeriod and t % harvestPeriod == 0:
-                tcc.harvestDeadTracks(prefix=suffix)
+                tcc.harvestTracks(prefix=suffix, dead_only=True)
         # final harvest
         if harvestPeriod:
-            all_tracks = [i for i in range(tcc.getNumberOfTracks())]
-            tcc.saveTracks(all_tracks, prefix=suffix + '_final_')
+            tcc.harvestTracks(prefix=suffix)
         of.getTime(all_time)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip

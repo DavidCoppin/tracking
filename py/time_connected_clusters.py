@@ -336,28 +336,30 @@ class TimeConnectedClusters:
     	return t_inds[0], t_inds[-1]
 
 
-    def harvestDeadTracks(self, prefix):
+    def harvestTracks(self, prefix, dead_only=False):
         """
-        Find all the tracks that are no longer alive, write the tracks into a file and remove them
-        from the connectivity list
+        Harvest tracks and remove from list
         @param prefix to be prepended to the file name
+        @param dead_only only harvest tracks that are no longer alive
         """
         t_index_min = self.LARGE_INT
         t_index_max = -self.LARGE_INT
-        dead_tracks = []
+        tracks_to_harvest = []
         for track_id in range(len(self.cluster_connect)):
             t_beg, t_end = self.getStartEndTimes(track_id)
-            if self.t_index > t_end:
-                dead_tracks.append(track_id)
+            if not dead_only or self.t_index > t_end:
+            	t_index_min = min(t_index_min, t_beg)
+            	t_index_max = max(t_index_max, t_end)
+                tracks_to_harvest.append(track_id)
 
-        # descending order of indices
-        dead_tracks.sort(reverse=True)
 
         # write the tracks to file
-        self.saveTracks(dead_tracks, prefix=prefix+'_t{}-{}_'.format(t_beg, t_end))        
+        self.saveTracks(tracks_to_harvest, 
+        	            prefix=prefix+'_t{}-{}_'.format(t_index_min, t_index_max))        
 
-        # remove the dead tracks
-        for track_id in dead_tracks:
+        # remove the harvested tracks
+        tracks_to_harvest.sort(reverse=True)
+        for track_id in tracks_to_harvest:
             self.removeTrack(track_id)
 
 
