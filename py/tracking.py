@@ -114,11 +114,13 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
                                   i_minmax=i_minmax, j_minmax=j_minmax, dead_only=True)
 
         # final harvest (all tracks)
-        if harvestPeriod:
-            tcc.harvestTracks(prefix=suffix, i_minmax=i_minmax, j_minmax=j_minmax)
+#        if harvestPeriod:
+#            tcc.harvestTracks(prefix=suffix, i_minmax=i_minmax, j_minmax=j_minmax)
         of.getTime(all_time)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
+    # Final harvest (all tracks)
+    tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax)
     # Remove tracks in large mask but never in small
     tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     # get 3D array of clusters from TimeConnectedClusters
@@ -144,7 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
-    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=0, 
+    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10, 
                          help='Number of time steps before dead tracks area saved to disk (0 for no harvest)')
     args = parser.parse_args()
 

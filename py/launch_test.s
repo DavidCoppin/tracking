@@ -17,7 +17,7 @@
 #python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 0:6000 -lats 0:828 -suffix globe
 
 ## Test Maritime Continent
-#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
+python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 1700:2200 -lats 50:650 -suffix cm
 
 ## Larger area
 #python -m cProfile tracking.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all
@@ -26,9 +26,9 @@
 #python plotEllipses.py -n 162 -f cmorph.pckl_png -t 50:100
 
 ## Create output for all the zones for a few days
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:828 -suffix africa
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:828 -suffix io-cm
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 2647:3216 -lats 0:828 -suffix pacific
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 3216:4577 -lats 0:828 -suffix america
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:828 -suffix africa
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:828 -suffix io-cm
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 2647:3216 -lats 0:828 -suffix pacific
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 3216:4577 -lats 0:828 -suffix america
 
 
