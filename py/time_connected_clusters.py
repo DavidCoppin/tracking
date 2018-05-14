@@ -357,7 +357,7 @@ class TimeConnectedClusters:
 
 
         # write the tracks to file
-        prfx = prefix + '_t{}-{}_'.format(t_index_min, t_index_max)
+        prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
         num_times = t_index_max - t_index_min + 1
         self.saveTracks(tracks_to_harvest, num_times, i_minmax, j_minmax,
                         prefix=prfx)
