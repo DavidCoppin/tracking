@@ -1,4 +1,4 @@
-#cython: profile=True
+#cython: profile=False
 
 import os
 import numpy as np
@@ -8,22 +8,6 @@ import ctypes
 from shapely.geometry.point import Point
 from shapely import affinity
 from matplotlib.patches import Polygon
-
-
-# load C library
-#_libpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_ellipse.so")
-#_lib = ctypes.CDLL(_libpath)
-#print "loaded ellipse lib", _lib
-#
-## prototype isPointInside function
-#_lib.isPointInside.restype = ctypes.c_int
-#_lib.isPointInside.argtypes = [
-#    ctypes.c_double,
-#    ctypes.c_double,
-#    ctypes.POINTER(ctypes.c_double),
-#    ctypes.POINTER(ctypes.c_double),
-#    ctypes.POINTER(ctypes.c_double),
-#]
 
 
 class Ellipse:
@@ -166,53 +150,14 @@ class Ellipse:
         eps = 1.e-12
         return _isPointInside(self.a + eps, self.b + eps, self.ij2AxesTransf, self.centre, point)
 
-#        eps = 1.e-12
-#        return _lib.isPointInside(self.a + eps, self.b + eps,
-#                                  self.ij2AxesTransf.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                                  self.centre.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                                  point.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))  # why `+ eps`
 
-#        # rotate the coordinates to align them to the principal axes
-#        ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
-#        eps = 1.e-12
-#
-#        ptPrimeAbs[0] /=  self.a + eps
-#        ptPrimeAbs[1] /=  self.b + eps
-###        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
-#        if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1]) < 1.0:
-##        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
-#            # inside
-#            return True
-#
-#        return False
-
-
-    def isPointInsideExt(self, point):
+    def isPointInsideExt(self, np.ndarray point):
         """
         Check if point is inside extended ellipse
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
         return _isPointInside(self.aExt, self.bExt, self.ij2AxesTransf, self.centre, point)
-#        return _lib.isPointInside(self.aExt, self.bExt,
-#                                  self.ij2AxesTransf.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                                  self.centre.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                                  point.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
-
-#        # rotate the coordinates to align them to the principal axes
-#        tmp = point - self.centre
-#        ptPrimeAbsX = self.ij2AxesTransf[0][0] * tmp[0] + self.ij2AxesTransf[0][1] * tmp[1]
-#        ptPrimeAbsY = self.ij2AxesTransf[1][0] * tmp[0] + self.ij2AxesTransf[1][1] * tmp[1]
-#
-#        ptPrimeAbsX /= self.aExt
-#        ptPrimeAbsY /= self.bExt
-###        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
-#        if (ptPrimeAbsX*ptPrimeAbsX + ptPrimeAbsY*ptPrimeAbsY) < 1.0:
-##        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
-#            # inside
-#            return True
-#
-#        return False
 
 
     def isEllipseInsideOf(self, otherEllipse, frac):
@@ -292,7 +237,6 @@ cdef _isPointInside(double a, double b, np.ndarray ij2AxesTransf, np.ndarray cen
     # rotate the coordinates to align them to the principal axes
     cdef double pointRelI = point[0] - centre[0]
     cdef double pointRelJ = point[1] - centre[1]
-
     cdef double ptPrimeAbsI = ij2AxesTransf[0][0] * pointRelI + ij2AxesTransf[0][1] * pointRelJ
     cdef double ptPrimeAbsJ = ij2AxesTransf[1][0] * pointRelI + ij2AxesTransf[1][1] * pointRelJ
 
