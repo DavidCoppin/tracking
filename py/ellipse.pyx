@@ -148,7 +148,9 @@ class Ellipse:
         @return True if inside, False if outside or on the boundary
         """
         eps = 1.e-12
-        return _isPointInside(self.a + eps, self.b + eps, self.ij2AxesTransf, self.centre, point)
+        transf = self.ij2AxesTransf
+        centre = self.centre
+        return _isPointInside(self.a + eps, self.b + eps, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isPointInsideExt(self, point):
@@ -157,7 +159,9 @@ class Ellipse:
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
-        return _isPointInside(self.aExt, self.bExt, self.ij2AxesTransf, self.centre, point)
+        transf = self.ij2AxesTransf
+        centre = self.centre
+        return _isPointInside(self.aExt, self.bExt, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isEllipseInsideOf(self, otherEllipse, frac):
@@ -233,12 +237,15 @@ class Ellipse:
             pylab.show()
 
 
-cdef _isPointInside(double a, double b, np.ndarray ij2AxesTransf, np.ndarray centre, np.ndarray point):
+## check if a point is inside an ellipse
+## it is faster to pass in the values instead of the arrays
+cdef _isPointInside(double a, double b, double tr00, double tr01, double tr10, double tr11,
+                    double centreX, double centreY, double pointX, double pointY):
     # rotate the coordinates to align them to the principal axes
-    cdef double pointRelI = point[0] - centre[0]
-    cdef double pointRelJ = point[1] - centre[1]
-    cdef double ptPrimeAbsI = ij2AxesTransf[0][0] * pointRelI + ij2AxesTransf[0][1] * pointRelJ
-    cdef double ptPrimeAbsJ = ij2AxesTransf[1][0] * pointRelI + ij2AxesTransf[1][1] * pointRelJ
+    cdef double pointRelI = pointX - centreX
+    cdef double pointRelJ = pointY - centreY
+    cdef double ptPrimeAbsI = tr00 * pointRelI + tr01 * pointRelJ
+    cdef double ptPrimeAbsJ = tr10 * pointRelI + tr11 * pointRelJ
 
     ptPrimeAbsI /= a
     ptPrimeAbsJ /= b
