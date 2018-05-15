@@ -4,6 +4,7 @@ import netCDF4
 from netCDF4 import Dataset as nc
 import bz2
 import os
+import matplotlib.pyplot as mpl
 
 """
 Write file with two variables: cprec (coastal precipitation) and nb (indexing of clusters)
@@ -18,6 +19,9 @@ class OutputNetcdf:
         """
         # precipitation data
         self.precip = []
+
+        # clusters
+        self.clusters = []
 
         # time
         self.time = []
@@ -36,11 +40,6 @@ class OutputNetcdf:
         self.time = np.append(self.time, time)
 
 
-    def extractTracks(self):
-        """
-        Extract tracks that correspond to the time of the file
-        """
-
     def selectPickles(self, prefix, t_index):
         """
         Gather files from the same regions
@@ -54,6 +53,29 @@ class OutputNetcdf:
                 print 'files[nb]', files[nb]
                 self.filenames.append(files[nb])
         return self.filenames
+
+
+    def extractTracks(self, files, lat, lon, id):
+        """
+        Extract tracks that correspond to the time of the file
+        """
+        self.id = id
+#        self.clusters = np.zeros((48, len(lat), len(lon)))
+        self.clusters = np.zeros((48, lat, lon))
+        for i in files:
+           print i
+           f = open(i)
+           tracks = cPickle.load(f)
+           for nb in range(len(tracks)):
+               keys = tracks[nb].keys()
+               for k in keys:
+                   for cl in tracks[nb][k]:
+                       i_index, j_index, mat = cl.toArray()
+                       self.clusters[k, i_index[0]:i_index[-1]+1, j_index[0]:j_index[-1]+1]\
+                                     [np.where(mat==1)]= self.id+1
+               self.id = self.id + 1
+           mpl.contourf(self.clusters[4, :, :])
+           mpl.show()
 
 
     def deletePickles(self, t_index):
@@ -160,9 +182,11 @@ class OutputNetcdf:
 
 ###################
 def testWrite():
+        id = 0
         on = OutputNetcdf()
         files = on.selectPickles('png', 5)
         print 'files', files
+        on.extractTracks(files, 300, 500, id)
 #        on.deletePickles(48)
 
 
