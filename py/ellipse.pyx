@@ -1,4 +1,4 @@
-#cython: profile=False
+#cython: profile=False, boundscheck=False, wraparound=False
 
 import os
 import numpy as np
@@ -151,7 +151,7 @@ class Ellipse:
         return _isPointInside(self.a + eps, self.b + eps, self.ij2AxesTransf, self.centre, point)
 
 
-    def isPointInsideExt(self, np.ndarray point):
+    def isPointInsideExt(self, point):
         """
         Check if point is inside extended ellipse
         @param point point in j, j index space
