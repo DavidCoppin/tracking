@@ -2,3 +2,4 @@
 *.out
 *.so
 ellipse.c
+build/

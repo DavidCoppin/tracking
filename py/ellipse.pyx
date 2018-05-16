@@ -1,4 +1,4 @@
-#cython: profile=False, boundscheck=False, wraparound=False
+#cython: profile=False
 
 import os
 import numpy as np
