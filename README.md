@@ -10,8 +10,20 @@ Requirements are:
  * scikit-image 0.12.3
  * nc_time-axis 1.0.2
  * opencv 2.4.11 or opencv3
+ * configparser
+ * Cython
 
 The code will currently not run with opencv 3.x.
+
+### Compiling
+
+The ellipse.pyx module must be compiled using Cython, to do this run:
+
+```
+./compile.sh
+```
+
+You **must** run this whenever you make changes in ellipse.pyx.
 
 ### On Pan
 
