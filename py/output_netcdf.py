@@ -13,7 +13,7 @@ after the clusters have been transformed into arrays
 
 class OutputNetcdf:
 
-    def __init__(self, ini, end):#, data):
+    def __init__(self, nb_day, lat, lon, id):#, data):
         """
         Constructor
         """
@@ -27,15 +27,26 @@ class OutputNetcdf:
         self.time = []
 
         # time step for the beginning
-        self.ini = ini
+        self.ini = nb_day*48
 
         # time step for the beginning
-        self.end = end
+        self.end = (nb_day+1)*48
 
         # keep time connected clusters
 #        self.tcc = data
 
         self.filenames = []
+
+        # Dictionary with name of pickle file as key, value is a np.array with same length as 
+        # number of tracks from pickle, set at 0 by default and replace by track Id when track
+        # over several output files
+        self.track_id = {}
+
+        self.lat = lat
+
+        self.lon = lon
+
+        self.id = id
 
     def getTime(self, time):
         """
@@ -61,53 +72,53 @@ class OutputNetcdf:
         return self.filenames
 
 
-    def extractTracks(self, files, lat, lon, id):
+    def extractTracks(self, files):
         """
         Extract tracks that correspond to the time of the file
         @param files: all the pickles files that will considered for this day
-        @param lat, lon: size of the domain
         """
-        self.id = id
-#        self.clusters = np.zeros((48, len(lat), len(lon)))
-        self.clusters = np.zeros((self.end-self.ini, lat, lon))
+        self.clusters = np.zeros((self.end-self.ini, len(self.lat), len(self.lon)))
+#        self.clusters = np.zeros((self.end-self.ini, nb_lat, nb_lon))
+        test = []
         for i in files:
            print i
            f = open(i)
            tracks = cPickle.load(f)
-           # Add default track Id = 0 for all tracks
-           self.addTrackId(tracks, 0)
+           # Set default track Id = 0 for all tracks if first time that file is read
+           if len(self.track_id) == 0:
+               self.track_id = {i: np.zeros(len(tracks))}
+           if i not in self.track_id :
+               self.setTrackId(i, len(tracks))
            for nb in range(len(tracks)):
                keys = tracks[nb].keys()
                # Check if track has an Id different from 0
-               if self.getTrackId(tracks[nb]) > 0 :
-                   new_id = self.getTrackId(tracks[nb])
+               if self.track_id.get(i)[nb] > 0 :
+                   new_id = self.track_id.get(i)[nb]
                else :
-                   new_id = self_id + 1
+                   new_id = self.id + 1
+                   self.id = self.id + 1
                # Fill in clusters with new_id where the track is
                for k in keys:
                    if k < self.end:
                        for cl in tracks[nb][k]:
                            i_index, j_index, mat = cl.toArray()
-                           self.clusters[k, i_index[0]:i_index[-1]+1, j_index[0]:j_index[-1]+1]\
-                                     [np.where(mat==1)]= new_id
+                           self.clusters[k-self.ini, i_index[0]:i_index[-1]+1, j_index[0]:\
+                                          j_index[-1]+1][np.where(mat==1)]= new_id
                # Replace track ID kept for next output file if track goes further than future output
                if keys[-1] >= self.end-self.ini:
-                   self.addTrackId(track[nb], new_id)
-               self.id = self.id + 1
+                   self.track_id[i][nb] = new_id
+#               print 'i, nb, self.track_id[i][nb]', i, nb, self.track_id[i][nb]
 #           mpl.contourf(self.clusters[4, :, :])
 #           mpl.show()
 
 
-    def addTrackId(self, track, Id):
+    def setTrackId(self, filename, nb_tracks):
         """
-        Add Id =0 if no track Id present. Otherwise, replace 0 by Id
+        If first time reading pickle file, add it to dictionary and set track id to 0 for 
+        every track
         """
-
-
-    def getTrackId(self, track):
-        """
-        Get track Id
-        """
+        self.track_id[filename] = np.zeros(nb_tracks)
+#        self.track_id.append({filename: np.zeros(nb_tracks)})
 
 
     def deletePickles(self):
@@ -119,9 +130,18 @@ class OutputNetcdf:
             if num[1] <= self.ini :
                 print 'self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
+                # Delete track_id associated with pickle
+                deleteTrackId(self.filenames[nb])
 
 
-    def writeFile(self, suffix, old_filename, lat, lon, unit, lat_slice, \
+    def deleteTrackId(self, filename):
+        """
+        Delete key/value associated to a filename in track_id
+        """
+        self.track_id.pop(filename)
+
+
+    def writeFile(self, suffix, old_filename, unit, lat_slice, \
                        lon_slice):
         """
         Write data to netcdf file
@@ -134,10 +154,10 @@ class OutputNetcdf:
         f = netCDF4.Dataset(new_filename, 'w')
 
         # create dimensions
-        num_i = len(lat)
+        num_i = len(self.lat)
         f.createDimension('lat', size=num_i)
 
-        num_j = len(lon)
+        num_j = len(self.lon)
         f.createDimension('lon', size=num_j)
 
         # infinite dimension
@@ -200,8 +220,8 @@ class OutputNetcdf:
             del var1, var2
         os.remove(filename)
 
-        i_index[:] = lat[:]
-        j_index[:] = lon[:]
+        i_index[:] = self.lat[:]
+        j_index[:] = self.lon[:]
         t_index[:] = self.time[self.ini:self.end]
         # now write all the data in one go
         mask=np.zeros((self.end-self.ini, num_i, num_j))
@@ -216,12 +236,12 @@ class OutputNetcdf:
 def testWrite():
         id = 0
         ini = 0
-        end = 5
+        end = 40
         on = OutputNetcdf(ini, end)
         files = on.selectPickles('png')
         print 'files', files
         on.extractTracks(files, 300, 500, id)
-        on.deletePickles()
+#        on.deletePickles()
 #        on.writeFile(str(suffix), list_filename[nb_day], lat, lon, \
 #                              unit, lat_slice, lon_slice)
 
