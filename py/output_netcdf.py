@@ -13,7 +13,7 @@ after the clusters have been transformed into arrays
 
 class OutputNetcdf:
 
-    def __init__(self):#, data):
+    def __init__(self, ini, end):#, data):
         """
         Constructor
         """
@@ -25,6 +25,12 @@ class OutputNetcdf:
 
         # time
         self.time = []
+
+        # time step for the beginning
+        self.ini = ini
+
+        # time step for the beginning
+        self.end = end
 
         # keep time connected clusters
 #        self.tcc = data
@@ -40,7 +46,7 @@ class OutputNetcdf:
         self.time = np.append(self.time, time)
 
 
-    def selectPickles(self, prefix, t_index):
+    def selectPickles(self, prefix):
         """
         Gather files from the same regions
         """
@@ -49,7 +55,7 @@ class OutputNetcdf:
         print 'files', files, len(files)
         for nb in range(len(files)):
             num = [int(s) for s in files[nb].split('_') if s.isdigit()]
-            if num[0] <= t_index :
+            if num[0] <= self.end :
                 print 'files[nb]', files[nb]
                 self.filenames.append(files[nb])
         return self.filenames
@@ -58,38 +64,64 @@ class OutputNetcdf:
     def extractTracks(self, files, lat, lon, id):
         """
         Extract tracks that correspond to the time of the file
+        @param files: all the pickles files that will considered for this day
+        @param lat, lon: size of the domain
         """
         self.id = id
 #        self.clusters = np.zeros((48, len(lat), len(lon)))
-        self.clusters = np.zeros((48, lat, lon))
+        self.clusters = np.zeros((self.end-self.ini, lat, lon))
         for i in files:
            print i
            f = open(i)
            tracks = cPickle.load(f)
+           # Add default track Id = 0 for all tracks
+           self.addTrackId(tracks, 0)
            for nb in range(len(tracks)):
                keys = tracks[nb].keys()
+               # Check if track has an Id different from 0
+               if self.getTrackId(tracks[nb]) > 0 :
+                   new_id = self.getTrackId(tracks[nb])
+               else :
+                   new_id = self_id + 1
+               # Fill in clusters with new_id where the track is
                for k in keys:
-                   for cl in tracks[nb][k]:
-                       i_index, j_index, mat = cl.toArray()
-                       self.clusters[k, i_index[0]:i_index[-1]+1, j_index[0]:j_index[-1]+1]\
-                                     [np.where(mat==1)]= self.id+1
+                   if k < self.end:
+                       for cl in tracks[nb][k]:
+                           i_index, j_index, mat = cl.toArray()
+                           self.clusters[k, i_index[0]:i_index[-1]+1, j_index[0]:j_index[-1]+1]\
+                                     [np.where(mat==1)]= new_id
+               # Replace track ID kept for next output file if track goes further than future output
+               if keys[-1] >= self.end-self.ini:
+                   self.addTrackId(track[nb], new_id)
                self.id = self.id + 1
-           mpl.contourf(self.clusters[4, :, :])
-           mpl.show()
+#           mpl.contourf(self.clusters[4, :, :])
+#           mpl.show()
 
 
-    def deletePickles(self, t_index):
+    def addTrackId(self, track, Id):
+        """
+        Add Id =0 if no track Id present. Otherwise, replace 0 by Id
+        """
+
+
+    def getTrackId(self, track):
+        """
+        Get track Id
+        """
+
+
+    def deletePickles(self):
         """
         Delete pickle once they are all used
         """
         for nb in range(len(self.filenames)):
             num = [int(s) for s in self.filenames[nb].split('_') if s.isdigit()]
-            if num[1] <= t_index :
+            if num[1] <= self.ini :
                 print 'self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
 
 
-    def writeFile(self, suffix, old_filename, data, lat, lon, ini, end ,unit, lat_slice, \
+    def writeFile(self, suffix, old_filename, lat, lon, unit, lat_slice, \
                        lon_slice):
         """
         Write data to netcdf file
@@ -170,12 +202,12 @@ class OutputNetcdf:
 
         i_index[:] = lat[:]
         j_index[:] = lon[:]
-        t_index[:] = self.time[ini:end]
+        t_index[:] = self.time[self.ini:self.end]
         # now write all the data in one go
-        mask=np.zeros((end-ini, num_i, num_j))
-        mask[np.where(data != 0)] = 1
+        mask=np.zeros((self.end-self.ini, num_i, num_j))
+        mask[np.where(self.clusters != 0)] = 1
         precip[:] = var * mask
-        nb_var[:] = data
+        nb_var[:] = self.clusters
         del var, mask, data_unzip
         f.close()
 
@@ -183,11 +215,15 @@ class OutputNetcdf:
 ###################
 def testWrite():
         id = 0
-        on = OutputNetcdf()
-        files = on.selectPickles('png', 5)
+        ini = 0
+        end = 5
+        on = OutputNetcdf(ini, end)
+        files = on.selectPickles('png')
         print 'files', files
         on.extractTracks(files, 300, 500, id)
-#        on.deletePickles(48)
+        on.deletePickles()
+#        on.writeFile(str(suffix), list_filename[nb_day], lat, lon, \
+#                              unit, lat_slice, lon_slice)
 
 
 if __name__ == '__main__':
