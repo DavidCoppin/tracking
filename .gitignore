@@ -3,3 +3,4 @@
 *.so
 ellipse.c
 build/
+*.pstats
