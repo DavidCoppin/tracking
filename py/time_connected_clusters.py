@@ -336,7 +336,7 @@ class TimeConnectedClusters:
     	return t_inds[0], t_inds[-1]
 
 
-    def harvestTracks(self, prefix, i_minmax, j_minmax, dead_only=False):
+    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
@@ -348,27 +348,46 @@ class TimeConnectedClusters:
         t_index_min = self.LARGE_INT
         t_index_max = -self.LARGE_INT
         tracks_to_harvest = []
+        good_tracks_to_harvest = []
         for track_id in range(len(self.cluster_connect)):
             t_beg, t_end = self.getStartEndTimes(track_id)
             if not dead_only or t_end < self.t_index - 1:
                 t_index_min = min(t_index_min, t_beg)
                 t_index_max = max(t_index_max, t_end)
                 tracks_to_harvest.append(track_id)
-
+                # keep only tracks that are above islands at some time
+#                overlap_mask = self.checkTrackOverMask(mask, frac, track_id)
+                if self.checkTrackOverMask(mask, frac, track_id) :
+                    good_tracks_to_harvest.append(track_id)
 
         # write the tracks to file
         prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
         num_times = t_index_max - t_index_min + 1
-        self.saveTracks(tracks_to_harvest, num_times, i_minmax, j_minmax,
+        self.saveTracks(good_tracks_to_harvest, num_times, i_minmax, j_minmax,
                         prefix=prfx)
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
-        print '... harvesting and removing tracks {}'.format(tracks_to_harvest)
+        print '... harvesting and removing tracks {}'.format(good_tracks_to_harvest)
+        print '... removing tracks {}'.format(tracks_to_harvest)
         for track_id in tracks_to_harvest:
             self.removeTrack(track_id)
 
 
+    def checkTrackOverMask(self, mask, frac, track_id):
+        """
+        Keep the tracks the overlap with the mask
+        @param valid_mask is 1 over the regions where we keep the tracks
+        @param frac threshold for the min fraction of overlap (0 <= frac <= 1)
+        """
+        found_overlap = False
+        for t_index in self.cluster_connect[track_id]:
+            iis, jjs = self.getCells(track_id, t_index)
+            numOverlap = mask[iis, jjs].sum()
+            if numOverlap >= frac*len(iis):
+                found_overlap = True
+                break
+        return found_overlap
 
     def removeTracksByValidMask(self, valid_mask, frac):
         """

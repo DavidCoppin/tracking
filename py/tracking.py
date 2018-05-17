@@ -8,6 +8,7 @@ from feature_extractor import FeatureExtractor
 from cluster import Cluster
 from coastal_mapping import CoastalMapping
 from output_file import OutputFile
+from output_netcdf import OutputNetcdf
 import configparser
 import sys,os,string
 import bz2
@@ -107,12 +108,10 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
                            mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
             tcc.addTime(clusters,frac_ellipse)
-
             # harvest the dead tracks and write to file
-            if harvestPeriod and (t + 1) % harvestPeriod == 0:
-                tcc.harvestTracks(prefix=suffix, 
-                                  i_minmax=i_minmax, j_minmax=j_minmax, dead_only=True)
-
+#            if harvestPeriod and (t + 1) % harvestPeriod == 0:
+#                tcc.harvestTracks(prefix=suffix, 
+#                                  i_minmax=i_minmax, j_minmax=j_minmax, dead_only=True)
         # final harvest (all tracks)
 #        if harvestPeriod:
 #            tcc.harvestTracks(prefix=suffix, i_minmax=i_minmax, j_minmax=j_minmax)
@@ -120,18 +119,26 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
     # Final harvest (all tracks)
-    tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax)
+#    tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax)
     # Remove tracks in large mask but never in small
     tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     # get 3D array of clusters from TimeConnectedClusters
     tracks = tcc.toArray(len(of.time), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+    id = 0
     for nb_day in xrange(len(dates)):
         print 'write_output, nb_day', nb_day
         name = list_filename[nb_day]
         ini = nb_day*48
         end = (nb_day+1)*48
+#        on = OutputNetcdf(nb_day, lat, lon, id)
+#        files = on.selectPickles('png')
+#        print 'files', files
+#        on.extractTracks(files)
+#        on.writeFile(str(suffix), list_filename[nb_day], unit, lat_slice, lon_slice)
+#        id = on.id
         of.writeFile(str(suffix), list_filename[nb_day], tracks[ini:end], lat, lon, ini, end, \
-                      unit, lat_slice, lon_slice)
+                              unit, lat_slice, lon_slice)
+        
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
 
