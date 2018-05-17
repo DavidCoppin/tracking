@@ -85,7 +85,7 @@ class OutputNetcdf:
                    self.id = self.id + 1
                # Fill in clusters with new_id where the track is
                for k in keys:
-                   if k < self.end:
+                   if k >= self.ini and k < self.end:
                        for cl in tracks[nb][k]:
                            i_index, j_index, mat = cl.toArray()
                            self.clusters[k-self.ini, i_index[0]:i_index[-1]+1, j_index[0]:\

@@ -124,6 +124,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         name = list_filename[nb_day]
         on = OutputNetcdf(nb_day, lat, lon, track_id, id)
         files = on.selectPickles(suffix)
+        files2 = files.sort()
         on.extractTracks(files)
         on.writeFile(str(suffix), list_filename[nb_day], unit, lat_slice, lon_slice)
         # Delete pickle that will not be used anymore (to be checked)

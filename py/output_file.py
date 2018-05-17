@@ -104,6 +104,7 @@ class OutputFile:
             ori = nc(filename)
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
+            print 'ori', ori
         if lon_slice.start < lon_slice.stop:
             var = ori.variables["CMORPH"][:, lat_slice, lon_slice]
         else:
