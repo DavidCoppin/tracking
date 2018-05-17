@@ -13,7 +13,7 @@ after the clusters have been transformed into arrays
 
 class OutputNetcdf:
 
-    def __init__(self, nb_day, lat, lon, id):#, data):
+    def __init__(self, nb_day, lat, lon, track_id, id):#, data):
         """
         Constructor
         """
@@ -23,38 +23,24 @@ class OutputNetcdf:
         # clusters
         self.clusters = []
 
-        # time
-        self.time = []
-
         # time step for the beginning
         self.ini = nb_day*48
 
         # time step for the beginning
         self.end = (nb_day+1)*48
 
-        # keep time connected clusters
-#        self.tcc = data
-
         self.filenames = []
 
         # Dictionary with name of pickle file as key, value is a np.array with same length as 
         # number of tracks from pickle, set at 0 by default and replace by track Id when track
         # over several output files
-        self.track_id = {}
+        self.track_id = track_id
 
         self.lat = lat
 
         self.lon = lon
 
         self.id = id
-
-    def getTime(self, time):
-        """
-        Store precipitation data and append it
-        @param var data
-        @param time time index
-        """
-        self.time = np.append(self.time, time)
 
 
     def selectPickles(self, prefix):
@@ -67,7 +53,6 @@ class OutputNetcdf:
         for nb in range(len(files)):
             num = [int(s) for s in files[nb].split('_') if s.isdigit()]
             if num[0] <= self.end :
-                print 'files[nb]', files[nb]
                 self.filenames.append(files[nb])
         return self.filenames
 
@@ -88,6 +73,7 @@ class OutputNetcdf:
            if len(self.track_id) == 0:
                self.track_id = {i: np.zeros(len(tracks))}
            if i not in self.track_id :
+               print 'i not in self.track_id', i
                self.setTrackId(i, len(tracks))
            for nb in range(len(tracks)):
                keys = tracks[nb].keys()
@@ -218,11 +204,12 @@ class OutputNetcdf:
             var2 = ori.variables["CMORPH"][:, lat_slice, :lon_slice.stop]
             var = np.concatenate((var1, var2), axis=2)
             del var1, var2
+        tint = ori.variables["time"][:]
         os.remove(filename)
 
         i_index[:] = self.lat[:]
         j_index[:] = self.lon[:]
-        t_index[:] = self.time[self.ini:self.end]
+        t_index[:] = tint[:]
         # now write all the data in one go
         mask=np.zeros((self.end-self.ini, num_i, num_j))
         mask[np.where(self.clusters != 0)] = 1

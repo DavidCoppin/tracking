@@ -28,7 +28,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     reso = C.getint('reso')
     print 'reso', reso
     min_prec = C.getfloat('min_prec', 0)
-    max_prec = C.getfloat('max_prec', 3)
+    max_prec = C.getfloat('max_prec', 3.0)
     print 'min_prec, max_prec', min_prec, max_prec
     szone = C.getint('szone', 8)
     lzone = C.getint('lzone', 50)
@@ -84,10 +84,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         else:
             all_data1 = f.variables["CMORPH"][:, lat_slice,lon_slice.start:]
             all_data2 = f.variables["CMORPH"][:, lat_slice,:lon_slice.stop]
-            #print np.shape(all_data1), np.shape(all_data2)
             all_data = np.concatenate((all_data1, all_data2), axis=2)
-            #print 'np.shape(all_data)', np.shape(all_data)
-        all_time = f.variables["time"][:]
         # Store once and for all lat, lon, unit
         if nb_day == 0:
             lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
@@ -101,7 +98,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         f.close()
         i_minmax = (0, len(lat))
         j_minmax = (0, len(lon))
-        for t in xrange(len(all_time)) :
+        for t in xrange(np.shape(all_data)[0]):
             print 'nb_day, t', nb_day, t
             data = all_data[t]
             # Extract clusters with watershed and remove large-scale clusters
@@ -111,29 +108,27 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
 
             # harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
-                tcc.harvestTracks(prefix=suffix, 
-                                  i_minmax=i_minmax, j_minmax=j_minmax, dead_only=True)
-
-        of.getTime(all_time)
+                tcc.harvestTracks(prefix=suffix, i_minmax=i_minmax, j_minmax=j_minmax, \
+                                   mask=np.flipud(cm.sArea), frac=frac_mask, dead_only=True)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
-    # Remove tracks in large mask but never in small
-    tcc.removeTracksByValidMask(valid_mask=np.flipud(cm.sArea), frac=frac_mask)
     # Final harvest (all tracks)
-    tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax)
+    tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax, \
+                       mask=np.flipud(cm.sArea), frac=frac_mask)
     # get 3D array of clusters from TimeConnectedClusters
     tracks = tcc.toArray(len(of.time), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
     id = 0
+    track_id = {}
     for nb_day in xrange(len(dates)):
         print 'write_output, nb_day', nb_day
         name = list_filename[nb_day]
-        on = OutputNetcdf(nb_day, lat, lon, id)
-        files = on.selectPickles('png')
-#        print 'files', files
+        on = OutputNetcdf(nb_day, lat, lon, track_id, id)
+        files = on.selectPickles(suffix)
         on.extractTracks(files)
         on.writeFile(str(suffix), list_filename[nb_day], unit, lat_slice, lon_slice)
         id = on.id
-        
+        track_id = on.track_id
+
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
 
