@@ -126,6 +126,8 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         files = on.selectPickles(suffix)
         on.extractTracks(files)
         on.writeFile(str(suffix), list_filename[nb_day], unit, lat_slice, lon_slice)
+        # Delete pickle that will not be used anymore (to be checked)
+#        on.deletePickles()
         id = on.id
         track_id = on.track_id
 
