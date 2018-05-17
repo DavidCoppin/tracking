@@ -66,33 +66,38 @@ class OutputNetcdf:
 #        self.clusters = np.zeros((self.end-self.ini, nb_lat, nb_lon))
         test = []
         for i in files:
-           print i
-           f = open(i)
-           tracks = cPickle.load(f)
-           # Set default track Id = 0 for all tracks if first time that file is read
-           if len(self.track_id) == 0:
-               self.track_id = {i: np.zeros(len(tracks))}
-           if i not in self.track_id :
-               print 'i not in self.track_id', i
-               self.setTrackId(i, len(tracks))
-           for nb in range(len(tracks)):
-               keys = tracks[nb].keys()
-               # Check if track has an Id different from 0
-               if self.track_id.get(i)[nb] > 0 :
-                   new_id = self.track_id.get(i)[nb]
-               else :
-                   new_id = self.id + 1
-                   self.id = self.id + 1
-               # Fill in clusters with new_id where the track is
-               for k in keys:
-                   if k >= self.ini and k < self.end:
-                       for cl in tracks[nb][k]:
-                           i_index, j_index, mat = cl.toArray()
-                           self.clusters[k-self.ini, i_index[0]:i_index[-1]+1, j_index[0]:\
-                                          j_index[-1]+1][np.where(mat==1)]= new_id
-               # Replace track ID kept for next output file if track goes further than future output
-               if keys[-1] >= self.end-self.ini:
-                   self.track_id[i][nb] = new_id
+            print i
+            f = open(i)
+            tracks = cPickle.load(f)
+            # Set default track Id = 0 for all tracks if first time that file is read
+            if len(self.track_id) == 0:
+                self.track_id = {i: np.zeros(len(tracks))}
+            if i not in self.track_id :
+                print 'i not in self.track_id', i
+                self.setTrackId(i, len(tracks))
+            for nb in range(len(tracks)):
+                keys = tracks[nb].keys()
+                # Check if track has an Id different from 0
+                if self.track_id.get(i)[nb] > 0 :
+                    new_id = self.track_id.get(i)[nb]
+                else :
+                    new_id = self.id + 1
+                    self.id = self.id + 1
+                # Fill in clusters with new_id where the track is
+                for k in keys:
+                    if k >= self.ini and k < self.end:
+                        for cl in tracks[nb][k]:
+                            i_index, j_index, mat = cl.toArray()
+                            self.clusters[k-self.ini, i_index[0]:i_index[-1]+1, j_index[0]:\
+                                           j_index[-1]+1][np.where(mat==1)]= new_id
+                            # Replace track ID kept for next output file if track goes further \
+                            # than future output
+                            if keys[-1] >= self.end-self.ini:
+                                self.track_id[i][nb] = new_id
+                # if not used, do not waste id
+                if keys[-1] < self.ini or keys[0] >= self.end:
+                    self.id = self.id -1
+                    new_id = self.id - 1
 #               print 'i, nb, self.track_id[i][nb]', i, nb, self.track_id[i][nb]
 #           mpl.contourf(self.clusters[4, :, :])
 #           mpl.show()
@@ -215,6 +220,8 @@ class OutputNetcdf:
         mask[np.where(self.clusters != 0)] = 1
         precip[:] = var * mask
         nb_var[:] = self.clusters
+#        unique = np.unique(self.clusters)
+#        print 'len(unique), unique', len(unique), unique
         del var, mask, data_unzip
         f.close()
 

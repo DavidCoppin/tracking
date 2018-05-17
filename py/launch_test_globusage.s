@@ -5,7 +5,7 @@
 #python tracking.py -d1 2013-11-05 -d2 2013-11-08 -lons 1400:1900 -lats 350:750 -suffix phil_3.0-8
 
 ## Test Papua New Guinea
-python tracking_harvest.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png -harvest 6
+python tracking_harvest.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png -harvest 48
 
 ## Test Sumatra
 #python tracking_harvest.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -suffix sumatra -harvest 12
