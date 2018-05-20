@@ -4,6 +4,7 @@ import netCDF4
 from netCDF4 import Dataset as nc
 import bz2
 import os
+import gzip
 import matplotlib.pyplot as mpl
 
 """
@@ -31,7 +32,7 @@ class OutputFromPickle:
 
         self.filenames = []
 
-        # Dictionary with name of pickle file as key, value is a np.array with same length as 
+        # Dictionary with name of pickle file as key, value is a np.array with same length as
         # number of tracks from pickle, set at 0 by default and replace by track Id when track
         # over several output files
         self.track_id = track_id
@@ -67,8 +68,8 @@ class OutputFromPickle:
         test = []
         for i in files:
             print i
-            f = open(i)
-            tracks = cPickle.load(f)
+            with gzip.GzipFile(i) as gzf:
+                tracks = cPickle.load(gzf)
             # Set default track Id = 0 for all tracks if first time that file is read
             if len(self.track_id) == 0:
                 self.track_id = {i: np.zeros(len(tracks))}
@@ -105,7 +106,7 @@ class OutputFromPickle:
 
     def setTrackId(self, filename, nb_tracks):
         """
-        If first time reading pickle file, add it to dictionary and set track id to 0 for 
+        If first time reading pickle file, add it to dictionary and set track id to 0 for
         every track
         """
         self.track_id[filename] = np.zeros(nb_tracks)

@@ -8,7 +8,8 @@ import cPickle
 import functools
 import tempfile
 import os
-    
+import gzip
+
 
 def __reduceOne(cluster_list, frac):
     """
@@ -33,7 +34,7 @@ def __reduceOne(cluster_list, frac):
 
 def reduce(cluster_list, frac=1.0):
     """
-    Fully reduce until no more reduction can be applied 
+    Fully reduce until no more reduction can be applied
     @param cluster_list in/out cluster list
     @param frac: threshold for overlapping ellipses to be reduced
     """
@@ -44,7 +45,7 @@ def reduce(cluster_list, frac=1.0):
 
 
 """
-Manages clusters across time in such a way that we one can easily extract all the clusters 
+Manages clusters across time in such a way that we one can easily extract all the clusters
 of a given Id and time index
 """
 
@@ -60,8 +61,8 @@ class TimeConnectedClusters:
         # number of clusters
         self.num_clusters = 0
 
-        # list of dictionaries. Each dictionary represents clusters across time which share the same 
-        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where 
+        # list of dictionaries. Each dictionary represents clusters across time which share the same
+        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where
         # t_index# is the time index and cluster# is a Cluster instance.
         self.cluster_connect = []
 
@@ -100,8 +101,8 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         @param frac TO DESCRIBE
         """
-        # merge overlapping clusters, this will reduce the number of 
-        # clusters to track but should have no influence on the 
+        # merge overlapping clusters, this will reduce the number of
+        # clusters to track but should have no influence on the
         # final result
         reduce(new_clusters, frac)
 
@@ -115,7 +116,7 @@ class TimeConnectedClusters:
 
             # done
             self.t_index += 1
-            return 
+            return
 
 
         new_track_ids = self._forwardTracking(new_clusters)
@@ -123,10 +124,10 @@ class TimeConnectedClusters:
         new_track_ids_to_fuse = self._backwardTracking(new_track_ids)
 
         # reduce list of tracks to fuse by looking at common track Ids between
-        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
+        # the elements of new_track_ids_to_fuse. These elements will be tagged for
         # removal in delete_elem
         self._fuseAll(new_track_ids_to_fuse)
- 
+
         # done with assigning, update the time index
         self.t_index += 1
 
@@ -148,7 +149,7 @@ class TimeConnectedClusters:
             # the track Id that we need to assign this cluster to
             new_track_id = -1
 
-            # find out if this cluster belongs to an existing track. This is equivalent to 
+            # find out if this cluster belongs to an existing track. This is equivalent to
             # forward tracking
             num_tracks = self.getNumberOfTracks()
             connected_clusters = []
@@ -163,11 +164,11 @@ class TimeConnectedClusters:
 
             if len(connected_track_ids) == 0:
                 # this cluster is on its own
-                # create a new entry 
+                # create a new entry
                 new_track_id = self.getNumberOfTracks()
                 self.cluster_connect.append({self.t_index: [new_cl]})
             else:
-                # choose the track for which the distance between new_cl any of the clusters 
+                # choose the track for which the distance between new_cl any of the clusters
                 # of that track at t - dt is smallest
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
@@ -199,14 +200,14 @@ class TimeConnectedClusters:
 
     def _backwardTracking(self, new_track_ids):
         """
-        Backward tracking: 
-        @param new_track_ids list of track Ids to which 
+        Backward tracking:
+        @param new_track_ids list of track Ids to which
                              _forwardTracking associated
                              the clusters
         @return list of new track Ids that will need to be fused
         """
-        # go through each new track and see if the track should 
-        # be merged with another track. Two tracks are tagged for a fuse if 
+        # go through each new track and see if the track should
+        # be merged with another track. Two tracks are tagged for a fuse if
         # cluster at time t - dt is inside the group of clusters at time t
 
         # create big clusters for each of the track_ids that are present at
@@ -319,7 +320,7 @@ class TimeConnectedClusters:
 
     def removeTrack(self, track_id):
     	"""
-    	Remove a track 
+    	Remove a track
     	@param track_id track Id
     	"""
     	self.cluster_connect.pop(track_id)
@@ -413,17 +414,17 @@ class TimeConnectedClusters:
                 if numOverlap >= frac*len(iis):
                     found_overlap = True
                     break
-                
+
 
             if not found_overlap:
                 remove_track_ids.append(track_id)
-        
+
         # remove the tracks that were tagged for removal
         # walking our way back from the end.
         remove_track_ids.sort(reverse=True)
         for track_id in remove_track_ids:
         	self.removeTrack(track_id)
-            
+
 
 
     def toArray(self, num_times, i_minmax=[], j_minmax=[], track_id_list=None):
@@ -526,16 +527,16 @@ class TimeConnectedClusters:
                 xc, yc = el.getCentre()
                 pylab.plot(yc, xc, '+', c=color)
 
-        pylab.title('Track {} (netcdf {}) time frames {} -> {}'.format(track_id, 
+        pylab.title('Track {} (netcdf {}) time frames {} -> {}'.format(track_id,
                                                             track_id + 1,
-                                                            t_inds[0]+1, 
+                                                            t_inds[0]+1,
                                                             t_inds[-1]+1))
         pylab.show()
 
 
     def save(self, filename="timeConnectedClusters.pckl"):
         """
-        Save object to file 
+        Save object to file
         @param filename file name
         """
         f = open(filename, 'w')
@@ -557,8 +558,9 @@ class TimeConnectedClusters:
         # toArray seems to produce that just pickling the clusters
         #data = self.toArray(num_times, i_minmax, j_minmax, track_id_list)
         data = [self.cluster_connect[tid] for tid in track_id_list]
-        f = tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False)
-        cPickle.dump(data, f)
+        with tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False) as f:
+            with gzip.GzipFile(fileobj=f) as gzf:
+                cPickle.dump(data, gzf)
 
 
     def getNumberOfTracks(self):
@@ -639,7 +641,7 @@ def testTwoClustersAtTime0():
     tcc.addTime([c3], 0.8)
     print tcc
     print 'Two clusters'
-    print tcc    
+    print tcc
 
 if __name__ == '__main__':
     testNoCluster()
