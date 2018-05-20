@@ -1,3 +1,5 @@
+#cython: profile=False
+
 from cluster import Cluster
 from ellipse import Ellipse
 import numpy as np
@@ -11,6 +13,26 @@ import os
 import gzip
 
 
+## check if a point is inside an ellipse
+## it is faster to pass in the values instead of the arrays
+cdef _isPointInsideEllipse(double a, double b, double tr00, double tr01, double tr10, double tr11,
+                           double centreX, double centreY, double pointX, double pointY):
+    # rotate the coordinates to align them to the principal axes
+    cdef double pointRelI = pointX - centreX
+    cdef double pointRelJ = pointY - centreY
+    cdef double ptPrimeAbsI = tr00 * pointRelI + tr01 * pointRelJ
+    cdef double ptPrimeAbsJ = tr10 * pointRelI + tr11 * pointRelJ
+
+    ptPrimeAbsI /= a
+    ptPrimeAbsJ /= b
+
+    if ptPrimeAbsI*ptPrimeAbsI + ptPrimeAbsJ*ptPrimeAbsJ < 1.0:
+        # inside
+        return True
+
+    return False
+
+
 def __reduceOne(cluster_list, frac):
     """
     Reduce the list of clusters by merging overlapping clusters
@@ -21,10 +43,27 @@ def __reduceOne(cluster_list, frac):
     n = len(cluster_list)
     for i in range(n):
         cli = cluster_list[i]
+        eli = cli.ellipse
+        eli_transf = eli.ij2AxesTransf
+        eli_centre = eli.centre
+        eli_a = eli.a
+        eli_b = eli.b
         for j in range(i + 1, n):
             clj = cluster_list[j]
+            elj = clj.ellipse
+            elj_transf = elj.ij2AxesTransf
+            elj_centre = elj.centre
+            
+            isCliInsideClj = _isPointInsideEllipse(elj.a, elj.b, elj_transf[0,0], elj_transf[0,1],
+                                                   elj_transf[1,0], elj_transf[1,1], elj_centre[0],
+                                                   elj_centre[1], eli_centre[0], eli_centre[1])
+            isCljInsideCli = _isPointInsideEllipse(eli_a, eli_b, eli_transf[0,0], eli_transf[0,1],
+                                                   eli_transf[1,0], eli_transf[1,1], eli_centre[0],
+                                                   eli_centre[1], elj_centre[0], elj_centre[1])
 
-            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+
+#            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+            if isCliInsideClj and isCljInsideCli:
                 cli += clj
                 del cluster_list[j]
                 return True
@@ -143,8 +182,12 @@ class TimeConnectedClusters:
         new_track_ids = set() # new cluster index to track id
 
         for new_cl_index in range(len(new_clusters)):
-
             new_cl = new_clusters[new_cl_index]
+            new_el = new_cl.ellipse
+            new_transf = new_el.ij2AxesTransf
+            new_centre = new_el.centre
+            new_aExt = new_el.aExt
+            new_bExt = new_el.bExt
 
             # the track Id that we need to assign this cluster to
             new_track_id = -1
@@ -157,8 +200,21 @@ class TimeConnectedClusters:
             for track_id in range(num_tracks):
                 old_clusters = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in old_clusters:
+                    old_el = old_cl.ellipse
+                    old_transf = old_el.ij2AxesTransf
+                    old_centre = old_el.centre
                     # is the centre of new_cl inside the ellipse of old_cl?
-                    if new_cl.isCentreInsideOfExt(old_cl) or old_cl.isCentreInsideOfExt(new_cl):
+                    isNewClInsideOldCl = _isPointInsideEllipse(old_el.aExt, old_el.bExt, old_transf[0,0], old_transf[0,1],
+                                                               old_transf[1,0], old_transf[1,1], old_centre[0], old_centre[1],
+                                                               new_centre[0], new_centre[1])
+                    # is the centre of old_cl inside the ellipse of new_cl?
+                    isOldClInsideNewCl = _isPointInsideEllipse(new_aExt, new_bExt, new_transf[0,0], new_transf[0,1],
+                                                               new_transf[1,0], new_transf[1,1], new_centre[0], new_centre[1],
+                                                               old_centre[0], old_centre[1])
+
+
+#                    if new_cl.isCentreInsideOfExt(old_cl) or old_cl.isCentreInsideOfExt(new_cl):
+                    if isNewClInsideOldCl or isOldClInsideNewCl:
                         connected_clusters.append(old_cl)
                         connected_track_ids.append(track_id)
 
@@ -214,9 +270,9 @@ class TimeConnectedClusters:
         # the previous time step
         old_big_clusters = {}
         for track_id in range(self.getNumberOfTracks()):
-        	cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
-        	if cluster_ids:
-        		old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+            cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
+            if cluster_ids:
+                old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
 
         # find the tracks to fuse
         new_track_ids_to_fuse = []
@@ -226,6 +282,11 @@ class TimeConnectedClusters:
 
             # big cluster in new_track_id at the present time
             big_cluster = self.getBigClusterAt(new_track_id, self.t_index)
+            big_ellipse = big_cluster.ellipse
+            big_transf = big_ellipse.ij2AxesTransf
+            big_centre = big_ellipse.centre
+            big_aExt = big_ellipse.aExt
+            big_bExt = big_ellipse.bExt
 
             track_ids_to_fuse = set()
             for track_id in old_big_clusters:
@@ -236,9 +297,17 @@ class TimeConnectedClusters:
 
                 # get the big cluster in track_id at the previous time
                 old_big_cluster = old_big_clusters[track_id]
+                obc_centre = old_big_cluster.ellipse.centre
+
+                # is the old big cluster inside the big clusters ellipse?
+                isOBCInsideBC = _isPointInsideEllipse(big_aExt, big_bExt, big_transf[0,0], big_transf[0,1],
+                                                           big_transf[1,0], big_transf[1,1], big_centre[0], big_centre[1],
+                                                           obc_centre[0], obc_centre[1])
+
 #                if old_big_clusters[track_id].isClusterInsideOf(big_cluster, frac=0.8):
-                if old_big_clusters[track_id].isCentreInsideOfExt(big_cluster):
-                	# tag this cluster for later fuse with new_track_id
+#                if old_big_clusters[track_id].isCentreInsideOfExt(big_cluster):
+                if isOBCInsideBC:
+                    # tag this cluster for later fuse with new_track_id
                     track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
@@ -319,22 +388,22 @@ class TimeConnectedClusters:
 
 
     def removeTrack(self, track_id):
-    	"""
-    	Remove a track
-    	@param track_id track Id
-    	"""
-    	self.cluster_connect.pop(track_id)
+        """
+        Remove a track
+        @param track_id track Id
+        """
+        self.cluster_connect.pop(track_id)
 
 
     def getStartEndTimes(self, track_id):
-    	"""
-    	Get the start/end time indices
-    	@param track_id track Id
-    	@return t_beg, t_end
-    	"""
-    	t_inds = self.cluster_connect[track_id].keys()
-    	t_inds.sort()
-    	return t_inds[0], t_inds[-1]
+        """
+        Get the start/end time indices
+        @param track_id track Id
+        @return t_beg, t_end
+        """
+        t_inds = self.cluster_connect[track_id].keys()
+        t_inds.sort()
+        return t_inds[0], t_inds[-1]
 
 
     def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, dead_only=False):
@@ -423,7 +492,7 @@ class TimeConnectedClusters:
         # walking our way back from the end.
         remove_track_ids.sort(reverse=True)
         for track_id in remove_track_ids:
-        	self.removeTrack(track_id)
+            self.removeTrack(track_id)
 
 
 

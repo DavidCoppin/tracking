@@ -7,6 +7,7 @@ from Cython.Build import cythonize
 
 extensions = [
     Extension("ellipse", ["ellipse.pyx"]),
+    Extension("time_connected_clusters", ["time_connected_clusters.pyx"]),
 ]
 
 setup(

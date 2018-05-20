@@ -2,5 +2,6 @@
 *.out
 *.so
 ellipse.c
+time_connected_clusters.c
 build/
 *.pstats
