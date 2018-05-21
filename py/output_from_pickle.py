@@ -30,6 +30,7 @@ class OutputFromPickle:
         # time step for the beginning
         self.end = (nb_day+1)*48
 
+        # name of the pickle files to be read
         self.filenames = []
 
         # Dictionary with name of pickle file as key, value is a np.array with same length as
@@ -44,17 +45,17 @@ class OutputFromPickle:
         self.id = id
 
 
-    def selectPickles(self, prefix):
+    def selectPickles(self, list_prefix):
         """
         Gather files from the same regions
         """
-        files = [i for i in os.listdir('.') if os.path.isfile(os.path.join('.',i)) \
-                  and i.startswith(prefix)]
-        print 'files', files, len(files)
-        for nb in range(len(files)):
-            num = [int(s) for s in files[nb].split('_') if s.isdigit()]
-            if num[0] <= self.end :
-                self.filenames.append(files[nb])
+        for n in range(len(list_prefix)):
+            files = [i for i in os.listdir('.') if os.path.isfile(os.path.join('.',i)) \
+                      and i.startswith(list_prefix[n])]
+            for nb in range(len(files)):
+                num = [int(s) for s in files[nb].split('_') if s.isdigit()]
+                if num[0] <= self.end :
+                    self.filenames.append(files[nb])
         return self.filenames
 
 
@@ -100,8 +101,6 @@ class OutputFromPickle:
                     self.id = self.id -1
                     new_id = self.id - 1
 #               print 'i, nb, self.track_id[i][nb]', i, nb, self.track_id[i][nb]
-#           mpl.contourf(self.clusters[4, :, :])
-#           mpl.show()
 
 
     def setTrackId(self, filename, nb_tracks):
@@ -133,8 +132,7 @@ class OutputFromPickle:
         self.track_id.pop(filename)
 
 
-    def writeFile(self, suffix, old_filename, unit, lat_slice, \
-                       lon_slice):
+    def writeFile(self, targetdir, suffix, old_filename):
         """
         Write data to netcdf file
         @param new_filename new file name
@@ -142,6 +140,12 @@ class OutputFromPickle:
         @param longitude
         @param ini and end: indicates the timesteps when the data needs to be written
         """
+        if os.path.isfile('lat-lon_'+str(suffix)+'.txt'):
+            lat_min, lat_max, lon_min, lon_max = readTxt('lat-lon_'+str(suffix)+'.txt')
+        else :
+            print 'attention all globe'
+            lat_min, lat_max, lon_min, lon_max = [0,-1,0,-1]
+
         new_filename = 'tracking'+str(old_filename[-18:-7])+'_'+str(suffix)
         f = netCDF4.Dataset(new_filename, 'w')
 
@@ -155,8 +159,27 @@ class OutputFromPickle:
         # infinite dimension
         time = f.createDimension('time', size=None)
 
-        # create variables
+        # read data needed
+        zipfile = bz2.BZ2File(old_filename)
+        data_unzip = zipfile.read()
+        filename = old_filename[:-4]
+        open(filename, 'wb').write(data_unzip)
+        try:
+            ori = nc(filename)
+        except RuntimeError:
+            ori = nc(filename.replace('-','_'))
+        if lon_min < lon_max:
+            var = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), int(lon_min):int(lon_max)]
+        else:
+            var1 = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), int(lon_min):]
+            var2 = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), :int(lon_max)]
+            var = np.concatenate((var1, var2), axis=2)
+            del var1, var2
+        tint = ori.variables["time"][:]
+        unit = ori.variables["time"].units
+        os.remove(filename)
 
+        # create variables
         i_index = f.createVariable('lat', 'f', ('lat',) ,zlib=True,complevel=9,\
                      least_significant_digit=4)
         f.variables['lat'].units='degrees_north'
@@ -194,24 +217,6 @@ class OutputFromPickle:
         f.variables['nb'].short_name='nb'
         f.variables['nb'].units='no unit'
 
-        # write the output
-        zipfile = bz2.BZ2File(old_filename)
-        data_unzip = zipfile.read()
-        filename = old_filename[:-4]
-        open(filename, 'wb').write(data_unzip)
-        try:
-            ori = nc(filename)
-        except RuntimeError:
-            ori = nc(filename.replace('-','_'))
-        if lon_slice.start < lon_slice.stop:
-            var = ori.variables["CMORPH"][:, lat_slice, lon_slice]
-        else:
-            var1 = ori.variables["CMORPH"][:, lat_slice, lon_slice.start:]
-            var2 = ori.variables["CMORPH"][:, lat_slice, :lon_slice.stop]
-            var = np.concatenate((var1, var2), axis=2)
-            del var1, var2
-        tint = ori.variables["time"][:]
-        os.remove(filename)
 
         i_index[:] = self.lat[:]
         j_index[:] = self.lon[:]
@@ -222,7 +227,6 @@ class OutputFromPickle:
         precip[:] = var * mask
         nb_var[:] = self.clusters
         unique = np.unique(self.clusters)
-        print 'len(unique), unique', len(unique), unique
         del var, mask, data_unzip
         f.close()
 

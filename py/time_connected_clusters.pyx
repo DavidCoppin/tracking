@@ -438,8 +438,8 @@ class TimeConnectedClusters:
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
-        print '... harvesting and removing tracks {}'.format(good_tracks_to_harvest)
-        print '... removing tracks {}'.format(tracks_to_harvest)
+#        print '... harvesting and removing tracks {}'.format(good_tracks_to_harvest)
+#        print '... removing tracks {}'.format(tracks_to_harvest)
         for track_id in tracks_to_harvest:
             self.removeTrack(track_id)
 

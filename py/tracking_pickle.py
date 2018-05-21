@@ -9,6 +9,7 @@ from cluster import Cluster
 from coastal_mapping import CoastalMapping
 from output_file import OutputFile
 from output_from_pickle import OutputFromPickle
+from write_output_pp import createTxt, readTxt
 import configparser
 import sys,os,string
 import bz2
@@ -23,8 +24,11 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     print config_full.sections()
     C = config_full['clusters']  # config parser expects sections
     # Read values from config.cfg
+    data_path = os.path.expandvars(C.get('data_path'))
     lsm = os.path.expandvars(C.get('lsm_path'))
     print 'lsm', lsm
+    targetdir = os.path.expandvars(C.get('targetdir'))
+#    print 'targetdir', targetdir
     reso = C.getint('reso')
     print 'reso', reso
     min_prec = C.getfloat('min_prec', 0)
@@ -46,7 +50,13 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
 
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
-    print 'lon_slice', lon_slice
+    # Store lat-lon limits over different zones for post_processing
+    if os.path.isfile('lat-lon_'+str(suffix)+'.txt'):
+        pass
+    else:
+        createTxt('lat-lon_'+str(suffix)+'.txt', [minmax_lats[0], minmax_lats[1],\
+                    minmax_lons[0], minmax_lons[1]])
+
     # Get the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
@@ -64,7 +74,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     list_filename=[]
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
-        filename=os.path.join('Data/CMORPH/Cmorph-' \
+        filename=os.path.join((str(data_path)+'Cmorph-' \
                + str(date.year) + '_' + str(date.month).zfill(2) + '_'\
                + str(date.day).zfill(2) + '.nc.bz2')
         # Open the file
@@ -85,9 +95,17 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             all_data1 = f.variables["CMORPH"][:, lat_slice,lon_slice.start:]
             all_data2 = f.variables["CMORPH"][:, lat_slice,:lon_slice.stop]
             all_data = np.concatenate((all_data1, all_data2), axis=2)
-        # Store once and for all lat, lon, unit
+        # Store once and for all lat, lon
         if nb_day == 0:
             lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
+            if os.path.isfile('lon_tot.txt'):
+                pass
+            else:
+                # Save info for post-processing:
+                lat_tot = f.variables['lat'][:]
+                lon_tot = f.variables['lon'][:]
+                createTxt('lat_tot.txt', lat_tot)
+                createTxt('lon_tot.txt', lon_tot)
             if lon_slice.start < lon_slice.stop:
                 lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
             else:
@@ -115,10 +133,17 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     # Final harvest (all tracks)
     tcc.harvestTracks(prefix=suffix,i_minmax=i_minmax, j_minmax=j_minmax, \
                        mask=np.flipud(cm.sArea), frac=frac_mask)
-    # get 3D array of clusters from TimeConnectedClusters
-    tracks = tcc.toArray(len(of.time), i_minmax=(0, len(lat)), j_minmax=(0, len(lon)))
+
+    # Save info for post-processing:
+    createTxt('filenames.txt', list_filename)
+
+    # Create the netcdf files
     id = 0
     track_id = {}
+    lat_tot = readTxt('lat_tot.txt')
+    lon_tot = readTxt('lon_tot.txt')
+#    lat = list(map(lambda x: float(x.replace(",", "")), lat_tot))
+#    lon = list(map(lambda x: float(x.replace(",", "")), lon_tot))
     for nb_day in xrange(len(dates)):
         print 'write_output, nb_day', nb_day
         name = list_filename[nb_day]
@@ -126,7 +151,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         files = ofp.selectPickles(suffix)
         files2 = files.sort()
         ofp.extractTracks(files)
-        ofp.writeFile(str(suffix), list_filename[nb_day], unit, lat_slice, lon_slice)
+        ofp.writeFile(str(targetdir), str(suffix), list_filename[nb_day])
         # Delete pickle that will not be used anymore (to be checked)
         ofp.deletePickles()
         id = ofp.id
