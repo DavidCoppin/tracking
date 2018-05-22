@@ -74,7 +74,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     list_filename=[]
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
-        filename=os.path.join((str(data_path)+'Cmorph-' \
+        filename=os.path.join(str(data_path)+'Cmorph-' \
                + str(date.year) + '_' + str(date.month).zfill(2) + '_'\
                + str(date.day).zfill(2) + '.nc.bz2')
         # Open the file
