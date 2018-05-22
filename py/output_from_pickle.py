@@ -94,9 +94,10 @@ class OutputFromPickle:
         @param files: all the pickles files that will considered for this day
         """
         self.clusters = np.zeros((self.end-self.ini, len(self.lat), len(self.lon)))
+        tot_lon = len(self.lon)
         for i in files:
             lat_min, lat_max, lon_min, lon_max = self.getLatLon(i)
-            print 'i, lat_min, lat_max, lon_min, lon_max', i, lat_min, lat_max, lon_min, lon_max
+#            print 'i, lat_min, lat_max, lon_min, lon_max', i, lat_min, lat_max, lon_min, lon_max
             with gzip.GzipFile(i) as gzf:
                 tracks = cPickle.load(gzf)
             # Set default track Id = 0 for all tracks if first time that file is read
@@ -118,9 +119,44 @@ class OutputFromPickle:
                     if k >= self.ini and k < self.end:
                         for cl in tracks[nb][k]:
                             i_index, j_index, mat = cl.toArray()
-                            self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]+int(lat_min)+1, \
-                                           j_index[0]+int(lon_min):j_index[-1]+int(lon_min)+1]\
-                                           [np.where(mat==1)]= new_id
+#			    print 'mat', np.shape(mat), mat
+                            if int(lon_min) < int(lon_max):
+                                self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                               +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
+                                               +int(lon_min)+1][np.where(mat==1)]= new_id
+                            # Africa
+                            else :
+				len_west = tot_lon - int(lon_min)
+#				print 'lon_end, len_lon_africa, i_index, j_index', \
+#                                        lon_end, len_lon_africa, i_index, j_index
+				# Part from 0 to 335
+                                if j_index[0] > len_west :
+#				    print 'part east'
+				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                                   +int(lat_min)+1,j_index[0]-len_west:j_index[-1]\
+                                                   -len_west+1][np.where(mat==1)]= new_id
+				# Part from 4497 to 4948
+				elif j_index[-1] < len_west :
+#				    print 'part west'
+#				    print 'j_index[0]+int(lon_min), j_index[-1]+int(lon_min)+1',\
+#					    j_index[0]+int(lon_min), j_index[-1]+int(lon_min)+1
+				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                                   +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
+                                                   +int(lon_min)+1][np.where(mat==1)]= new_id
+				# On both parts
+				else :
+#				    print 'both parts'
+				    mat_west = mat[:,0:(len_west-j_index[0])]
+				    mat_east = mat[:,(len_west-j_index[0]):]
+#                                    print 'np.shape(mat), np.shape(mat_east), np.shape(mat_west)', \
+#					np.shape(mat), np.shape(mat_east), np.shape(mat_west)
+				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                                   +int(lat_min)+1,0:len(j_index)\
+						   -(len_west-j_index[0])+1]\
+						   [np.where(mat_east==1)]= new_id
+				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                                   +int(lat_min)+1,j_index[0]+int(lon_min):]\
+                                                   [np.where(mat_west==1)]= new_id
                             # Replace track ID kept for next output file if track goes further \
                             # than future output
                             if keys[-1] >= self.end-self.ini:
