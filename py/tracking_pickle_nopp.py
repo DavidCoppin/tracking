@@ -7,7 +7,6 @@ from time_connected_clusters import TimeConnectedClusters
 from feature_extractor import FeatureExtractor
 from cluster import Cluster
 from coastal_mapping import CoastalMapping
-from output_file import OutputFile
 from output_from_pickle import OutputFromPickle
 from write_output_pp import createTxt, readTxt
 import configparser
@@ -62,7 +61,6 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     llat = minmax_lats[1] - minmax_lats[0]
     llon = minmax_lons[1] - minmax_lons[0]
     tcc = TimeConnectedClusters()
-    of = OutputFile(tcc)
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
     print 'dates', dates
@@ -131,26 +129,6 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
 
     # Save info for post-processing:
     createTxt(str(targetdir)+'filenames.txt', list_filename)
-
-    # Create the netcdf files
-    #id = 0
-    #track_id = {}
-    #lat_tot = readTxt('lat_tot.txt')
-    #lon_tot = readTxt('lon_tot.txt')
-#    lat = list(map(lambda x: float(x.replace(",", "")), lat_tot))
-#    lon = list(map(lambda x: float(x.replace(",", "")), lon_tot))
-    #for nb_day in xrange(len(dates)):
-    #    print 'write_output, nb_day', nb_day
-    #    name = list_filename[nb_day]
-    #    ofp = OutputFromPickle(nb_day, lat, lon, track_id, id)
-    #    files = ofp.selectPickles(suffix)
-    #    files2 = files.sort()
-    #    ofp.extractTracks(files)
-    #    ofp.writeFile(str(targetdir), str(suffix), list_filename[nb_day])
-    #    # Delete pickle that will not be used anymore (to be checked)
-    #    ofp.deletePickles()
-    #    id = ofp.id
-    #    track_id = ofp.track_id
 
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
