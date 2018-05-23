@@ -1,3 +1,5 @@
+#cython: profile=False
+
 from cluster import Cluster
 from ellipse import Ellipse
 import numpy as np
@@ -6,7 +8,30 @@ import copy
 import math
 import cPickle
 import functools
-    
+import tempfile
+import os
+import gzip
+
+
+## check if a point is inside an ellipse
+## it is faster to pass in the values instead of the arrays
+cdef _isPointInsideEllipse(double a, double b, double tr00, double tr01, double tr10, double tr11,
+                           double centreX, double centreY, double pointX, double pointY):
+    # rotate the coordinates to align them to the principal axes
+    cdef double pointRelI = pointX - centreX
+    cdef double pointRelJ = pointY - centreY
+    cdef double ptPrimeAbsI = tr00 * pointRelI + tr01 * pointRelJ
+    cdef double ptPrimeAbsJ = tr10 * pointRelI + tr11 * pointRelJ
+
+    ptPrimeAbsI /= a
+    ptPrimeAbsJ /= b
+
+    if ptPrimeAbsI*ptPrimeAbsI + ptPrimeAbsJ*ptPrimeAbsJ < 1.0:
+        # inside
+        return True
+
+    return False
+
 
 def __reduceOne(cluster_list, frac):
     """
@@ -18,10 +43,27 @@ def __reduceOne(cluster_list, frac):
     n = len(cluster_list)
     for i in range(n):
         cli = cluster_list[i]
+        eli = cli.ellipse
+        eli_transf = eli.ij2AxesTransf
+        eli_centre = eli.centre
+        eli_a = eli.a
+        eli_b = eli.b
         for j in range(i + 1, n):
             clj = cluster_list[j]
+            elj = clj.ellipse
+            elj_transf = elj.ij2AxesTransf
+            elj_centre = elj.centre
+            
+            isCliInsideClj = _isPointInsideEllipse(elj.a, elj.b, elj_transf[0,0], elj_transf[0,1],
+                                                   elj_transf[1,0], elj_transf[1,1], elj_centre[0],
+                                                   elj_centre[1], eli_centre[0], eli_centre[1])
+            isCljInsideCli = _isPointInsideEllipse(eli_a, eli_b, eli_transf[0,0], eli_transf[0,1],
+                                                   eli_transf[1,0], eli_transf[1,1], eli_centre[0],
+                                                   eli_centre[1], elj_centre[0], elj_centre[1])
 
-            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+
+#            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
+            if isCliInsideClj and isCljInsideCli:
                 cli += clj
                 del cluster_list[j]
                 return True
@@ -31,7 +73,7 @@ def __reduceOne(cluster_list, frac):
 
 def reduce(cluster_list, frac=1.0):
     """
-    Fully reduce until no more reduction can be applied 
+    Fully reduce until no more reduction can be applied
     @param cluster_list in/out cluster list
     @param frac: threshold for overlapping ellipses to be reduced
     """
@@ -42,7 +84,7 @@ def reduce(cluster_list, frac=1.0):
 
 
 """
-Manages clusters across time in such a way that we one can easily extract all the clusters 
+Manages clusters across time in such a way that we one can easily extract all the clusters
 of a given Id and time index
 """
 
@@ -58,8 +100,8 @@ class TimeConnectedClusters:
         # number of clusters
         self.num_clusters = 0
 
-        # list of dictionaries. Each dictionary represents clusters across time which share the same 
-        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where 
+        # list of dictionaries. Each dictionary represents clusters across time which share the same
+        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where
         # t_index# is the time index and cluster# is a Cluster instance.
         self.cluster_connect = []
 
@@ -98,8 +140,8 @@ class TimeConnectedClusters:
         @param new_clusters list of new clusters
         @param frac TO DESCRIBE
         """
-        # merge overlapping clusters, this will reduce the number of 
-        # clusters to track but should have no influence on the 
+        # merge overlapping clusters, this will reduce the number of
+        # clusters to track but should have no influence on the
         # final result
         reduce(new_clusters, frac)
 
@@ -113,7 +155,7 @@ class TimeConnectedClusters:
 
             # done
             self.t_index += 1
-            return 
+            return
 
 
         new_track_ids = self._forwardTracking(new_clusters)
@@ -121,10 +163,10 @@ class TimeConnectedClusters:
         new_track_ids_to_fuse = self._backwardTracking(new_track_ids)
 
         # reduce list of tracks to fuse by looking at common track Ids between
-        # the elements of new_track_ids_to_fuse. These elements will be tagged for 
+        # the elements of new_track_ids_to_fuse. These elements will be tagged for
         # removal in delete_elem
         self._fuseAll(new_track_ids_to_fuse)
- 
+
         # done with assigning, update the time index
         self.t_index += 1
 
@@ -140,13 +182,17 @@ class TimeConnectedClusters:
         new_track_ids = set() # new cluster index to track id
 
         for new_cl_index in range(len(new_clusters)):
-
             new_cl = new_clusters[new_cl_index]
+            new_el = new_cl.ellipse
+            new_transf = new_el.ij2AxesTransf
+            new_centre = new_el.centre
+            new_aExt = new_el.aExt
+            new_bExt = new_el.bExt
 
             # the track Id that we need to assign this cluster to
             new_track_id = -1
 
-            # find out if this cluster belongs to an existing track. This is equivalent to 
+            # find out if this cluster belongs to an existing track. This is equivalent to
             # forward tracking
             num_tracks = self.getNumberOfTracks()
             connected_clusters = []
@@ -154,18 +200,31 @@ class TimeConnectedClusters:
             for track_id in range(num_tracks):
                 old_clusters = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in old_clusters:
+                    old_el = old_cl.ellipse
+                    old_transf = old_el.ij2AxesTransf
+                    old_centre = old_el.centre
                     # is the centre of new_cl inside the ellipse of old_cl?
-                    if new_cl.isCentreInsideOfExt(old_cl) or old_cl.isCentreInsideOfExt(new_cl):
+                    isNewClInsideOldCl = _isPointInsideEllipse(old_el.aExt, old_el.bExt, old_transf[0,0], old_transf[0,1],
+                                                               old_transf[1,0], old_transf[1,1], old_centre[0], old_centre[1],
+                                                               new_centre[0], new_centre[1])
+                    # is the centre of old_cl inside the ellipse of new_cl?
+                    isOldClInsideNewCl = _isPointInsideEllipse(new_aExt, new_bExt, new_transf[0,0], new_transf[0,1],
+                                                               new_transf[1,0], new_transf[1,1], new_centre[0], new_centre[1],
+                                                               old_centre[0], old_centre[1])
+
+
+#                    if new_cl.isCentreInsideOfExt(old_cl) or old_cl.isCentreInsideOfExt(new_cl):
+                    if isNewClInsideOldCl or isOldClInsideNewCl:
                         connected_clusters.append(old_cl)
                         connected_track_ids.append(track_id)
 
             if len(connected_track_ids) == 0:
                 # this cluster is on its own
-                # create a new entry 
+                # create a new entry
                 new_track_id = self.getNumberOfTracks()
                 self.cluster_connect.append({self.t_index: [new_cl]})
             else:
-                # choose the track for which the distance between new_cl any of the clusters 
+                # choose the track for which the distance between new_cl any of the clusters
                 # of that track at t - dt is smallest
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
@@ -197,23 +256,23 @@ class TimeConnectedClusters:
 
     def _backwardTracking(self, new_track_ids):
         """
-        Backward tracking: 
-        @param new_track_ids list of track Ids to which 
+        Backward tracking:
+        @param new_track_ids list of track Ids to which
                              _forwardTracking associated
                              the clusters
         @return list of new track Ids that will need to be fused
         """
-        # go through each new track and see if the track should 
-        # be merged with another track. Two tracks are tagged for a fuse if 
+        # go through each new track and see if the track should
+        # be merged with another track. Two tracks are tagged for a fuse if
         # cluster at time t - dt is inside the group of clusters at time t
 
         # create big clusters for each of the track_ids that are present at
         # the previous time step
         old_big_clusters = {}
         for track_id in range(self.getNumberOfTracks()):
-        	cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
-        	if cluster_ids:
-        		old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+            cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
+            if cluster_ids:
+                old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
 
         # find the tracks to fuse
         new_track_ids_to_fuse = []
@@ -223,6 +282,11 @@ class TimeConnectedClusters:
 
             # big cluster in new_track_id at the present time
             big_cluster = self.getBigClusterAt(new_track_id, self.t_index)
+            big_ellipse = big_cluster.ellipse
+            big_transf = big_ellipse.ij2AxesTransf
+            big_centre = big_ellipse.centre
+            big_aExt = big_ellipse.aExt
+            big_bExt = big_ellipse.bExt
 
             track_ids_to_fuse = set()
             for track_id in old_big_clusters:
@@ -233,9 +297,17 @@ class TimeConnectedClusters:
 
                 # get the big cluster in track_id at the previous time
                 old_big_cluster = old_big_clusters[track_id]
+                obc_centre = old_big_cluster.ellipse.centre
+
+                # is the old big cluster inside the big clusters ellipse?
+                isOBCInsideBC = _isPointInsideEllipse(big_aExt, big_bExt, big_transf[0,0], big_transf[0,1],
+                                                           big_transf[1,0], big_transf[1,1], big_centre[0], big_centre[1],
+                                                           obc_centre[0], obc_centre[1])
+
 #                if old_big_clusters[track_id].isClusterInsideOf(big_cluster, frac=0.8):
-                if old_big_clusters[track_id].isCentreInsideOfExt(big_cluster):
-                	# tag this cluster for later fuse with new_track_id
+#                if old_big_clusters[track_id].isCentreInsideOfExt(big_cluster):
+                if isOBCInsideBC:
+                    # tag this cluster for later fuse with new_track_id
                     track_ids_to_fuse.add(track_id)
 
             if track_ids_to_fuse:
@@ -315,6 +387,78 @@ class TimeConnectedClusters:
         return iis, jjs
 
 
+    def removeTrack(self, track_id):
+        """
+        Remove a track
+        @param track_id track Id
+        """
+        self.cluster_connect.pop(track_id)
+
+
+    def getStartEndTimes(self, track_id):
+        """
+        Get the start/end time indices
+        @param track_id track Id
+        @return t_beg, t_end
+        """
+        t_inds = self.cluster_connect[track_id].keys()
+        t_inds.sort()
+        return t_inds[0], t_inds[-1]
+
+
+    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, dead_only=False):
+        """
+        Harvest tracks and remove from list
+        @param prefix to be prepended to the file name
+        @param i_minmax min/max lat indices
+        @param j_minmax min/max lon indices
+        @param dead_only only harvest tracks that are no longer alive, otherwise
+                         harvest all the tracks
+        """
+        t_index_min = self.LARGE_INT
+        t_index_max = -self.LARGE_INT
+        tracks_to_harvest = []
+        good_tracks_to_harvest = []
+        for track_id in range(len(self.cluster_connect)):
+            t_beg, t_end = self.getStartEndTimes(track_id)
+            if not dead_only or t_end < self.t_index - 1:
+                t_index_min = min(t_index_min, t_beg)
+                t_index_max = max(t_index_max, t_end)
+                tracks_to_harvest.append(track_id)
+                # keep only tracks that are above islands at some time
+#                overlap_mask = self.checkTrackOverMask(mask, frac, track_id)
+                if self.checkTrackOverMask(mask, frac, track_id) :
+                    good_tracks_to_harvest.append(track_id)
+
+        # write the tracks to file
+        prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
+        num_times = t_index_max - t_index_min + 1
+        self.saveTracks(good_tracks_to_harvest, num_times, i_minmax, j_minmax,
+                        prefix=prfx)
+
+        # remove the harvested tracks
+        tracks_to_harvest.sort(reverse=True)
+#        print '... harvesting and removing tracks {}'.format(good_tracks_to_harvest)
+#        print '... removing tracks {}'.format(tracks_to_harvest)
+        for track_id in tracks_to_harvest:
+            self.removeTrack(track_id)
+
+
+    def checkTrackOverMask(self, mask, frac, track_id):
+        """
+        Keep the tracks the overlap with the mask
+        @param valid_mask is 1 over the regions where we keep the tracks
+        @param frac threshold for the min fraction of overlap (0 <= frac <= 1)
+        """
+        found_overlap = False
+        for t_index in self.cluster_connect[track_id]:
+            iis, jjs = self.getCells(track_id, t_index)
+            numOverlap = mask[iis, jjs].sum()
+            if numOverlap >= frac*len(iis):
+                found_overlap = True
+                break
+        return found_overlap
+
     def removeTracksByValidMask(self, valid_mask, frac):
         """
         Remove the tracks that never overlap with the valid mask
@@ -339,28 +483,29 @@ class TimeConnectedClusters:
                 if numOverlap >= frac*len(iis):
                     found_overlap = True
                     break
-                
+
 
             if not found_overlap:
                 remove_track_ids.append(track_id)
-        
+
         # remove the tracks that were tagged for removal
-        # walking our way back from the end. Should we remove 
-        # the clusters first?
+        # walking our way back from the end.
         remove_track_ids.sort(reverse=True)
         for track_id in remove_track_ids:
-            del self.cluster_connect[track_id]
+            self.removeTrack(track_id)
 
 
-    def toArray(self, time, i_minmax=[], j_minmax=[]):
+
+    def toArray(self, num_times, i_minmax=[], j_minmax=[], track_id_list=None):
         """
         Convert clusters in tcc into 3D array
-        @param filename file name
+        @param num_times number of time indices
         @param i_minmax min/max lat indices
         @param j_minmax min/max lon indices
+        @param track_id_list list of track Ids, use None to select all tracks
         """
-        # create dimensions
 
+        # get the sizes
         iMin, jMin, iMax, jMax = self.getMinMaxIndices()
 
         if i_minmax:
@@ -372,11 +517,16 @@ class TimeConnectedClusters:
             jMin = min(jMin, j_minmax[0])
             jMax = max(jMax, j_minmax[1])
         num_j = jMax - jMin #+ 1
-#        print 'self.t_index, num_i, num_j', self.t_index, num_i, num_j
+
+        track_ids = [i for i in range(self.getNumberOfTracks())]
+        if track_id_list:
+            track_ids = track_id_list
+
         # data buffer, check ordering!!
-        self.data = np.zeros((len(time), num_i, num_j), np.int32)
-        for track_id in range(self.getNumberOfTracks()):
-            for time_index in range(len(time)):
+        data = np.zeros((num_times, num_i, num_j), np.int32)
+
+        for track_id in track_ids:
+            for time_index in range(num_times):
                 clusters = self.getClusters(track_id, time_index)
                 for cl in clusters:
                     n_cells = cl.getNumberOfCells()
@@ -384,8 +534,8 @@ class TimeConnectedClusters:
                     jis = [c[1] - jMin for c in cl.cells]
                     iis = [c[0] - iMin for c in cl.cells]
                     # check ordering!!
-                    self.data[tis, iis, jis] = track_id + 1
-        return self.data
+                    data[tis, iis, jis] = track_id + 1
+        return data
 
 
     def findCluster(self, cluster_id):
@@ -446,20 +596,40 @@ class TimeConnectedClusters:
                 xc, yc = el.getCentre()
                 pylab.plot(yc, xc, '+', c=color)
 
-        pylab.title('Track {} (netcdf {}) time frames {} -> {}'.format(track_id, 
+        pylab.title('Track {} (netcdf {}) time frames {} -> {}'.format(track_id,
                                                             track_id + 1,
-                                                            t_inds[0]+1, 
+                                                            t_inds[0]+1,
                                                             t_inds[-1]+1))
         pylab.show()
 
 
     def save(self, filename="timeConnectedClusters.pckl"):
         """
-        Save object to file 
+        Save object to file
         @param filename file name
         """
         f = open(filename, 'w')
         cPickle.dump(self, f)
+
+
+    def saveTracks(self, track_id_list, num_times, i_minmax, j_minmax, prefix):
+        """
+        Save the tracks to file
+        @param track_id_list list of track Ids
+        @param num_times number of time indices
+        @param i_minmax min/max lat indices
+        @param j_minmax min/max lon indices
+        @param prefix prefix of the file
+        """
+        if not track_id_list:
+            # nothing to do
+            return
+        # toArray seems to produce that just pickling the clusters
+        #data = self.toArray(num_times, i_minmax, j_minmax, track_id_list)
+        data = [self.cluster_connect[tid] for tid in track_id_list]
+        with tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False) as f:
+            with gzip.GzipFile(fileobj=f) as gzf:
+                cPickle.dump(data, gzf)
 
 
     def getNumberOfTracks(self):
@@ -540,7 +710,7 @@ def testTwoClustersAtTime0():
     tcc.addTime([c3], 0.8)
     print tcc
     print 'Two clusters'
-    print tcc    
+    print tcc
 
 if __name__ == '__main__':
     testNoCluster()

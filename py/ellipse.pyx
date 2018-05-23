@@ -1,19 +1,24 @@
+#cython: profile=False
+
+import os
 import numpy as np
+cimport numpy as np
 import math
+import ctypes
 from shapely.geometry.point import Point
 from shapely import affinity
 from matplotlib.patches import Polygon
-"""
-A Class that computes the ellipse of a cloud of points
-"""
+
 
 class Ellipse:
-
+    """
+    A Class that computes the ellipse of a cloud of points
+    """
     def __init__(self, cells, min_ellipse_axis=10):
         """
-        Constructor 
+        Constructor
         @param cells set of (i,j) tuples, must have at least one cell
-        @param min_ellipse_axis min axis length 
+        @param min_ellipse_axis min axis length
         """
         n = len(cells)
         area = float(n)
@@ -42,10 +47,10 @@ class Ellipse:
         inertia[1, 0] = inertia[0, 1]
         inertia[1, 1] = np.sum(jInds * jInds)
 
-        # the set of eigenvectors is the rotation matrix from ij space to the 
+        # the set of eigenvectors is the rotation matrix from ij space to the
         # inertial tensor's principal axes
         eigenvals, self.axes2ijTransf = np.linalg.eig(inertia)
-        self.ij2AxesTransf = np.transpose(self.axes2ijTransf)
+        self.ij2AxesTransf = np.transpose(self.axes2ijTransf).copy()  # copy ensures the array is C_CONTIGUOUS in memory
 
         # angle between the principal axes and the i, j directions
         self.angle = math.atan2(self.ij2AxesTransf[0, 1], self.ij2AxesTransf[0, 0])*180./np.pi
@@ -142,20 +147,10 @@ class Ellipse:
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
-
-        # rotate the coordinates to align them to the principal axes
-        ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
         eps = 1.e-12
-
-        ptPrimeAbs[0] /=  self.a + eps
-        ptPrimeAbs[1] /=  self.b + eps
-##        if (ptPrimeAbs[0]/(self.a + eps))**2 + (ptPrimeAbs[1]/(self.b + eps))**2 < 1.0:
-        if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1]) < 1.0:
-#        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
-            # inside
-            return True
-
-        return False
+        transf = self.ij2AxesTransf
+        centre = self.centre
+        return _isPointInside(self.a + eps, self.b + eps, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isPointInsideExt(self, point):
@@ -164,18 +159,9 @@ class Ellipse:
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
-  
-        # rotate the coordinates to align them to the principal axes
-        ptPrimeAbs = self.ij2AxesTransf.dot(point - self.centre)
-        ptPrimeAbs[0] /= self.aExt
-        ptPrimeAbs[1] /= self.bExt
-##        if (ptPrimeAbs[0]/self.aExt)**2 + (ptPrimeAbs[1]/self.bExt)**2 < 1.0:
-        if (ptPrimeAbs[0]*ptPrimeAbs[0] + ptPrimeAbs[1]*ptPrimeAbs[1]) < 1.0:
-#        if ptPrimeAbs.dot(ptPrimeAbs) < 1.0:
-            # inside
-            return True
-
-        return False
+        transf = self.ij2AxesTransf
+        centre = self.centre
+        return _isPointInside(self.aExt, self.bExt, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isEllipseInsideOf(self, otherEllipse, frac):
@@ -250,6 +236,28 @@ class Ellipse:
         if show:
             pylab.show()
 
+
+## check if a point is inside an ellipse
+## it is faster to pass in the values instead of the arrays
+cdef _isPointInside(double a, double b, double tr00, double tr01, double tr10, double tr11,
+                    double centreX, double centreY, double pointX, double pointY):
+    # rotate the coordinates to align them to the principal axes
+    cdef double pointRelI = pointX - centreX
+    cdef double pointRelJ = pointY - centreY
+    cdef double ptPrimeAbsI = tr00 * pointRelI + tr01 * pointRelJ
+    cdef double ptPrimeAbsJ = tr10 * pointRelI + tr11 * pointRelJ
+
+    ptPrimeAbsI /= a
+    ptPrimeAbsJ /= b
+
+    if ptPrimeAbsI*ptPrimeAbsI + ptPrimeAbsJ*ptPrimeAbsJ < 1.0:
+        # inside
+        return True
+
+    return False
+
+
+
 #############################################################################################
 def test0():
     # test zero set
@@ -320,7 +328,7 @@ def testMinEllipseAxis(axis=1):
     print 'ellipse axes: ', ell.a, ell.b
     print 'ellipse ext axes: ', ell.aExt, ell.bExt
     ell.show(cells=cells)
-    
+
 
 def testMinEllipseAreaBig():
     cells = {(i, 0) for i in range(4)}.union({(i - 1, 1) for i in range(4)})
