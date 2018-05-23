@@ -1,3 +1,7 @@
+'''
+@description: Tool used to debug. Show ellipses associated with a track
+'''
+
 import argparse
 import cPickle
 

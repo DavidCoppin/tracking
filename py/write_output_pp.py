@@ -1,9 +1,17 @@
+'''
+@description: Method leading the post-processing of pickles into global output
+'''
+
 import numpy as np
 import argparse
 from output_from_pickle import OutputFromPickle, readTxt, createTxt
 import sys
 
 def writeOutputPP(inputdir, outputdir):
+    """
+    @param inputdir: directory where pickles are stored
+    @param outputdir: directory where outputs will be stored
+    """
     id = 0
     track_id ={}
     filenames = readTxt(str(inputdir)+'filenames.txt')
@@ -11,10 +19,10 @@ def writeOutputPP(inputdir, outputdir):
     lon_tot = readTxt(str(inputdir)+'lon_tot.txt')
     lat = list(map(lambda x: float(x.replace(",", "")), lat_tot))
     lon = list(map(lambda x: float(x.replace(",", "")), lon_tot))
-#   list_prefix = ['io-cm', 'pacific', 'america', 'africa']
+    list_prefix = ['io-cm', 'pacific', 'america', 'africa']
 #    list_prefix = ['io-cm', 'pacific', 'america']
 #    list_prefix = ['africa']
-    list_prefix = ['png']
+#    list_prefix = ['png']
     for nb_day in xrange(len(filenames)):
         print 'write_output', filenames[nb_day]
         ofp = OutputFromPickle(nb_day, lat, lon, inputdir, outputdir, list_prefix, track_id, id)
