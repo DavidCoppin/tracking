@@ -20,7 +20,7 @@
 ## Larger area
 #python -m cProfile tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-01 -lons 328:2726 -lats 0:818 -suffix all
 
-## Fou final areas
+## Four final areas
 # Indian_ocean + Maritime Continent
 python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:828 -suffix io-cm -harvest 24
 # Pacific ocean

@@ -97,7 +97,6 @@ class OutputFromPickle:
         tot_lon = len(self.lon)
         for i in files:
             lat_min, lat_max, lon_min, lon_max = self.getLatLon(i)
-#            print 'i, lat_min, lat_max, lon_min, lon_max', i, lat_min, lat_max, lon_min, lon_max
             with gzip.GzipFile(i) as gzf:
                 tracks = cPickle.load(gzf)
             # Set default track Id = 0 for all tracks if first time that file is read
@@ -119,42 +118,32 @@ class OutputFromPickle:
                     if k >= self.ini and k < self.end:
                         for cl in tracks[nb][k]:
                             i_index, j_index, mat = cl.toArray()
-#			    print 'mat', np.shape(mat), mat
                             if int(lon_min) < int(lon_max):
                                 self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
                                                +int(lon_min)+1][np.where(mat==1)]= new_id
                             # Africa
                             else :
-				len_west = tot_lon - int(lon_min)
-#				print 'lon_end, len_lon_africa, i_index, j_index', \
-#                                        lon_end, len_lon_africa, i_index, j_index
-				# Part from 0 to 335
+				                len_west = tot_lon - int(lon_min)
+				                # Part from 0 to 335
                                 if j_index[0] > len_west :
-#				    print 'part east'
-				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                 				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]-len_west:j_index[-1]\
                                                    -len_west+1][np.where(mat==1)]= new_id
-				# Part from 4497 to 4948
-				elif j_index[-1] < len_west :
-#				    print 'part west'
-#				    print 'j_index[0]+int(lon_min), j_index[-1]+int(lon_min)+1',\
-#					    j_index[0]+int(lon_min), j_index[-1]+int(lon_min)+1
-				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                 				# Part from 4497 to 4948
+                 				elif j_index[-1] < len_west :
+				                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
                                                    +int(lon_min)+1][np.where(mat==1)]= new_id
-				# On both parts
-				else :
-#				    print 'both parts'
-				    mat_west = mat[:,0:(len_west-j_index[0])]
-				    mat_east = mat[:,(len_west-j_index[0]):]
-#                                    print 'np.shape(mat), np.shape(mat_east), np.shape(mat_west)', \
-#					np.shape(mat), np.shape(mat_east), np.shape(mat_west)
-				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+				                # On both parts
+                				else :
+                                    mat_west = mat[:,0:(len_west-j_index[0])]
+                                    mat_east = mat[:,(len_west-j_index[0]):]
+                                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,0:len(j_index)\
-						   -(len_west-j_index[0])+1]\
-						   [np.where(mat_east==1)]= new_id
-				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                                   -(len_west-j_index[0])+1]\
+                                                   [np.where(mat_east==1)]= new_id
+                				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]+int(lon_min):]\
                                                    [np.where(mat_west==1)]= new_id
                             # Replace track ID kept for next output file if track goes further \
@@ -165,7 +154,6 @@ class OutputFromPickle:
                 if keys[-1] < self.ini or keys[0] >= self.end:
                     self.id = self.id -1
                     new_id = self.id - 1
-#               print 'i, nb, self.track_id[i][nb]', i, nb, self.track_id[i][nb]
 
 
     def getLatLon(self, file):
@@ -187,7 +175,6 @@ class OutputFromPickle:
         every track
         """
         self.track_id[filename] = np.zeros(nb_tracks)
-#        self.track_id.append({filename: np.zeros(nb_tracks)})
 
 
     def deletePickles(self):
@@ -242,13 +229,6 @@ class OutputFromPickle:
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
         var = ori.variables["CMORPH"][:,:,:]
-#        if lon_min < lon_max:
-#            var = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), int(lon_min):int(lon_max)]
-#        else:
-#            var1 = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), int(lon_min):]
-#            var2 = ori.variables["CMORPH"][:, int(lat_min):int(lat_max), :int(lon_max)]
-#            var = np.concatenate((var1, var2), axis=2)
-#            del var1, var2
         tint = ori.variables["time"][:]
         unit = ori.variables["time"].units
         os.remove(filename)
@@ -305,19 +285,3 @@ class OutputFromPickle:
         f.close()
 
 
-###################
-def testWrite():
-        id = 0
-        ini = 0
-        end = 40
-        on = OutputNetcdf(ini, end)
-        files = on.selectPickles('pickles/png')
-        print 'files', files
-        on.extractTracks(files, 300, 500, id)
-#        on.deletePickles()
-#        on.writeFile(str(suffix), list_filename[nb_day], lat, lon, \
-#                              unit, lat_slice, lon_slice)
-
-
-if __name__ == '__main__':
-    testWrite()
