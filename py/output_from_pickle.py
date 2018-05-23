@@ -124,26 +124,26 @@ class OutputFromPickle:
                                                +int(lon_min)+1][np.where(mat==1)]= new_id
                             # Africa
                             else :
-				                len_west = tot_lon - int(lon_min)
-				                # Part from 0 to 335
+                                len_west = tot_lon - int(lon_min)
+                                # Part from 0 to 335
                                 if j_index[0] > len_west :
-                 				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]-len_west:j_index[-1]\
                                                    -len_west+1][np.where(mat==1)]= new_id
-                 				# Part from 4497 to 4948
-                 				elif j_index[-1] < len_west :
-				                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                # Part from 4497 to 4948
+                                elif j_index[-1] < len_west :
+                                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
                                                    +int(lon_min)+1][np.where(mat==1)]= new_id
-				                # On both parts
-                				else :
+                                # On both parts
+                                else :
                                     mat_west = mat[:,0:(len_west-j_index[0])]
                                     mat_east = mat[:,(len_west-j_index[0]):]
                                     self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,0:len(j_index)\
                                                    -(len_west-j_index[0])+1]\
                                                    [np.where(mat_east==1)]= new_id
-                				    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                    +int(lat_min)+1,j_index[0]+int(lon_min):]\
                                                    [np.where(mat_west==1)]= new_id
                             # Replace track ID kept for next output file if track goes further \
