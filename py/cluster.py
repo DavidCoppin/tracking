@@ -6,11 +6,11 @@ class Cluster:
 
     def __init__(self, cells={}, min_ellipse_axis=1):
         """
-        Constructor 
-        @param cells set of (i,j) tuples
-        @param min_ellipse_axis min axis length used in iscentreInsideOfExt
+        Constructor
+        @param cells: set of (i,j) tuples
+        @param min_ellipse_axis: minimum axis length used in isCentreInsideOfExt
         """
-        # set of i,j cells 
+        # set of i,j cells
         self.cells = cells
 
         # want the ellipse axes to scale to at least this area
@@ -25,7 +25,7 @@ class Cluster:
 
         # compute the ellipse...
         self.update()
-    
+
 
     def getNumberOfCells(self):
         """
@@ -36,21 +36,17 @@ class Cluster:
 
 
     def update(self):
-
         if len(self.cells) > 0:
-
             self.ellipse = Ellipse(self.cells, min_ellipse_axis=self.min_ellipse_axis)
-
             for dim in range(0, 2):
                 self.box[0][dim] = numpy.min([c[dim] for c in self.cells])
                 self.box[1][dim] = numpy.max([c[dim] for c in self.cells])
 
 
-
     def isCentreInsideOf(self, otherCluster):
         """
         Check if this ellipse' centre is inside the other cluster's ellipse
-        @param otherCluster other cluster
+        @param otherCluster: other cluster
         @return True if inside
         """
         return otherCluster.ellipse.isPointInside(self.ellipse.getCentre())
@@ -59,7 +55,7 @@ class Cluster:
     def isCentreInsideOfExt(self, otherCluster):
         """
         Check if this ellipse' centre is inside the other cluster's extended ellipse
-        @param otherCluster other cluster
+        @param otherCluster: other cluster
         @return True if inside
         """
         return otherCluster.ellipse.isPointInsideExt(self.ellipse.getCentre())
@@ -67,8 +63,9 @@ class Cluster:
 
     def isClusterInsideOf(self, otherCluster, frac=0.99):
         """
-        Check if fraction of this cluster is inside other cluster 
-        @param frac fraction of min area of self
+        Check if fraction of this cluster is inside other cluster
+        @param otherCluster: other cluster
+        @param frac: fraction of min area of self
         @return True if at least frac is inside
         """
         min_area = min(len(self.cells), len(otherCluster.cells))
@@ -82,7 +79,7 @@ class Cluster:
         """
         return self.ellipse.getCentre()
 
-   
+
     def getDistance(self, otherCluster):
         """
         Get the distance between the two clusters' centres
@@ -95,7 +92,7 @@ class Cluster:
 
     def __mul__(self, otherCluster):
         """
-        Overload of * operator, returns a cluster that is the intersection of 
+        Overload of * operator, returns a cluster that is the intersection of
         this and otherCluster
         @param otherCluster
         @return intersection of self with otherCluster
@@ -106,7 +103,7 @@ class Cluster:
     def __iadd__(self, otherCluster):
         """
         Overload of += operator, add othercluster cells to self
-        @param otherCluster other cluster
+        @param otherCluster: other cluster
         """
         self.cells = self.cells.union(otherCluster.cells)
         self.update()
@@ -116,7 +113,7 @@ class Cluster:
     def writeFile(self, filename):
         """
         Write to netcdf file
-        @param filename file name
+        @param filename: file name
         """
         import netCDF4
         iCoords, jCoords, ijValues = self.toArray()
@@ -134,11 +131,10 @@ class Cluster:
     def toArray(self, bounds=[]):
         """
         Convert this cluster to numpy (dense) array
-        @bounds [[iMin, jMin], [iMax, jMax]]
+        @param bounds: [[iMin, jMin], [iMax, jMax]]
         @return array of coordinates, array of zeros and ones
         """
         if len(self.cells) <= 0:
-            # no op
             return numpy.array([]), numpy.array([]), numpy.array([])
 
         if not bounds:
@@ -151,6 +147,7 @@ class Cluster:
             ijValues[c[0] - iMin, c[1] - jMin] = 1
 
         return iCoords, jCoords, ijValues
+
 
     def __repr__(self):
         """
@@ -169,7 +166,6 @@ class Cluster:
 def test1():
     cluster = Cluster({(-1, -2)})
     print('test1 {}'.format(cluster))
-    #cluster.writeFile('test1.nc')
 
 def testHorizLine():
     cluster = Cluster({(-1, -2), (0, -2), (1, -2), (2, -2)})

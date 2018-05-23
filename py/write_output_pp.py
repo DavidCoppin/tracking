@@ -19,7 +19,6 @@ def writeOutputPP(inputdir, outputdir):
         print 'write_output', filenames[nb_day]
         ofp = OutputFromPickle(nb_day, lat, lon, inputdir, outputdir, list_prefix, track_id, id)
         files = ofp.selectPickles()
-#        print 'files woPP', files
         if len(files)==0:
             print 'no files in writeOutputPP'
             sys.exit()
@@ -27,6 +26,7 @@ def writeOutputPP(inputdir, outputdir):
         print 'files', files, len(files)
         ofp.extractTracks(files)
         ofp.writeFile('final', filenames[nb_day])
+
         # Delete pickle that will not be used anymore
         ofp.deletePickles()
         id = ofp.id

@@ -1,17 +1,15 @@
 '''
 Created on March 28, 2018
-
 @author: David Coppin
 @institution: Department of Physics, University of Auckland
 
-@description: A Class that creates the different coastal mask used in the algorithm
+@description: A Class that creates the different coastal masks used in the algorithm
 '''
 import numpy as np
 from scipy import ndimage
 import cv2
 from netCDF4 import Dataset as nc
 import argparse
-import matplotlib.pyplot as mpl
 
 class CoastalMapping:
 
@@ -28,6 +26,7 @@ class CoastalMapping:
         @param max_size: maximal size of island that should be filled
         @return mask of the two coastal areas
         """
+        # Load parameters and land-sea mask
         self.reso = reso
         self.min_size = min_size
         self.max_size = max_size
@@ -38,9 +37,7 @@ class CoastalMapping:
             else:
                 slm1 = nc(dataname).variables['lsm'][lat_slice,lon_slice.start:]
                 slm2 = nc(dataname).variables['lsm'][lat_slice,:lon_slice.stop]
-                print np.shape(slm1), np.shape(slm2)
                 slm = np.concatenate((slm1, slm2), axis=1)
-                print 'np.shape(slm)', np.shape(slm)
         else :
             print 'prob reso', reso, self.reso
             slm_3d = nc(dataname).variables['lsmask'][:,:,:]
@@ -48,18 +45,22 @@ class CoastalMapping:
             slm_short = slm_3d[:,len_lat/6:len_lat-len_lat/6,:] # remove first and last 30 degres
             slm = slm_short.squeeze()
         new_slm = np.flipud(slm)
+
         # Create the coastline and fill islands
         slm_fill = self.fillIslands(new_slm.copy())
         land_fill = (1-new_slm)+slm_fill
         land_fill[np.where(land_fill>=1)] = 1
-        # Remove very small islands to speed up tracking
+
+        # Remove islands whose area is smaller than min_size
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
         mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
+
         # Get the caostal area via inverse Box-counting
         self.lArea = self.createCoastalArea(mask_coast,lzone,1)
         self.sArea = self.createCoastalArea(mask_coast,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
+
         # Fill in hole in mask
         slat_box = lat_slice.stop - 550
         elat_box = lat_slice.stop - 450
@@ -68,11 +69,13 @@ class CoastalMapping:
         if lon_slice.start < 1900:
             self.lArea[slat_box:elat_box,slon_box:elon_box]=1
 
+
     def findCoastline(self,data,smooth_radius=2.5):
         """
         Finds coastlines in a slm-array
-        smooth_radius = sigma-value for the canny algorithm
-        data= the slm array
+        @param data: the slm array
+        @param smooth_radius: sigma-value for the canny algorithm
+        @return coastlines
         """
         try:
             from skimage.feature import canny
@@ -87,7 +90,7 @@ class CoastalMapping:
         """
         Fills in islands up to a certain size
 	    @param slm: land-sea mask
-        @return array with big islands filled with 
+        @return array with big islands filled with 1
         """
         slm = np.ma.masked_where(slm==0,slm).filled(255)
         slm = np.ma.masked_where(slm==1,slm).filled(0)
@@ -96,9 +99,10 @@ class CoastalMapping:
         cnt = result[-2]
         hir = result[-1]
         hir = hir[0]
-        #How many km2 representing one gridbox-pixel
+
+        # km2 in one grid point
         A = self.reso*self.reso*1.
-        #size in grid points
+        # size in grid points
         size = self.max_size/A
         for i,c in zip(hir,cnt):
             if cv2.contourArea(c) > size:
@@ -109,10 +113,10 @@ class CoastalMapping:
 
     def eraseIslands(self,land,slm):
         """
-        Removes small islands from land-sea mask
+        Removes islands whose area is smaller than min_size from land-sea mask
         @param land: array with islands filled and coastline.
         @param slm: array to get good coastline detection on side of domain
-        @return new_mask: the new land-sea mask (without smaller islands)
+        @return new_mask: the new land-sea mask (without islands smaller than min_size)
         """
         Tmp = land.astype(np.uint8)
         result = cv2.findContours(Tmp,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
@@ -121,11 +125,16 @@ class CoastalMapping:
         new_mask = np.zeros(land.shape)
         for index,cnt in enumerate(cnts):
             cimg = np.zeros_like(land)
+
+            # Draw contours of cluster
             cv2.drawContours(cimg, cnts, index, color=255, thickness=-1)
-            ## Calculate the area covered by the contour km**2
+
+            # Calculate the area covered by the contour km**2
             Area = self.reso**2*cv2.contourArea(cnt)
             if Area > self.min_size:
                 cv2.drawContours(tmpary,[cnt],-1,1,-1)
+
+        # Fill in sides of region
         new_mask=1-tmpary
         new_mask[0,:] = slm[0,:]
         new_mask[:,0] = slm[:,0]
@@ -144,6 +153,7 @@ class CoastalMapping:
         """
         nY,nX = data.shape
         new_data = np.zeros((nY,nX))
+
         #Create circle mask around each coastal point
         for i in xrange(nY):
             for j in xrange(nX):
@@ -158,13 +168,8 @@ class CoastalMapping:
 def testCoastalArea(data, reso, minmax_lats, minmax_lons, szone, lzone, min_size, max_size):
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
-    cm = CoastalMapping(data, np.int(reso), lat_slice, lon_slice, np.int(szone), np.int(lzone), 
+    cm = CoastalMapping(data, np.int(reso), lat_slice, lon_slice, np.int(szone), np.int(lzone),
                          np.int(min_size), np.int(max_size))
-    mpl.subplot(1,2,1)
-    mpl.contourf(np.flipud(cm.sArea))
-    mpl.subplot(1,2,2)
-    mpl.contourf(np.flipud(cm.lArea))
-    mpl.show()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test Coastal Area')
@@ -173,9 +178,9 @@ if __name__ == '__main__':
     parser.add_argument('-r', dest='reso', default='8', help='resolution of the land-sea mask in km')
     parser.add_argument('-lons', dest='lons', default='1200:2200', help='Min and max longitude indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='50:650', help='Min and max latitude indices LATMIN,LATMAX')
-    parser.add_argument('-sz', dest='szone', default='6', help='small distance to coast in pixels')
+    parser.add_argument('-sz', dest='szone', default='8', help='small distance to coast in pixels')
     parser.add_argument('-lz', dest='lzone', default='50', help='large distance to coast in pixels')
-    parser.add_argument('-smin', dest='min_size', default='300', help='area below which islands are deleted in km2')
+    parser.add_argument('-smin', dest='min_size', default='0', help='area below which islands are deleted in km2')
     parser.add_argument('-smax', dest='max_size', default='800000', help='max area of filled islands in km2')
     args = parser.parse_args()
     try:

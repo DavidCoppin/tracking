@@ -16,12 +16,14 @@ from datetime import datetime,timedelta as td
 
 def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
 
-    ### Need to choose if we import parameters as arguments from testCmorph or if we use
-    ### configuration.py to do that for us
+    ##########################################################################
+    # Import arguments from config.cfg or fix default
+    ##########################################################################
     config_full = configparser.ConfigParser()
     config_full.read('config.cfg')
     print config_full.sections()
-    C = config_full['clusters']  # config parser expects sections
+    C = config_full['clusters']
+
     # Read values from config.cfg
     data_path = os.path.expandvars(C.get('data_path'))
     lsm = os.path.expandvars(C.get('lsm_path'))
@@ -44,32 +46,36 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
     max_size = C.getint('max_size', 800000)
     print 'min_size, max_size', min_size, max_size
     save = C.getboolean('save')
-    #####################################################
+    #########################################################################
 
+    # Get lat-lon limits of region and save it post_processing
     lon_slice = slice(minmax_lons[0], minmax_lons[1])
     lat_slice = slice(minmax_lats[0], minmax_lats[1])
-    # Store lat-lon limits over different zones for post_processing
     if os.path.isfile(str(targetdir)+'lat-lon_'+str(suffix)+'.txt'):
         pass
     else:
-        createTxt(str(targetdir)+'lat-lon_'+str(suffix)+'.txt', [minmax_lats[0], minmax_lats[1],\
-                    minmax_lons[0], minmax_lons[1]])
+        createTxt(str(targetdir)+'lat-lon_'+str(suffix)+'.txt', [minmax_lats[0], \
+                   minmax_lats[1], minmax_lons[0], minmax_lons[1]])
 
-    # Get the two coastal masks
+    # Create the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
-    llat = minmax_lats[1] - minmax_lats[0]
-    llon = minmax_lons[1] - minmax_lons[0]
+
+    # Load class used for tracking and dates for all the files
     tcc = TimeConnectedClusters()
     delta = lyear - fyear
     dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
-    print 'dates', dates
     list_filename=[]
+
+    #########################################################################
+    # Loop over days
+    #########################################################################
     for nb_day in xrange(len(dates)):
         date=dates[nb_day]
         filename=os.path.join(str(data_path)+'Cmorph-' \
                + str(date.year) + '_' + str(date.month).zfill(2) + '_'\
                + str(date.day).zfill(2) + '.nc.bz2')
+
         # Open the file
         filename = filename.replace('--','-').replace('__','_')
         print 'filename', filename
@@ -88,46 +94,53 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             all_data1 = f.variables["CMORPH"][:, lat_slice,lon_slice.start:]
             all_data2 = f.variables["CMORPH"][:, lat_slice,:lon_slice.stop]
             all_data = np.concatenate((all_data1, all_data2), axis=2)
-        # Store once and for all lat, lon
+
+        # Store once and for all info: lat, lon for post-processing
         if nb_day == 0:
             lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
             if os.path.isfile(str(targetdir)+'lon_tot.txt'):
                 pass
             else:
-                # Save info for post-processing:
                 lat_tot = f.variables['lat'][:]
                 lon_tot = f.variables['lon'][:]
                 createTxt(str(targetdir)+'lat_tot.txt', lat_tot)
                 createTxt(str(targetdir)+'lon_tot.txt', lon_tot)
+
+            # Special case of zones on both sides of 0 degree of longitude
             if lon_slice.start < lon_slice.stop:
                 lon = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
             else:
                 lon1 = f.variables['lon'][minmax_lons[0]:]
                 lon2 = f.variables['lon'][:minmax_lons[1]]
                 lon = np.concatenate((lon1, lon2))
-            unit = f.variables["time"].units
         f.close()
+
+        # Begin tracking
         i_minmax = (0, len(lat))
         j_minmax = (0, len(lon))
         for t in xrange(np.shape(all_data)[0]):
             print 'nb_day, t', nb_day, t
             data = all_data[t]
+
             # Extract clusters with watershed and remove large-scale clusters
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
-                           mask=np.flipud(cm.lArea), frac=frac_mask).newgetClusters(min_axis)
+                           mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
+
+            # Check time connectivity between clusters
             tcc.addTime(clusters,frac_ellipse)
 
-            # harvest the dead tracks and write to file
+            # Harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
                 tcc.harvestTracks(prefix=targetdir+suffix, i_minmax=i_minmax, j_minmax=j_minmax, \
                                    mask=np.flipud(cm.sArea), frac=frac_mask, dead_only=True)
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
+
     # Final harvest (all tracks)
     tcc.harvestTracks(prefix=targetdir+suffix,i_minmax=i_minmax, j_minmax=j_minmax, \
                        mask=np.flipud(cm.sArea), frac=frac_mask)
 
-    # Save info for post-processing:
+    # Save filenames for post-processing:
     createTxt(str(targetdir)+'filenames.txt', list_filename)
 
     if save:
