@@ -16,13 +16,12 @@
 
 ## Four final areas
 # Indian_ocean + Maritime Continent
-python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:828 -suffix io-cm -harvest 24
+#python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:828 -suffix io-cm -harvest 24
 # Pacific ocean
 #python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 2647:3216 -lats 0:828 -suffix pacific -harvest 24
 # Americas
 #python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 3216:4577 -lats 0:828 -suffix america -harvest 24
 # Africa
 #python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:828 -suffix africa -harvest 24
-
 
 

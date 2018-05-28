@@ -7,7 +7,7 @@ import argparse
 from output_from_pickle import OutputFromPickle, readTxt, createTxt
 import sys
 
-def writeOutputPP(inputdir, outputdir):
+def writeOutputPP(inputdir, outputdir, list_prefix):
     """
     @param inputdir: directory where pickles are stored
     @param outputdir: directory where outputs will be stored
@@ -19,10 +19,6 @@ def writeOutputPP(inputdir, outputdir):
     lon_tot = readTxt(str(inputdir)+'lon_tot.txt')
     lat = list(map(lambda x: float(x.replace(",", "")), lat_tot))
     lon = list(map(lambda x: float(x.replace(",", "")), lon_tot))
-    list_prefix = ['io-cm', 'pacific', 'america', 'africa']
-#    list_prefix = ['io-cm', 'pacific', 'america']
-#    list_prefix = ['africa']
-#    list_prefix = ['png']
     for nb_day in xrange(len(filenames)):
         print 'write_output', filenames[nb_day]
         ofp = OutputFromPickle(nb_day, lat, lon, inputdir, outputdir, list_prefix, track_id, id)
@@ -49,5 +45,8 @@ if __name__ == '__main__':
                          and txt files are stored')
     parser.add_argument('-o', dest='outputdir', default='output/', help='directory where netcdf \
                              are stored')
+#    parser.add_argument('-p','--prefix', nargs='+', help='<Required> Set flag', required=True)
+    parser.add_argument('-p', dest='prefix', nargs='+', default=['io-cm', 'pacific', 'america', \
+                           'africa'])
     args = parser.parse_args()
-    writeOutputPP(args.inputdir, args.outputdir)
+    writeOutputPP(args.inputdir, args.outputdir, args.prefix)
