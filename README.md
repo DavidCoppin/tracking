@@ -40,7 +40,11 @@ module load OpenCV/3.4.0-gimkl-2017a-Python-2.7.13
 ```
 module load Anaconda2/5.0.1-GCC-4.8.5
 source activate my_conda
-python tracking_pickle_nopp.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png_3.0-8
+python tracking_pickle_nopp.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png
+
+# To run post-processing after that
+python write_output_pp.py 
+# if prefix of pickles is png, use python write_output_pp.py -p png
 ```
 Note: The starting date (-d1), the ending date (-d2) and the configuration have default values "2010-02-19", "2010-02-23" and "config23" respectively so it is no longer necessary to pass these arguments. As of March 2 2018, it is possible to specify the longitude/latitude index box with options -lons and -lats respectively. Type Tracking_clean.py --help for a full set of options. 
 
