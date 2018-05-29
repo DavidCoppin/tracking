@@ -239,14 +239,12 @@ class Ellipse:
 
 ## it is faster to pass in the values instead of the arrays
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
-## it's important this function inlined with the calling function 
+## it's important that this function be inlined with the calling function 
 ## for performanc
-cdef _isPointInside2(double a, double b,
-                    double tr00, double tr01,
-                    double centreX, double centreY, 
-                           double pointX, double pointY):
+cdef bint _isPointInside(double a, double b, double tr00, double tr01, double tr10, double tr11,
+                         double centreX, double centreY, double pointX, double pointY):
     """
-    Check if a point is inside an ellipse
+    Check if a point is inside ellipse
     @param a x radius of ellipse in rotated coordinates
     @param b y radius of ellipse in rotated coordinates
     @param tr00 element of rotation matrix
@@ -257,38 +255,15 @@ cdef _isPointInside2(double a, double b,
     @param pointY y coordinate of point
     @return True if point is inside, False otherwise
     """
-    pointX -= centreX
-    pointY -= centreY
-    # rotate the coordinates to align them to the principal axes
-    cdef double ptXPrime =(+tr00 * pointX + tr01 * pointY) / a
-    cdef double ptYPrime =(-tr01 * pointX + tr00 * pointY) / b
-
-    if ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0:
-        # inside
-        return True
-
-    return False
-
-## it is faster to pass in the values instead of the arrays
-## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
-## it's important this function inlined with the calling function 
-## for performanc
-cdef _isPointInside(double a, double b, double tr00, double tr01, double tr10, double tr11,
-                    double centreX, double centreY, double pointX, double pointY):
 
     pointX -= centreX
     pointY -= centreY
     # rotate the coordinates to align them to the principal axes
     # and normalize
     cdef double ptXPrime = (+tr00 * pointX + tr01 * pointY) / a
-    cdef double ptYPrime = (+tr10 * pointX + tr11 * pointY) / b
+    cdef double ptYPrime = (-tr01 * pointX + tr11 * pointY) / b
 
-    if ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0:
-        # inside
-        return True
-
-    return False
-
+    return (ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0)
 
 
 #############################################################################################
