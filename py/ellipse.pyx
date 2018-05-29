@@ -261,7 +261,7 @@ cdef bint _isPointInside(double a, double b, double tr00, double tr01, double tr
     # rotate the coordinates to align them to the principal axes
     # and normalize
     cdef double ptXPrime = (+tr00 * pointX + tr01 * pointY) / a
-    cdef double ptYPrime = (-tr01 * pointX + tr11 * pointY) / b
+    cdef double ptYPrime = (-tr01 * pointX + tr00 * pointY) / b
 
     return (ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0)
 
