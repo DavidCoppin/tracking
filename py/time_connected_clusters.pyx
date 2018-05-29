@@ -13,20 +13,33 @@ import os
 import gzip
 
 
-## check if a point is inside an ellipse
 ## it is faster to pass in the values instead of the arrays
-cdef _isPointInsideEllipse(double a, double b, double tr00, double tr01, double tr10, double tr11,
-                           double centreX, double centreY, double pointX, double pointY):
+## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
+## it's important this function inlined with the calling function 
+## for performance
+cdef _isPointInsideEllipse(double a, double b,
+	                       double tr00, double tr01,
+                           double centreX, double centreY, 
+                           double pointX, double pointY):
+    """
+    Check if a point is inside an ellipse
+    @param a x radius of ellipse in rotated coordinates
+    @param b y radius of ellipse in rotated coordinates
+    @param tr00 element of rotation matrix
+    @param tr01 element of rotation matrix
+    @param centreX x coordinate of centre
+    @param centreY y coordinate of centre
+    @param pointX x cpoordinat of point
+    @param pointY y coordinate of point
+    @return True if point is inside, False otherwise
+    """
+    pointX -= centreX
+    pointY -= centreY
     # rotate the coordinates to align them to the principal axes
-    cdef double pointRelI = pointX - centreX
-    cdef double pointRelJ = pointY - centreY
-    cdef double ptPrimeAbsI = tr00 * pointRelI + tr01 * pointRelJ
-    cdef double ptPrimeAbsJ = tr10 * pointRelI + tr11 * pointRelJ
+    cdef double ptXPrime =(+tr00 * pointX + tr01 * pointY) / a
+    cdef double ptYPrime =(-tr01 * pointX + tr00 * pointY) / b
 
-    ptPrimeAbsI /= a
-    ptPrimeAbsJ /= b
-
-    if ptPrimeAbsI*ptPrimeAbsI + ptPrimeAbsJ*ptPrimeAbsJ < 1.0:
+    if ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0:
         # inside
         return True
 
@@ -55,11 +68,11 @@ def __reduceOne(cluster_list, frac):
             elj_centre = elj.centre
             
             isCliInsideClj = _isPointInsideEllipse(elj.a, elj.b, elj_transf[0,0], elj_transf[0,1],
-                                                   elj_transf[1,0], elj_transf[1,1], elj_centre[0],
-                                                   elj_centre[1], eli_centre[0], eli_centre[1])
+                                                   elj_centre[0], elj_centre[1], 
+                                                   eli_centre[0], eli_centre[1])
             isCljInsideCli = _isPointInsideEllipse(eli_a, eli_b, eli_transf[0,0], eli_transf[0,1],
-                                                   eli_transf[1,0], eli_transf[1,1], eli_centre[0],
-                                                   eli_centre[1], elj_centre[0], elj_centre[1])
+                                                   eli_centre[0], eli_centre[1], 
+                                                   elj_centre[0], elj_centre[1])
 
 
 #            if cli.isCentreInsideOf(clj) and clj.isCentreInsideOf(cli):
@@ -205,11 +218,11 @@ class TimeConnectedClusters:
                     old_centre = old_el.centre
                     # is the centre of new_cl inside the ellipse of old_cl?
                     isNewClInsideOldCl = _isPointInsideEllipse(old_el.aExt, old_el.bExt, old_transf[0,0], old_transf[0,1],
-                                                               old_transf[1,0], old_transf[1,1], old_centre[0], old_centre[1],
+                                                               old_centre[0], old_centre[1],
                                                                new_centre[0], new_centre[1])
                     # is the centre of old_cl inside the ellipse of new_cl?
                     isOldClInsideNewCl = _isPointInsideEllipse(new_aExt, new_bExt, new_transf[0,0], new_transf[0,1],
-                                                               new_transf[1,0], new_transf[1,1], new_centre[0], new_centre[1],
+                                                               new_centre[0], new_centre[1],
                                                                old_centre[0], old_centre[1])
 
 
@@ -301,7 +314,7 @@ class TimeConnectedClusters:
 
                 # is the old big cluster inside the big clusters ellipse?
                 isOBCInsideBC = _isPointInsideEllipse(big_aExt, big_bExt, big_transf[0,0], big_transf[0,1],
-                                                           big_transf[1,0], big_transf[1,1], big_centre[0], big_centre[1],
+                                                           big_centre[0], big_centre[1],
                                                            obc_centre[0], obc_centre[1])
 
 #                if old_big_clusters[track_id].isClusterInsideOf(big_cluster, frac=0.8):
