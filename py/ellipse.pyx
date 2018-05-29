@@ -150,7 +150,7 @@ class Ellipse:
         eps = 1.e-12
         transf = self.ij2AxesTransf
         centre = self.centre
-        return _isPointInside(self.a + eps, self.b + eps, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
+        return _isPointInside(self.a + eps, self.b + eps, transf[0][0], transf[0][1], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isPointInsideExt(self, point):
@@ -161,7 +161,7 @@ class Ellipse:
         """
         transf = self.ij2AxesTransf
         centre = self.centre
-        return _isPointInside(self.aExt, self.bExt, transf[0][0], transf[0][1], transf[1][0], transf[1][1], centre[0], centre[1], point[0], point[1])
+        return _isPointInside(self.aExt, self.bExt, transf[0][0], transf[0][1], transf[1][1], centre[0], centre[1], point[0], point[1])
 
 
     def isEllipseInsideOf(self, otherEllipse, frac):
@@ -241,7 +241,7 @@ class Ellipse:
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
 ## it's important that this function be inlined with the calling function 
 ## for performanc
-cdef bint _isPointInside(double a, double b, double tr00, double tr01, double tr10, double tr11,
+cdef bint _isPointInside(double a, double b, double tr00, double tr01, double tr11,
                          double centreX, double centreY, double pointX, double pointY):
     """
     Check if a point is inside ellipse
