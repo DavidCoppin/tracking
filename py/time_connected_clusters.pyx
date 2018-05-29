@@ -17,7 +17,8 @@ import gzip
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
 ## it's important that this function be inlined with the calling function 
 ## for performance
-cdef _isPointInsideEllipse(double a, double b,
+## only need the top row of the rotation matrix if we uyse symetry
+cdef bint _isPointInsideEllipse(double a, double b,
 	                       double tr00, double tr01,
                            double centreX, double centreY, 
                            double pointX, double pointY):
@@ -39,11 +40,7 @@ cdef _isPointInsideEllipse(double a, double b,
     cdef double ptXPrime =(+tr00 * pointX + tr01 * pointY) / a
     cdef double ptYPrime =(-tr01 * pointX + tr00 * pointY) / b
 
-    if ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0:
-        # inside
-        return True
-
-    return False
+    return (ptXPrime*ptXPrime + ptYPrime*ptYPrime < 1.0)
 
 
 def __reduceOne(cluster_list, frac):
@@ -120,9 +117,6 @@ class TimeConnectedClusters:
 
         # current time index
         self.t_index = 0
-
-        # 3D array of clusters
-        self.data = []
 
 
     def fuse(self, track_ids):

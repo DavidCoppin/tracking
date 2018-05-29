@@ -239,6 +239,7 @@ class Ellipse:
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
 ## it's important that this function be inlined with the calling function 
 ## for performanc
+## only need the top row of the rotation matrix if we uyse symetry
 cdef bint _isPointInside(double a, double b, double tr00, double tr01,
                          double centreX, double centreY, double pointX, double pointY):
     """
