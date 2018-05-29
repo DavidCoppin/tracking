@@ -119,7 +119,7 @@ class OutputFromPickle:
                 print 'i not in self.track_id', i
                 self.setTrackId(i, len(tracks))
             for nb in range(len(tracks)):
-                keys = tracks[nb].keys()
+                keys = sorted(tracks[nb].keys())
 
                 # Check if track has an Id different from 0
                 if self.track_id.get(i)[nb] > 0 :
