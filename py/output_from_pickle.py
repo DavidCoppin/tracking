@@ -1,6 +1,6 @@
 '''
 @description: A Class that selects the pickles needed for the output, extract tracks from
-              the pickles and put them with a unique in a 3D array that will be used as 
+              the pickles and put them with a unique in a 3D array that will be used as
               output and as a mask on precipitation, and write the final output
 '''
 
@@ -101,7 +101,7 @@ class OutputFromPickle:
 
     def extractTracks(self, files):
         """
-        Extract tracks that correspond to the time of the file and gives them 
+        Extract tracks that correspond to the time of the file and gives them
         a unique id
         @param files: all the pickles files for this day
         """
@@ -283,7 +283,7 @@ class OutputFromPickle:
         f.variables['cprec'].short_name='cprec'
         f.variables['cprec'].units='mm/h'
 
-        nb_var = f.createVariable('nb', 'i4', ('time', 'lat', 'lon'))
+        nb_var = f.createVariable('nb', 'i4', ('time', 'lat', 'lon'), zlib=True)
         f.variables['nb'].gridtype='lonlat'
         f.variables['nb'].code=0
         f.variables['nb'].long_name='identification number of the clusters'
