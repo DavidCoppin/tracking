@@ -148,9 +148,8 @@ class Ellipse:
         @return True if inside, False if outside or on the boundary
         """
         eps = 1.e-12
-        transf = self.ij2AxesTransf
-        centre = self.centre
-        return _isPointInside(self.a + eps, self.b + eps, transf[0][0], transf[0][1], centre[0], centre[1], point[0], point[1])
+        transf = self.ij2AxesTransf[0,:]
+        return _isPointInside(self.a + eps, self.b + eps, transf[0], transf[1], self.centre[0], self.centre[1], point[0], point[1])
 
 
     def isPointInsideExt(self, point):
@@ -159,9 +158,8 @@ class Ellipse:
         @param point point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
-        transf = self.ij2AxesTransf
-        centre = self.centre
-        return _isPointInside(self.aExt, self.bExt, transf[0][0], transf[0][1], centre[0], centre[1], point[0], point[1])
+        transf = self.ij2AxesTransf[0,:]
+        return _isPointInside(self.aExt, self.bExt, transf[0], transf[1], self.centre[0], self.centre[1], point[0], point[1])
 
 
     def isEllipseInsideOf(self, otherEllipse, frac):

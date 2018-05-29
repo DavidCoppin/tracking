@@ -197,7 +197,7 @@ class TimeConnectedClusters:
         for new_cl_index in range(len(new_clusters)):
             new_cl = new_clusters[new_cl_index]
             new_el = new_cl.ellipse
-            new_transf = new_el.ij2AxesTransf
+            new_transf = new_el.ij2AxesTransf[0, :]
             new_centre = new_el.centre
             new_aExt = new_el.aExt
             new_bExt = new_el.bExt
@@ -214,14 +214,16 @@ class TimeConnectedClusters:
                 old_clusters = self.cluster_connect[track_id].get(self.t_index - 1, [])
                 for old_cl in old_clusters:
                     old_el = old_cl.ellipse
-                    old_transf = old_el.ij2AxesTransf
+                    old_transf = old_el.ij2AxesTransf[0, :]
                     old_centre = old_el.centre
                     # is the centre of new_cl inside the ellipse of old_cl?
-                    isNewClInsideOldCl = _isPointInsideEllipse(old_el.aExt, old_el.bExt, old_transf[0,0], old_transf[0,1],
+                    isNewClInsideOldCl = _isPointInsideEllipse(old_el.aExt, old_el.bExt, 
+                    	                                       old_transf[0], old_transf[1],
                                                                old_centre[0], old_centre[1],
                                                                new_centre[0], new_centre[1])
                     # is the centre of old_cl inside the ellipse of new_cl?
-                    isOldClInsideNewCl = _isPointInsideEllipse(new_aExt, new_bExt, new_transf[0,0], new_transf[0,1],
+                    isOldClInsideNewCl = _isPointInsideEllipse(new_aExt, new_bExt, 
+                    	                                       new_transf[0], new_transf[1],
                                                                new_centre[0], new_centre[1],
                                                                old_centre[0], old_centre[1])
 
