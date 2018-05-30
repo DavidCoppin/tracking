@@ -195,7 +195,6 @@ class OutputFromPickle:
                 if keys[-1] < self.ini or keys[0] >= self.end:
                     self.id = self.id -1
                     new_id = self.id - 1
-                print 'new_id, self.id', new_id, self.id
 
 
     def getLatLon(self, file):

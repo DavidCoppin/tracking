@@ -45,7 +45,6 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
         dict_pickles = ofp.dict_pickles
         track_id = ofp.track_id
         id = ofp.id
-        print 'id', id
 
 
 
