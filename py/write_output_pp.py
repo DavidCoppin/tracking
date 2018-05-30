@@ -19,6 +19,12 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
     lon_tot = readTxt(str(inputdir)+'lon_tot.txt')
     lat = list(map(lambda x: float(x.replace(",", "")), lat_tot))
     lon = list(map(lambda x: float(x.replace(",", "")), lon_tot))
+    if len(list_prefix)==1:
+        str_lat_lon = readTxt(str(inputdir)+'lat-lon_'+str(list_prefix[0])+'.txt')
+        lat_lon = [int(str_lat_lon[0]), int(str_lat_lon[1]), int(str_lat_lon[2]), \
+                    int(str_lat_lon[3])]
+    else :
+        lat_lon = [0, -1, 0, -1]
     for nb_day in xrange(len(filenames)):
         print 'write_output', filenames[nb_day]
         ofp = OutputFromPickle(nb_day, lat, lon, inputdir, outputdir, list_prefix, track_id, id)
@@ -28,11 +34,12 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
             sys.exit()
         files2 = files.sort()
         print 'files', files, len(files)
+        sys.exit()
         ofp.extractTracks(files)
-        ofp.writeFile('final', filenames[nb_day])
+        ofp.writeFile('always_unzip', filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
-        ofp.deletePickles()
+#        ofp.deletePickles()
         id = ofp.id
         track_id = ofp.track_id
 

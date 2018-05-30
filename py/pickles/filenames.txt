@@ -1,2 +1,3 @@
-Data/CMORPH/Cmorph-2010_02_19.nc.bz2
-Data/CMORPH/Cmorph-2010_02_20.nc.bz2
+Data/CMORPH/Cmorph-2008_11_04.nc.bz2
+Data/CMORPH/Cmorph-2008_11_05.nc.bz2
+Data/CMORPH/Cmorph-2008_11_06.nc.bz2

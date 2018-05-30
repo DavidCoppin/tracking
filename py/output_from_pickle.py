@@ -134,7 +134,12 @@ class OutputFromPickle:
                         for cl in tracks[nb][k]:
                             i_index, j_index, mat = cl.toArray()
                             if int(lon_min) < int(lon_max):
-                                self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
+                                if len(self.lat)<800:
+                                    self.clusters[k-self.ini, i_index[0]:i_index[-1]\
+                                               +1,j_index[0]:j_index[-1]\
+                                               +1][np.where(mat==1)]= new_id
+                                else:
+                                    self.clusters[k-self.ini, i_index[0]+int(lat_min):i_index[-1]\
                                                +int(lat_min)+1,j_index[0]+int(lon_min):j_index[-1]\
                                                +int(lon_min)+1][np.where(mat==1)]= new_id
 
@@ -220,7 +225,7 @@ class OutputFromPickle:
         self.track_id.pop(filename)
 
 
-    def writeFile(self, suffix, old_filename):
+    def writeFile(self, suffix, old_filename, list_lat_lon):
         """
         Write data to netcdf file
         @param suffix: suffix for output
@@ -239,6 +244,8 @@ class OutputFromPickle:
         # infinite dimension
         time = f.createDimension('time', size=None)
 
+        lat_min, lat_max, lon_min, lon_max = list_lat_lon
+
         # read data needed
         zipfile = bz2.BZ2File(old_filename)
         data_unzip = zipfile.read()
@@ -248,7 +255,7 @@ class OutputFromPickle:
             ori = nc(filename)
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
-        var = ori.variables["CMORPH"][:,:,:]
+        var = ori.variables["CMORPH"][:,lat_min:lat_max,lon_min:lon_max]
         tint = ori.variables["time"][:]
         unit = ori.variables["time"].units
         os.remove(filename)

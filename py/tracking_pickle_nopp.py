@@ -101,8 +101,11 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             if os.path.isfile(str(targetdir)+'lon_tot.txt'):
                 pass
             else:
-                lat_tot = f.variables['lat'][:]
-                lon_tot = f.variables['lon'][:]
+#                lat_tot = f.variables['lat'][:]
+#                lon_tot = f.variables['lon'][:]
+                # test
+                lat_tot = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
+                lon_tot = f.variables['lon'][minmax_lons[0]:minmax_lons[1]]
                 createTxt(str(targetdir)+'lat_tot.txt', lat_tot)
                 createTxt(str(targetdir)+'lon_tot.txt', lon_tot)
 
