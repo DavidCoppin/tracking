@@ -9,6 +9,7 @@
 
 ## Test Sumatra
 python tracking_pickle_nopp.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -suffix sumatra -harvest 24
+#python tracking_pickle_nopp.py -d1 2008-11-04 -d2 2008-11-06 -lons 1700:2200 -lats 200:500 -suffix png -harvest 24
 
 ## Test Madagascar
 #python tracking_pickle_nopp.py -d1 1999-01-01 -d2 1999-01-04 -lons 250:750 -lats 0:300 -suffix madag -harvest 24

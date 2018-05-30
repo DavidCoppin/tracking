@@ -40,7 +40,8 @@ def readTxt(filename):
 
 class OutputFromPickle:
 
-    def __init__(self, nb_day, lat, lon, inputdir, outputdir, list_prefix, track_id, id):
+    def __init__(self, nb_day, lat, lon, inputdir, outputdir, list_prefix, dict_pickles, \
+                  track_id, id):
         """
         Constructor
         """
@@ -82,6 +83,9 @@ class OutputFromPickle:
         # list of prefix of the different regions to include in the output
         self.list_prefix = list_prefix
 
+        # dictionary with pickle name as key and file as value
+        self.dict_pickles = dict_pickles
+
 
     def selectPickles(self):
         """
@@ -109,8 +113,17 @@ class OutputFromPickle:
         tot_lon = len(self.lon)
         for i in files:
             lat_min, lat_max, lon_min, lon_max = self.getLatLon(i)
-            with gzip.GzipFile(i) as gzf:
-                tracks = cPickle.load(gzf)
+
+            # Check if file already unzipped
+            if i not in self.dict_pickles:
+                with gzip.GzipFile(i) as gzf:
+                    tracks = cPickle.load(gzf)
+                    self.dict_pickles[i]=tracks
+            else:
+                tracks = self.dict_pickles[i]
+
+#            with gzip.GzipFile(i) as gzf:
+#                tracks = cPickle.load(gzf)
 
             # Set default track Id = 0 for all tracks if first time that file is read
             if len(self.track_id) == 0:
@@ -216,6 +229,9 @@ class OutputFromPickle:
                 print 'should delete self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
                 self.deleteTrackId(self.filenames[nb])
+                del self.dict_pickles[self.filenames[nb]]
+#                print 'len(self.dict_pickles)', len(self.dict_pickles)
+#                print 'self.dict_pickles.keys()', self.dict_pickles.keys()
 
 
     def deleteTrackId(self, filename):
@@ -255,7 +271,10 @@ class OutputFromPickle:
             ori = nc(filename)
         except RuntimeError:
             ori = nc(filename.replace('-','_'))
-        var = ori.variables["CMORPH"][:,lat_min:lat_max,lon_min:lon_max]
+        if max(list_lat_lon)>0:
+            var = ori.variables["CMORPH"][:,lat_min:lat_max,lon_min:lon_max]
+        else:
+            var = ori.variables["CMORPH"][:,:,:]
         tint = ori.variables["time"][:]
         unit = ori.variables["time"].units
         os.remove(filename)
