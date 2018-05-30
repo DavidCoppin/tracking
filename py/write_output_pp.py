@@ -38,13 +38,14 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
         files2 = files.sort()
         print 'files', files, len(files)
         ofp.extractTracks(files)
-        ofp.writeFile('2_zones', filenames[nb_day], lat_lon)
+        ofp.writeFile('one_unzip_delete', filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
         ofp.deletePickles()
         dict_pickles = ofp.dict_pickles
         track_id = ofp.track_id
         id = ofp.id
+        print 'id', id
 
 
 

@@ -131,11 +131,13 @@ class OutputFromPickle:
             if i not in self.track_id :
                 print 'i not in self.track_id', i
                 self.setTrackId(i, len(tracks))
+            print 'i', i
             for nb in range(len(tracks)):
                 keys = sorted(tracks[nb].keys())
 
                 # Check if track has an Id different from 0
-                if self.track_id.get(i)[nb] > 0 :
+                if self.track_id.get(i)[nb] > 0 and ((keys[0] >= self.ini and keys[0] <= self.end) \
+                        or (keys[-1] >= self.ini and keys[-1] <= self.end)):
                     new_id = self.track_id.get(i)[nb]
                 else :
                     new_id = self.id + 1
@@ -147,7 +149,7 @@ class OutputFromPickle:
                         for cl in tracks[nb][k]:
                             i_index, j_index, mat = cl.toArray()
                             if int(lon_min) < int(lon_max):
-                                if len(self.lat)<800:
+                                if len(self.list_prefix)==1:
                                     self.clusters[k-self.ini, i_index[0]:i_index[-1]\
                                                +1,j_index[0]:j_index[-1]\
                                                +1][np.where(mat==1)]= new_id
@@ -193,6 +195,7 @@ class OutputFromPickle:
                 if keys[-1] < self.ini or keys[0] >= self.end:
                     self.id = self.id -1
                     new_id = self.id - 1
+                print 'new_id, self.id', new_id, self.id
 
 
     def getLatLon(self, file):
