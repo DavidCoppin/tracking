@@ -11,10 +11,65 @@ from output_from_pickle import OutputFromPickle
 from write_output_pp import createTxt, readTxt
 import configparser
 import sys,os,string
+import gzip
 import bz2
+import cPickle
 from datetime import datetime,timedelta as td
 
-def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
+
+def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, restart_dir,
+             restart_interval, harvestPeriod):
+    # are we restarting
+    restart = False
+    if restart_dir is not None:
+        restart_file = os.path.join(restart_dir, "clusters_restart_%s.pkl" % suffix)
+        if os.path.exists(restart_file):
+            # restart the simulation where it left off
+            restart = True
+            print "Loading restart file: %s" % restart_file
+
+            # load restart file
+#            with open(restart_file) as fh:
+            with gzip.GzipFile(restart_file) as fh:
+                restart_data = cPickle.load(fh)
+
+            # unpack
+            tcc = restart_data['tcc']
+            minmax_lats = restart_data['minmax_lats']
+            minmax_lons = restart_data['minmax_lons']
+            fyear = restart_data['fyear']
+            list_filename = restart_data['list_filename']
+            # check finish date is after restart date
+            if fyear > lyear:
+                print "Error: finish date (%s) is earlier than restart date (%s)" % (lyear, fyear)
+                sys.exit(1)
+            print "Restarting from: %s" % fyear
+
+    # if not restarting, create empty TimeConnectedClusters instance
+    if not restart:
+        tcc = TimeConnectedClusters()
+        list_filename = []
+
+    # prepare for writing restart files
+    if restart_file is None or restart_interval is None:
+        # don't write restart files
+        restart_interval = None
+        restart_file = None
+
+    else:
+        # make the restart directory, if required
+        if not os.path.exists(restart_dir):
+            os.makedirs(restart_dir)
+        print "Saving restart files to: %s" % restart_file
+        print "Saving restart files every %d days" % restart_interval
+
+    # run tracking
+    _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
+                   suffix, harvestPeriod, restart_file, restart_interval)
+
+
+def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
+                   suffix, harvestPeriod, restart_file, restart_interval):
 
     ##########################################################################
     # Import arguments from config.cfg or fix default
@@ -62,16 +117,13 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
                          np.int(lzone), np.int(min_size), np.int(max_size))
 
     # Load class used for tracking and dates for all the files
-    tcc = TimeConnectedClusters()
     delta = lyear - fyear
-    dates = [fyear + td(days=i) for i in xrange(delta.days + 1)]
-    list_filename=[]
 
     #########################################################################
     # Loop over days
     #########################################################################
-    for nb_day in xrange(len(dates)):
-        date=dates[nb_day]
+    for nb_day in xrange(delta.days + 1):
+        date = fyear + td(days=nb_day)
         filename=os.path.join(str(data_path)+'Cmorph-' \
                + str(date.year) + '_' + str(date.month).zfill(2) + '_'\
                + str(date.day).zfill(2) + '.nc.bz2')
@@ -142,6 +194,33 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
 
+        # store restart file?
+        if restart_interval is not None and nb_day % restart_interval == 0:
+            # create object for dumping to file
+            restart_data = {
+                'tcc': tcc,
+                'minmax_lons': minmax_lons,
+                'minmax_lats': minmax_lats,
+                'fyear': date + td(days=1),
+                'list_filename': list_filename,
+            }
+
+            # if the restart file already exists we temporarily rename it in case writing the new one fails
+            tmpRestart = False
+            if os.path.exists(restart_file):
+                os.rename(restart_file, restart_file + '.tmp')
+                tmpRestart = True
+
+            # create the restart file
+            print "Writing restart file:", restart_file
+#            with open(restart_file, "wb") as fh:
+            with gzip.GzipFile(restart_file, "wb") as fh:
+                cPickle.dump(restart_data, fh)
+
+            # remove temporary file
+            if tmpRestart:
+                os.remove(restart_file + '.tmp')
+
     # Final harvest (all tracks)
     tcc.harvestTracks(prefix=targetdir+suffix,i_minmax=i_minmax, j_minmax=j_minmax, \
                        mask=np.flipud(cm.sArea), frac=frac_mask)
@@ -163,8 +242,10 @@ if __name__ == '__main__':
     parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
-    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10, 
+    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10,
                          help='Number of time steps before dead tracks area saved to disk (0 for no harvest)')
+    parser.add_argument('-restart-dir', default=None, help="Directory for storing and loading restart files")
+    parser.add_argument('-restart-interval', type=int, default=None, help="If set then write restart files at this interval (days)")
     args = parser.parse_args()
 
     # get the lat-lon box
@@ -183,4 +264,5 @@ if __name__ == '__main__':
     except IndexError,ValueError:
         sys.stdout.write(helpstring+'\n')
         sys.exit()
-    tracking(fyear,lyear,minmax_lons, minmax_lats, args.suffix, harvestPeriod=args.harvestPeriod)
+    tracking(fyear, lyear, minmax_lons, minmax_lats, args.suffix, args.restart_dir,
+             args.restart_interval, args.harvestPeriod)
