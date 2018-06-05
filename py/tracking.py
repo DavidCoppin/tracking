@@ -21,6 +21,7 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, restart_dir,
              restart_interval, harvestPeriod):
     # are we restarting
     restart = False
+    restart_file = None
     if restart_dir is not None:
         restart_file = os.path.join(restart_dir, "clusters_restart_%s.pkl" % suffix)
         if os.path.exists(restart_file):
