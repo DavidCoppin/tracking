@@ -139,8 +139,8 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, harvestPeriod=0):
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
                 tcc.harvestTracks(prefix=targetdir+suffix, i_minmax=i_minmax, j_minmax=j_minmax, \
                                    mask=np.flipud(cm.sArea), frac=frac_mask, dead_only=True)
-            if t==3:
-                sys.exit()
+#            if t==2:
+#                sys.exit()
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
 

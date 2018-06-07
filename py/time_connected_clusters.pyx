@@ -136,8 +136,13 @@ class TimeConnectedClusters:
 
         for track_id in tr_ids[1:]:
             for t_index, cl_list in self.cluster_connect[track_id].items():
-                cl_conn0[t_index]['area'] = cl_conn0[t_index]['area'] + cl_list['area']
-                cl_conn0[t_index]['clusters'] = cl_conn0[t_index]['clusters'] + cl_list['clusters']
+                if t_index in self.cluster_connect[track_id] and t_index not in cl_conn0 :
+                    cl_conn0[t_index] = {'area': cl_list['area'], 'clusters': cl_list['clusters']}
+                elif t_index in self.cluster_connect[track_id] and t_index in cl_conn0 :
+                    cl_conn0[t_index]['area'] = cl_conn0[t_index]['area'] + cl_list['area']
+                    cl_conn0[t_index]['clusters'] = cl_conn0[t_index]['clusters'] + cl_list['clusters']
+                else :
+                    pass
 
         # return the track Ids marked for deletion
         n = len(tr_ids)
@@ -209,7 +214,11 @@ class TimeConnectedClusters:
             connected_clusters = []
             connected_track_ids = []
             for track_id in range(num_tracks):
-                old_clusters = self.cluster_connect[track_id][self.t_index - 1].get('clusters', [])
+                if self.t_index-1 in self.cluster_connect[track_id]:
+                    # track exists at t_index - 1
+                    old_clusters = self.cluster_connect[track_id][self.t_index - 1].get('clusters')
+                else :
+                    old_clusters = []
                 for old_cl in old_clusters:
                     old_el = old_cl.ellipse
                     old_transf = old_el.ij2AxesTransf[0, :]
@@ -243,21 +252,18 @@ class TimeConnectedClusters:
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
                 new_track_id = connected_track_ids[i]
-#                print 'new_track_id, self.t_index', new_track_id, self.t_index
-                print 'self.cluster_connect[new_track_id]', self.cluster_connect[new_track_id]
-#                print 'self.cluster_connect[new_track_id][self.t_index]', \
-#                        self.cluster_connect[new_track_id][self.t_index]
-#                print 'self.cluster_connect[new_track_id][self.t_index][area]', \
-#                        self.cluster_connect[new_track_id][self.t_index]['area']
-#                print 'self.cluster_connect[new_track_id][self.t_index].get(area)', \
-#                        self.cluster_connect[new_track_id][self.t_index].get('area')
-                self.cluster_connect[new_track_id][self.t_index]['clusters'] = \
-                        self.cluster_connect[new_track_id][self.t_index].get('clusters', []) + \
-                                              [new_cl]
-                self.cluster_connect[new_track_id][self.t_index]['area'] = \
-                        self.cluster_connect[new_track_id][self.t_index].get('area', 0) + area
-
-
+                if self.t_index in self.cluster_connect[new_track_id]:
+                    # time index is already in the track, append the new cluster and update area
+                    self.cluster_connect[new_track_id][self.t_index]['clusters'].append(new_cl)
+#                    self.cluster_connect[new_track_id][self.t_index]['clusters'] = \
+#                            self.cluster_connect[new_track_id][self.t_index]['clusters'] + [new_cl]
+                    self.cluster_connect[new_track_id][self.t_index]['area'] = \
+                            self.cluster_connect[new_track_id][self.t_index].get('area') + area
+                else:
+                    # create a new entry
+                    self.cluster_connect[new_track_id][self.t_index] = {'area': area, \
+                            'clusters': [new_cl]}
+#                print 'self.cluster_connect[new_track_id]', self.cluster_connect[new_track_id]
             new_track_ids.add(new_track_id)
 
             # update number of clusters
@@ -296,9 +302,11 @@ class TimeConnectedClusters:
         # the previous time step
         old_big_clusters = {}
         for track_id in range(self.getNumberOfTracks()):
-            cluster_ids = self.cluster_connect[track_id][self.t_index - 1].get('clusters', None)
-            if cluster_ids:
-                old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+            if self.t_index-1 in self.cluster_connect[track_id]:
+                  cluster_ids = self.cluster_connect[track_id][self.t_index - 1].get('clusters')
+                  old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+            else :
+                  clusters_ids = None
 
         # find the tracks to fuse
         new_track_ids_to_fuse = []
