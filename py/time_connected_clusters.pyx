@@ -11,6 +11,7 @@ import functools
 import tempfile
 import os
 import gzip
+import sys
 
 
 ## it is faster to pass in the values instead of the arrays
@@ -427,6 +428,19 @@ class TimeConnectedClusters:
         return num_cells
 
 
+    def getMaxTrackArea(self, track_id):
+        """
+        Get the maximum area of a track
+        @param track_id: track id
+        @return the maximum area
+        """
+        all_track = self.cluster_connect[track_id].values()
+        hi = -sys.maxint-1
+        for x in (item['area'] for item in all_track):
+            hi = max(x,hi)
+        return hi
+
+
     def removeTrack(self, track_id):
         """
         Remove a track
@@ -467,6 +481,7 @@ class TimeConnectedClusters:
         tracks_to_harvest = []
         good_tracks_to_harvest = []
         for track_id in range(len(self.cluster_connect)):
+            max_area = self.getMaxTrackArea(track_id)
             t_beg, t_end = self.getStartEndTimes(track_id)
             if not dead_only or t_end < self.t_index - 1:
                 t_index_min = min(t_index_min, t_beg)
@@ -480,7 +495,7 @@ class TimeConnectedClusters:
         # write the tracks to file
         prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
         num_times = t_index_max - t_index_min + 1
-        print 'good_tracks_to_harvest', good_tracks_to_harvest
+#        print 'good_tracks_to_harvest', good_tracks_to_harvest
         self.saveTracks(good_tracks_to_harvest, num_times, i_minmax, j_minmax,
                         prefix=prfx)
 
