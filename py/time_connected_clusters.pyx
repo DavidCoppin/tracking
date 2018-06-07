@@ -64,7 +64,7 @@ def __reduceOne(cluster_list, frac):
             elj = clj.ellipse
             elj_transf = elj.ij2AxesTransf
             elj_centre = elj.centre
-            
+
             isCliInsideClj = _isPointInsideEllipse(elj.a, elj.b, elj_transf[0,0], elj_transf[0,1],
                                                    elj_centre[0], elj_centre[1], 
                                                    eli_centre[0], eli_centre[1])
@@ -304,10 +304,7 @@ class TimeConnectedClusters:
         old_big_clusters = {}
         for track_id in range(self.getNumberOfTracks()):
             if self.t_index-1 in self.cluster_connect[track_id]:
-                  cluster_ids = self.cluster_connect[track_id][self.t_index - 1].get('clusters')
                   old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
-            else :
-                  clusters_ids = None
 
         # find the tracks to fuse
         new_track_ids_to_fuse = []
@@ -467,7 +464,25 @@ class TimeConnectedClusters:
         return num_cells
 
 
-    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, dead_only=False):
+    def checkNoSynoptic(self, max_cells, length_time, track_id):
+        """
+        Get the maximum Area along a track
+        @param track_id: track Id
+        @return max_area
+        """
+        no_synoptic = True
+        # Remove long AND big clusters
+        length = len(self.cluster_connect[track_id])
+        max_area = self.getMaxTrackArea(track_id)
+        if max_area >= max_cells and length >= length_time:
+            no_synoptic = False
+            print 'length_time, max_cells', length_time, max_cells
+            print 'no_synoptic, length, max_area', no_synoptic, length, max_area
+        return no_synoptic
+
+
+    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, max_cells, \
+                       length_time, dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
@@ -481,15 +496,15 @@ class TimeConnectedClusters:
         tracks_to_harvest = []
         good_tracks_to_harvest = []
         for track_id in range(len(self.cluster_connect)):
-            max_area = self.getMaxTrackArea(track_id)
             t_beg, t_end = self.getStartEndTimes(track_id)
             if not dead_only or t_end < self.t_index - 1:
                 t_index_min = min(t_index_min, t_beg)
                 t_index_max = max(t_index_max, t_end)
                 tracks_to_harvest.append(track_id)
                 # keep only tracks that are above islands at some time
-#                overlap_mask = self.checkTrackOverMask(mask, frac, track_id)
-                if self.checkTrackOverMask(mask, frac, track_id) :
+                # and that are not synoptic
+                if self.checkTrackOverMask(mask, frac, track_id) \
+                         and self.checkNoSynoptic(max_cells, length_time, track_id):
                     good_tracks_to_harvest.append(track_id)
 
         # write the tracks to file

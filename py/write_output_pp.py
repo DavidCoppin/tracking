@@ -38,7 +38,7 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
         files2 = files.sort()
         print 'files', files, len(files)
         ofp.extractTracks(files)
-        ofp.writeFile('one_unzip_delete', filenames[nb_day], lat_lon)
+        ofp.writeFile('no_syn', filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
         ofp.deletePickles()
