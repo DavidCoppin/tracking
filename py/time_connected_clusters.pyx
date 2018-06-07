@@ -122,34 +122,6 @@ class TimeConnectedClusters:
         self.t_index = 0
 
 
-    def fuse(self, track_ids):
-        """
-        Fuse track Ids. Only the first track ID will survive, all other track Ids
-        will be folded into the first one
-        @param track_ids set of track Ids
-        @return track Ids marked for deletion
-        """
-
-        tr_ids = list(track_ids)
-        tr_ids.sort()
-        track_id0 = tr_ids[0]
-        cl_conn0 = self.cluster_connect[track_id0]
-
-        for track_id in tr_ids[1:]:
-            for t_index, cl_list in self.cluster_connect[track_id].items():
-                if t_index in self.cluster_connect[track_id] and t_index not in cl_conn0 :
-                    cl_conn0[t_index] = {'area': cl_list['area'], 'clusters': cl_list['clusters']}
-                elif t_index in self.cluster_connect[track_id] and t_index in cl_conn0 :
-                    cl_conn0[t_index]['area'] = cl_conn0[t_index]['area'] + cl_list['area']
-                    cl_conn0[t_index]['clusters'] = cl_conn0[t_index]['clusters'] + cl_list['clusters']
-                else :
-                    pass
-
-        # return the track Ids marked for deletion
-        n = len(tr_ids)
-        return [tr_ids[i] for i in range(n - 1, 0, -1)]
-
-
     def addTime(self, new_clusters, frac):
         """
         Add time entry
@@ -183,6 +155,9 @@ class TimeConnectedClusters:
         # the elements of new_track_ids_to_fuse. These elements will be tagged for
         # removal in delete_elem
         self._fuseAll(new_track_ids_to_fuse)
+
+        # cut tracks when large decrease in area
+        self.cutTracks(0.9)
 
         # done with assigning, update the time index
         self.t_index += 1
@@ -351,6 +326,34 @@ class TimeConnectedClusters:
         return new_track_ids_to_fuse
 
 
+    def fuse(self, track_ids):
+        """
+        Fuse track Ids. Only the first track ID will survive, all other track Ids
+        will be folded into the first one
+        @param track_ids set of track Ids
+        @return track Ids marked for deletion
+        """
+
+        tr_ids = list(track_ids)
+        tr_ids.sort()
+        track_id0 = tr_ids[0]
+        cl_conn0 = self.cluster_connect[track_id0]
+
+        for track_id in tr_ids[1:]:
+            for t_index, cl_list in self.cluster_connect[track_id].items():
+                if t_index in self.cluster_connect[track_id] and t_index not in cl_conn0 :
+                    cl_conn0[t_index] = {'area': cl_list['area'], 'clusters': cl_list['clusters']}
+                elif t_index in self.cluster_connect[track_id] and t_index in cl_conn0 :
+                    cl_conn0[t_index]['area'] = cl_conn0[t_index]['area'] + cl_list['area']
+                    cl_conn0[t_index]['clusters'] = cl_conn0[t_index]['clusters'] + cl_list['clusters']
+                else :
+                    pass
+
+        # return the track Ids marked for deletion
+        n = len(tr_ids)
+        return [tr_ids[i] for i in range(n - 1, 0, -1)]
+
+
     def _fuseAll(self, new_track_ids_to_fuse):
         """
         Apply fuse method to a list of track branches to merge
@@ -386,6 +389,22 @@ class TimeConnectedClusters:
         delete_track_ids.sort(reverse=True)
         for i in delete_track_ids:
             del self.cluster_connect[i]
+
+
+    def cutTracks(self, frac):
+        """
+        Cut tracks when area decreases by more than frac %. If cut, end previous track 
+        and create a new one
+        @param frac: fraction
+        """
+        num_tracks = self.getNumberOfTracks()
+        for track_id in range(num_tracks):
+            # check if track exist for last 2 time steps
+            if self.t_index in self.cluster_connect[track_id] and \
+                    self.t_index -1 in self.cluster_connect[track_id] :
+                # compare area
+                if self.cluster_connect[track_id][self.t_index]['area'] < \
+                        frac * self.cluster_connect[track_id][self.t_index - 1]['area']:
 
 
     def getMinMaxIndices(self):
