@@ -7,7 +7,7 @@ import argparse
 from output_from_pickle import OutputFromPickle, readTxt, createTxt
 import sys
 
-def writeOutputPP(inputdir, outputdir, list_prefix):
+def writeOutputPP(inputdir, outputdir, list_prefix, suffix):
     """
     @param inputdir: directory where pickles are stored
     @param outputdir: directory where outputs will be stored
@@ -38,7 +38,7 @@ def writeOutputPP(inputdir, outputdir, list_prefix):
         files2 = files.sort()
         print 'files', files, len(files)
         ofp.extractTracks(files)
-        ofp.writeFile('no_syn', filenames[nb_day], lat_lon)
+        ofp.writeFile(str(suffix), filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
         ofp.deletePickles()
@@ -58,5 +58,6 @@ if __name__ == '__main__':
 #    parser.add_argument('-p','--prefix', nargs='+', help='<Required> Set flag', required=True)
     parser.add_argument('-p', dest='prefix', nargs='+', default=['io-cm', 'pacific', 'america', \
                            'africa'])
+    parser.add_argument('-s', dest='suffix', default='final', help='suffix for netcdf file')
     args = parser.parse_args()
-    writeOutputPP(args.inputdir, args.outputdir, args.prefix)
+    writeOutputPP(args.inputdir, args.outputdir, args.prefix, args.suffix)
