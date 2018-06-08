@@ -122,11 +122,12 @@ class TimeConnectedClusters:
         self.t_index = 0
 
 
-    def addTime(self, new_clusters, frac):
+    def addTime(self, new_clusters, frac, frac_decrease):
         """
         Add time entry
         @param new_clusters list of new clusters
         @param frac TO DESCRIBE
+        @param frac_decrease: decrease in size above which a track is cut (in percent) 
         """
         # merge overlapping clusters, this will reduce the number of
         # clusters to track but should have no influence on the
@@ -157,7 +158,7 @@ class TimeConnectedClusters:
         self._fuseAll(new_track_ids_to_fuse)
 
         # cut tracks when large decrease in area
-        self.cutTracks(0.9)
+        self.cutTracks(frac_decrease)
 
         # done with assigning, update the time index
         self.t_index += 1
@@ -404,7 +405,16 @@ class TimeConnectedClusters:
                     self.t_index -1 in self.cluster_connect[track_id] :
                 # compare area
                 if self.cluster_connect[track_id][self.t_index]['area'] < \
-                        frac * self.cluster_connect[track_id][self.t_index - 1]['area']:
+                        (1-frac) * self.cluster_connect[track_id][self.t_index - 1]['area']:
+                    # create new track with track at t_index and delete it at t_index -1
+                    print 'self.cluster_connect[track_id][self.t_index-1][area]', \
+                            self.cluster_connect[track_id][self.t_index-1]['area']
+                    print 'self.cluster_connect[track_id][self.t_index][area]', \
+                            self.cluster_connect[track_id][self.t_index]['area']
+                    self.cluster_connect.append({self.t_index: {'area': \
+                            self.cluster_connect[track_id][self.t_index]['area'], 'clusters': \
+                            self.cluster_connect[track_id][self.t_index]['clusters']}})
+                    del self.cluster_connect[track_id][self.t_index]
 
 
     def getMinMaxIndices(self):
@@ -492,11 +502,14 @@ class TimeConnectedClusters:
         no_synoptic = True
         # Remove long AND big clusters
         length = len(self.cluster_connect[track_id])
-        max_area = self.getMaxTrackArea(track_id)
-        if max_area >= max_cells and length >= length_time:
-            no_synoptic = False
-            print 'length_time, max_cells', length_time, max_cells
-            print 'no_synoptic, length, max_area', no_synoptic, length, max_area
+        if length < length_time:
+            pass
+        else :
+            max_area = self.getMaxTrackArea(track_id)
+            if max_area >= max_cells :
+                no_synoptic = False
+                print 'length_time, max_cells', length_time, max_cells
+                print 'no_synoptic, length, max_area', no_synoptic, length, max_area
         return no_synoptic
 
 
