@@ -415,7 +415,8 @@ class TimeConnectedClusters:
         return t_inds[0], t_inds[-1]
 
 
-    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, dead_only=False):
+    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, pickle_index,
+                      dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
@@ -440,10 +441,12 @@ class TimeConnectedClusters:
                     good_tracks_to_harvest.append(track_id)
 
         # write the tracks to file
+        print ">>> harvesting tracks: pickle index: %d" % pickle_index
         prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
+        sufx = '_%d' % pickle_index
         num_times = t_index_max - t_index_min + 1
         self.saveTracks(good_tracks_to_harvest, num_times, i_minmax, j_minmax,
-                        prefix=prfx)
+                        prfx, suffix=sufx)
 
         # remove the harvested tracks
         tracks_to_harvest.sort(reverse=True)
@@ -621,7 +624,7 @@ class TimeConnectedClusters:
         cPickle.dump(self, f)
 
 
-    def saveTracks(self, track_id_list, num_times, i_minmax, j_minmax, prefix):
+    def saveTracks(self, track_id_list, num_times, i_minmax, j_minmax, prefix, suffix=''):
         """
         Save the tracks to file
         @param track_id_list list of track Ids
@@ -636,7 +639,8 @@ class TimeConnectedClusters:
         # toArray seems to produce that just pickling the clusters
         #data = self.toArray(num_times, i_minmax, j_minmax, track_id_list)
         data = [self.cluster_connect[tid] for tid in track_id_list]
-        with tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False) as f:
+        with tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False, suffix=suffix) as f:
+            print ">>> saving tracks to file: %s" % f.name
             with gzip.GzipFile(fileobj=f) as gzf:
                 cPickle.dump(data, gzf)
 
