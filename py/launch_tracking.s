@@ -8,7 +8,7 @@
 #python tracking.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png -harvest 24
 
 ## Test Sumatra
-python tracking.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -suffix sumatra -harvest 24
+#python tracking.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -suffix sumatra -harvest 24
 #python tracking.py -d1 2008-11-04 -d2 2008-11-06 -lons 1700:2200 -lats 200:500 -suffix png -harvest 24
 
 ## Test Madagascar
@@ -25,4 +25,4 @@ python tracking.py -d1 2008-11-04 -d2 2008-11-06 -lons 1250:1550 -lats 250:550 -
 # Africa
 #python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:828 -suffix africa -harvest 24
 
-#python tracking.py -d1 1998-12-01 -d2 1998-12-12 -lons 1300:2600 -lats 300:828 -suffix debug -harvest 24
+python tracking.py -d1 1998-12-05 -d2 1998-12-12 -lons 1300:2600 -lats 300:828 -suffix debug -harvest 24
