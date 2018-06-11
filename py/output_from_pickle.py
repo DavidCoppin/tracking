@@ -121,7 +121,6 @@ class OutputFromPickle:
                     self.dict_pickles[i]=tracks
             else:
                 tracks = self.dict_pickles[i]
-
 #            with gzip.GzipFile(i) as gzf:
 #                tracks = cPickle.load(gzf)
 
@@ -146,7 +145,7 @@ class OutputFromPickle:
                 # Fill in clusters with new_id
                 for k in keys:
                     if k >= self.ini and k < self.end:
-                        for cl in tracks[nb][k]:
+                        for cl in tracks[nb][k].get('clusters'):
                             i_index, j_index, mat = cl.toArray()
                             if int(lon_min) < int(lon_max):
                                 if len(self.list_prefix)==1:

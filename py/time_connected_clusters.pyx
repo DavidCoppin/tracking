@@ -11,16 +11,17 @@ import functools
 import tempfile
 import os
 import gzip
+import sys
 
 
 ## it is faster to pass in the values instead of the arrays
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
-## it's important that this function be inlined with the calling function 
+## it's important that this function be inlined with the calling function
 ## for performance
 ## only need the top row of the rotation matrix if we uyse symetry
 cdef bint _isPointInsideEllipse(double a, double b,
 	                       double tr00, double tr01,
-                           double centreX, double centreY, 
+                           double centreX, double centreY,
                            double pointX, double pointY):
     """
     Check if a point is inside an ellipse
@@ -63,7 +64,7 @@ def __reduceOne(cluster_list, frac):
             elj = clj.ellipse
             elj_transf = elj.ij2AxesTransf
             elj_centre = elj.centre
-            
+
             isCliInsideClj = _isPointInsideEllipse(elj.a, elj.b, elj_transf[0,0], elj_transf[0,1],
                                                    elj_centre[0], elj_centre[1], 
                                                    eli_centre[0], eli_centre[1])
@@ -111,8 +112,10 @@ class TimeConnectedClusters:
         self.num_clusters = 0
 
         # list of dictionaries. Each dictionary represents clusters across time which share the same
-        # ID. Each element is a track {t_index0: [cluster0, cluster1, ...], t_index1: [...], ...} where
-        # t_index# is the time index and cluster# is a Cluster instance.
+        # ID. Each element is a track {t_index0: {'area':area0, 'clusters':[cluster0, cluster1,..]},
+        # t_index1: { ...}} where area and clusters are keys in a dictionary for each t_index.
+        # t_index# is the time index and cluster# is a Cluster instance, and area# is the total area
+        # covered by a track at time #
         self.cluster_connect = []
 
         # current time index
@@ -134,7 +137,13 @@ class TimeConnectedClusters:
 
         for track_id in tr_ids[1:]:
             for t_index, cl_list in self.cluster_connect[track_id].items():
-                cl_conn0[t_index] = cl_conn0.get(t_index, []) + cl_list
+                if t_index in self.cluster_connect[track_id] and t_index not in cl_conn0 :
+                    cl_conn0[t_index] = {'area': cl_list['area'], 'clusters': cl_list['clusters']}
+                elif t_index in self.cluster_connect[track_id] and t_index in cl_conn0 :
+                    cl_conn0[t_index]['area'] = cl_conn0[t_index]['area'] + cl_list['area']
+                    cl_conn0[t_index]['clusters'] = cl_conn0[t_index]['clusters'] + cl_list['clusters']
+                else :
+                    pass
 
         # return the track Ids marked for deletion
         n = len(tr_ids)
@@ -157,7 +166,8 @@ class TimeConnectedClusters:
             # there is no past
             # just create a new track for each cluster
             for new_cl in new_clusters:
-                self.cluster_connect.append({self.t_index: [new_cl]})
+                area = new_cl.getNumberOfCells()
+                self.cluster_connect.append({self.t_index: {'area': area, 'clusters': [new_cl]}})
                 self.num_clusters += 1
 
             # done
@@ -205,7 +215,11 @@ class TimeConnectedClusters:
             connected_clusters = []
             connected_track_ids = []
             for track_id in range(num_tracks):
-                old_clusters = self.cluster_connect[track_id].get(self.t_index - 1, [])
+                if self.t_index-1 in self.cluster_connect[track_id]:
+                    # track exists at t_index - 1
+                    old_clusters = self.cluster_connect[track_id][self.t_index - 1].get('clusters')
+                else :
+                    old_clusters = []
                 for old_cl in old_clusters:
                     old_el = old_cl.ellipse
                     old_transf = old_el.ij2AxesTransf[0, :]
@@ -227,20 +241,30 @@ class TimeConnectedClusters:
                         connected_clusters.append(old_cl)
                         connected_track_ids.append(track_id)
 
+            area = new_cl.getNumberOfCells()
             if len(connected_track_ids) == 0:
                 # this cluster is on its own
                 # create a new entry
                 new_track_id = self.getNumberOfTracks()
-                self.cluster_connect.append({self.t_index: [new_cl]})
+                self.cluster_connect.append({self.t_index: {'area': area, 'clusters': [new_cl]}})
             else:
                 # choose the track for which the distance between new_cl any of the clusters
                 # of that track at t - dt is smallest
                 dists = np.array([new_cl.getDistance(cl) for cl in connected_clusters])
                 i = np.argmin(dists)
                 new_track_id = connected_track_ids[i]
-                self.cluster_connect[new_track_id][self.t_index] = \
-                               self.cluster_connect[new_track_id].get(self.t_index, []) + [new_cl]
-
+                if self.t_index in self.cluster_connect[new_track_id]:
+                    # time index is already in the track, append the new cluster and update area
+                    self.cluster_connect[new_track_id][self.t_index]['clusters'].append(new_cl)
+#                    self.cluster_connect[new_track_id][self.t_index]['clusters'] = \
+#                            self.cluster_connect[new_track_id][self.t_index]['clusters'] + [new_cl]
+                    self.cluster_connect[new_track_id][self.t_index]['area'] = \
+                            self.cluster_connect[new_track_id][self.t_index].get('area') + area
+                else:
+                    # create a new entry
+                    self.cluster_connect[new_track_id][self.t_index] = {'area': area, \
+                            'clusters': [new_cl]}
+#                print 'self.cluster_connect[new_track_id]', self.cluster_connect[new_track_id]
             new_track_ids.add(new_track_id)
 
             # update number of clusters
@@ -256,7 +280,7 @@ class TimeConnectedClusters:
         @param t_index time index
         @return one big cluster representing the merge of all smaller clusters
         """
-        clusters = self.cluster_connect[track_id].get(t_index, [])
+        clusters = self.cluster_connect[track_id][t_index].get('clusters', [])
         if not clusters:
             return None
         all_cells = functools.reduce(lambda x, y: x.union(y), [cl.cells for cl in clusters])
@@ -279,9 +303,8 @@ class TimeConnectedClusters:
         # the previous time step
         old_big_clusters = {}
         for track_id in range(self.getNumberOfTracks()):
-            cluster_ids = self.cluster_connect[track_id].get(self.t_index - 1, None)
-            if cluster_ids:
-                old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
+            if self.t_index-1 in self.cluster_connect[track_id]:
+                  old_big_clusters[track_id] = self.getBigClusterAt(track_id, self.t_index - 1)
 
         # find the tracks to fuse
         new_track_ids_to_fuse = []
@@ -365,7 +388,6 @@ class TimeConnectedClusters:
             del self.cluster_connect[i]
 
 
-
     def getMinMaxIndices(self):
         """
         Get the low/high end box indices
@@ -374,10 +396,10 @@ class TimeConnectedClusters:
         i_min, j_min, i_max, j_max = self.LARGE_INT, self.LARGE_INT, -self.LARGE_INT, -self.LARGE_INT
         for track in self.cluster_connect:
             for cl_list in track.values():
-                i_min = min(i_min, min([cl.box[0][0] for cl in cl_list]))
-                j_min = min(j_min, min([cl.box[0][1] for cl in cl_list]))
-                i_max = max(i_max, max([cl.box[1][0] for cl in cl_list]))
-                j_max = max(j_max, max([cl.box[1][1] for cl in cl_list]))
+                i_min = min(i_min, min([cl.box[0][0] for cl in cl_list['clusters']]))
+                j_min = min(j_min, min([cl.box[0][1] for cl in cl_list['clusters']]))
+                i_max = max(i_max, max([cl.box[1][0] for cl in cl_list['clusters']]))
+                j_max = max(j_max, max([cl.box[1][1] for cl in cl_list['clusters']]))
         return i_min, j_min, i_max, j_max
 
 
@@ -394,6 +416,26 @@ class TimeConnectedClusters:
         iis = np.array([ij[0] for ij in ijs])
         jjs = np.array([ij[1] for ij in ijs])
         return iis, jjs
+
+
+    def getTrackSize(self, track_id, time_index):
+        num_cells = 0
+        for cluster in self.cluster_connect[track_id][time_index].get('clusters', []):
+            num_cells += cluster.getNumberOfCells()
+        return num_cells
+
+
+    def getMaxTrackArea(self, track_id):
+        """
+        Get the maximum area of a track
+        @param track_id: track id
+        @return the maximum area
+        """
+        all_track = self.cluster_connect[track_id].values()
+        hi = -sys.maxint-1
+        for x in (item['area'] for item in all_track):
+            hi = max(x,hi)
+        return hi
 
 
     def removeTrack(self, track_id):
@@ -415,8 +457,32 @@ class TimeConnectedClusters:
         return t_inds[0], t_inds[-1]
 
 
-    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, pickle_index,
-                      dead_only=False):
+    def getTrackSize(self, track_id, time_index):
+        num_cells = 0
+        for cluster in self.cluster_connect[track_id][time_index].get('clusters', []):
+            num_cells += cluster.getNumberOfCells()
+        return num_cells
+
+
+    def checkNoSynoptic(self, max_cells, length_time, track_id):
+        """
+        Get the maximum Area along a track
+        @param track_id: track Id
+        @return max_area
+        """
+        no_synoptic = True
+        # Remove long AND big clusters
+        length = len(self.cluster_connect[track_id])
+        max_area = self.getMaxTrackArea(track_id)
+        if max_area >= max_cells and length >= length_time:
+            no_synoptic = False
+            print 'length_time, max_cells', length_time, max_cells
+            print 'no_synoptic, length, max_area', no_synoptic, length, max_area
+        return no_synoptic
+
+
+    def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, max_cells, \
+                       length_time, pickle_index, dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix to be prepended to the file name
@@ -436,15 +502,17 @@ class TimeConnectedClusters:
                 t_index_max = max(t_index_max, t_end)
                 tracks_to_harvest.append(track_id)
                 # keep only tracks that are above islands at some time
-#                overlap_mask = self.checkTrackOverMask(mask, frac, track_id)
-                if self.checkTrackOverMask(mask, frac, track_id) :
+                # and that are not synoptic
+                if self.checkTrackOverMask(mask, frac, track_id) \
+                         and self.checkNoSynoptic(max_cells, length_time, track_id):
                     good_tracks_to_harvest.append(track_id)
 
         # write the tracks to file
-        print ">>> harvesting tracks: pickle index: %d" % pickle_index
+#        print "harvesting tracks: pickle index: %d" % pickle_index
         prfx = prefix + '_{}_{}_'.format(t_index_min, t_index_max)
         sufx = '_%d' % pickle_index
         num_times = t_index_max - t_index_min + 1
+#        print 'good_tracks_to_harvest', good_tracks_to_harvest
         self.saveTracks(good_tracks_to_harvest, num_times, i_minmax, j_minmax,
                         prfx, suffix=sufx)
 
@@ -470,6 +538,7 @@ class TimeConnectedClusters:
                 found_overlap = True
                 break
         return found_overlap
+
 
     def removeTracksByValidMask(self, valid_mask, frac):
         """
@@ -561,7 +630,7 @@ class TimeConnectedClusters:
         found_time_index = -1
         for track_id in range(self.getNumberOfTracks()):
             for time_index, cluster_ids in self.cluster_connect[track_id].items():
-                if cluster_id in cluster_ids:
+                if cluster_id in cluster_ids['clusters']:
                     found_track_id = track_id
                     found_time_index = time_index
         return found_track_id, found_time_index
@@ -593,7 +662,7 @@ class TimeConnectedClusters:
             color = rgb(x)
 
             # get the ellipses
-            ellipses = [cl.ellipse for cl in track.get(ti, [])]
+            ellipses = [cl.ellipse for cl in track[ti].get('clusters', [])]
 
             if len(ellipses) == 0:
                 print 'WARNING: no cluster at time index '.format(ti)
@@ -640,7 +709,7 @@ class TimeConnectedClusters:
         #data = self.toArray(num_times, i_minmax, j_minmax, track_id_list)
         data = [self.cluster_connect[tid] for tid in track_id_list]
         with tempfile.NamedTemporaryFile(prefix=prefix, dir=os.getcwd(), delete=False, suffix=suffix) as f:
-            print ">>> saving tracks to file: %s" % f.name
+#            print "saving tracks to file: %s" % f.name
             with gzip.GzipFile(fileobj=f) as gzf:
                 cPickle.dump(data, gzf)
 
@@ -669,7 +738,7 @@ class TimeConnectedClusters:
         @param time_index
         @return list of clusters
         """
-        return self.cluster_connect[track_id].get(time_index, [])
+        return self.cluster_connect[track_id][time_index].get('clusters', [])
 
 
     def __repr__(self):

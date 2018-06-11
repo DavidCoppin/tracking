@@ -124,6 +124,9 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     min_size = C.getint('min_size', 0)
     max_size = C.getint('max_size', 800000)
     print 'min_size, max_size', min_size, max_size
+    max_cells = C.getint('max_cells', 4500)
+    t_life = C.getint('t_life', 5)
+    print 'max_cells, t_life', max_cells, t_life
     save = C.getboolean('save')
     #########################################################################
 
@@ -200,7 +203,8 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
         # Begin tracking
         i_minmax = (0, len(lat))
         j_minmax = (0, len(lon))
-        for t in xrange(np.shape(all_data)[0]):
+        timesteps = np.shape(all_data)[0]
+        for t in xrange(timesteps):
             print 'nb_day, t', nb_day, t
             data = all_data[t]
 
@@ -214,7 +218,9 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             # Harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
                 tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                                  pickle_index, dead_only=True)
+                                  max_cells, t_life*timesteps, pickle_index, dead_only=True)
+#            if t==2:
+#                sys.exit()
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
 
@@ -251,9 +257,9 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             pickle_index += 1
 
     # Final harvest (all tracks)
-    print ">>> final harvest (pickle index is %d)" % pickle_index
+    print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                      pickle_index)
+                      max_cells, t_life*timesteps, pickle_index, dead_only=True)
 
     # Save filenames for post-processing:
     createTxt(str(targetdir)+'filenames.txt', list_filename)
