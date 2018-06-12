@@ -226,7 +226,7 @@ class OutputFromPickle:
         for nb in range(len(self.filenames)):
             num = [int(s) for s in self.filenames[nb].split('_') if s.isdigit()]
             if num[1] < self.end :
-                print 'should delete self.filenames[nb]', self.filenames[nb]
+#                print 'delete self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
                 self.deleteTrackId(self.filenames[nb])
                 del self.dict_pickles[self.filenames[nb]]
