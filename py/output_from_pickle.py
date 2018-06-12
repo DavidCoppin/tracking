@@ -135,13 +135,12 @@ class OutputFromPickle:
                 keys = sorted(tracks[nb].keys())
 
                 # Check if track has an Id different from 0
-                if self.track_id.get(i)[nb] > 0 and ((keys[0] >= self.ini and keys[0] <= self.end) \
-                        or (keys[-1] >= self.ini and keys[-1] <= self.end)):
+                if self.track_id.get(i)[nb] > 0 and ((keys[0] <= self.ini and keys[-1] >= self.ini) \
+                        or (keys[0] <= self.end and keys[-1] >= self.end)):
                     new_id = self.track_id.get(i)[nb]
                 else :
                     new_id = self.id + 1
                     self.id = self.id + 1
-
                 # Fill in clusters with new_id
                 for k in keys:
                     if k >= self.ini and k < self.end:
@@ -227,7 +226,7 @@ class OutputFromPickle:
         for nb in range(len(self.filenames)):
             num = [int(s) for s in self.filenames[nb].split('_') if s.isdigit()]
             if num[1] < self.end :
-                print 'should delete self.filenames[nb]', self.filenames[nb]
+#                print 'delete self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
                 self.deleteTrackId(self.filenames[nb])
                 del self.dict_pickles[self.filenames[nb]]

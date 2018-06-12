@@ -199,7 +199,6 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
                 lon2 = f.variables['lon'][:minmax_lons[1]]
                 lon = np.concatenate((lon1, lon2))
         f.close()
-
         # Begin tracking
         i_minmax = (0, len(lat))
         j_minmax = (0, len(lon))
