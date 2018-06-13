@@ -331,3 +331,15 @@ class OutputFromPickle:
         f.close()
 
 
+    def saveInfoPP(self, filename, nb_day):
+        """
+        Save informations to be able to restart post-processing correctly
+        """
+        f = open('info_pp.pkl', 'w')
+        print 'saving filename,  nb_day, self.track_id, self.id',\
+                filename,  nb_day, self.track_id, self.id
+        info = {'filename': filename, 'nb_day': nb_day, 'track_id': self.track_id, \
+                 'id': self.id}
+        cPickle.dump(info, f)
+
+
