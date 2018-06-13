@@ -503,7 +503,7 @@ class TimeConnectedClusters:
                 tracks_to_harvest.append(track_id)
                 # keep only tracks that are above islands at some time
                 # and that are not synoptic
-                if self.checkTrackOverMask(mask, frac, track_id):# \
+                if self.checkTrackOverMask(mask, frac, track_id) \
                          and self.checkNoSynoptic(max_cells, length_time, track_id):
                     good_tracks_to_harvest.append(track_id)
 
