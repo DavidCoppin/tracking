@@ -263,7 +263,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                      max_cells, t_life*timesteps, pickle_index, dead_only=True)
+                      max_cells, t_life*timesteps, pickle_index, dead_only=False)
 
 #    # Save filenames for post-processing:
 #    createTxt(str(targetdir)+'filenames.txt', list_filename)
