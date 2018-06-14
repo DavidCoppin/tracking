@@ -244,7 +244,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             # create the restart file
             print "Writing restart file:", restart_file
 #            with open(restart_file, "wb") as fh:
-            with gzip.GzipFile(restart_file, "wb") as fh:
+            with gzip.GzipFile(restart_file, "wb", 1) as fh:
                 cPickle.dump(restart_data, fh)
 
             # remove temporary file
