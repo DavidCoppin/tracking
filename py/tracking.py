@@ -128,6 +128,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     t_life = C.getint('t_life', 5)
     print 'max_cells, t_life', max_cells, t_life
     frac_decrease = C.getfloat('frac_decrease', 0.9)
+    print 'frac_decrease', frac_decrease
     save = C.getboolean('save')
     #########################################################################
 

@@ -405,7 +405,8 @@ class TimeConnectedClusters:
                     self.t_index -1 in self.cluster_connect[track_id] :
                 # compare area
                 if self.cluster_connect[track_id][self.t_index]['area'] < \
-                        (1-frac) * self.cluster_connect[track_id][self.t_index - 1]['area']:
+                        (1-frac) * self.cluster_connect[track_id][self.t_index - 1]['area'] \#:
+                        and self.cluster_connect[track_id][self.t_index-1]['area'] > 490:
                     # create new track with track at t_index and delete it at t_index -1
                     print 'self.cluster_connect[track_id][self.t_index-1][area]', \
                             self.cluster_connect[track_id][self.t_index-1]['area']
