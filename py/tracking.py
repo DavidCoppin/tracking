@@ -255,13 +255,16 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             # we will have to delete these when restarting, otherwise they will be duplicated
             pickle_index += 1
 
-    # Final harvest (all tracks)
+        # save filenames for post-processing:
+        createTxt(str(targetdir)+'filenames.txt', list_filename)
+
+    # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
                       max_cells, t_life*timesteps, pickle_index, dead_only=True)
 
-    # Save filenames for post-processing:
-    createTxt(str(targetdir)+'filenames.txt', list_filename)
+#    # Save filenames for post-processing:
+#    createTxt(str(targetdir)+'filenames.txt', list_filename)
 
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
@@ -278,9 +281,12 @@ if __name__ == '__main__':
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
     parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10,
-                         help='Number of time steps before dead tracks area saved to disk (0 for no harvest)')
-    parser.add_argument('-restart-dir', default=None, help="Directory for storing and loading restart files")
-    parser.add_argument('-restart-interval', type=int, default=None, help="If set then write restart files at this interval (days)")
+                         help='Number of time steps before dead tracks area saved to disk (0 \
+                                for no harvest)')
+    parser.add_argument('-restart_dir', default=None, help="Directory for storing and loading \
+                           restart files")
+    parser.add_argument('-restart_interval', type=int, default=None, help="If set then write \
+                           restart files at this interval (days)")
     args = parser.parse_args()
 
     # get the lat-lon box
