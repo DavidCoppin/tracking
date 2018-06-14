@@ -255,13 +255,16 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             # we will have to delete these when restarting, otherwise they will be duplicated
             pickle_index += 1
 
-    # Final harvest (all tracks)
+        # save filenames for post-processing:
+        createTxt(str(targetdir)+'filenames.txt', list_filename)
+
+    # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
                       max_cells, t_life*timesteps, pickle_index, dead_only=True)
 
-    # Save filenames for post-processing:
-    createTxt(str(targetdir)+'filenames.txt', list_filename)
+#    # Save filenames for post-processing:
+#    createTxt(str(targetdir)+'filenames.txt', list_filename)
 
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
