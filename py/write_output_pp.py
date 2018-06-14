@@ -14,6 +14,10 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
     @param lastname: end date when post-processing stops
     @param inputdir: directory where pickles are stored
     @param outputdir: directory where outputs will be stored
+    @param list_prefix: list of prefixes to choose what pickle files read
+    @param suffix: suffix for output
+    @param restart_dir: restart directory for post-processing pickle need to start 
+                        next post-processing from where we left
     """
     restart = False
     restart_file = None
