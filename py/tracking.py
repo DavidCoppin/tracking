@@ -127,6 +127,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     max_cells = C.getint('max_cells', 4500)
     t_life = C.getint('t_life', 5)
     print 'max_cells, t_life', max_cells, t_life
+    frac_decrease = C.getfloat('frac_decrease', 0.9)
     save = C.getboolean('save')
     #########################################################################
 
@@ -212,7 +213,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
                            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
 
             # Check time connectivity between clusters
-            tcc.addTime(clusters,frac_ellipse)
+            tcc.addTime(clusters, frac_ellipse, frac_decrease)
 
             # Harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
