@@ -278,9 +278,12 @@ if __name__ == '__main__':
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
     parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10,
-                         help='Number of time steps before dead tracks area saved to disk (0 for no harvest)')
-    parser.add_argument('-restart-dir', default=None, help="Directory for storing and loading restart files")
-    parser.add_argument('-restart-interval', type=int, default=None, help="If set then write restart files at this interval (days)")
+                         help='Number of time steps before dead tracks area saved to disk (0 \
+                                for no harvest)')
+    parser.add_argument('-restart_dir', default=None, help="Directory for storing and loading \
+                           restart files")
+    parser.add_argument('-restart_interval', type=int, default=None, help="If set then write \
+                           restart files at this interval (days)")
     args = parser.parse_args()
 
     # get the lat-lon box
