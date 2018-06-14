@@ -62,7 +62,9 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
             pp_filenames = filenames[start_ind:]
         else :
             pp_filenames = filenames[start_ind:end_ind+1]
-        print 'pp_filenames', pp_filenames
+    else :
+        pp_filenames = filenames
+    print 'pp_filenames', pp_filenames
 
     for nb_day in xrange(len(pp_filenames)):
         print 'write_output for', pp_filenames[nb_day]
