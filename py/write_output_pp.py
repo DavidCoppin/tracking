@@ -79,7 +79,7 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
         ofp.writeFile(str(suffix), pp_filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
-        ofp.deletePickles()
+#        ofp.deletePickles()
         dict_pickles = ofp.dict_pickles
         track_id = ofp.track_id
         id = ofp.id
