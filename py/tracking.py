@@ -127,6 +127,8 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     max_cells = C.getint('max_cells', 4500)
     t_life = C.getint('t_life', 5)
     print 'max_cells, t_life', max_cells, t_life
+    frac_decrease = C.getfloat('frac_decrease', 0.9)
+    print 'frac_decrease', frac_decrease
     save = C.getboolean('save')
     #########################################################################
 
@@ -212,7 +214,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
                            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
 
             # Check time connectivity between clusters
-            tcc.addTime(clusters,frac_ellipse)
+            tcc.addTime(clusters, frac_ellipse, frac_decrease)
 
             # Harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
@@ -261,7 +263,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                      max_cells, t_life*timesteps, pickle_index, dead_only=True)
+                      max_cells, t_life*timesteps, pickle_index, dead_only=False)
 
 #    # Save filenames for post-processing:
 #    createTxt(str(targetdir)+'filenames.txt', list_filename)

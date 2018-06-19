@@ -62,7 +62,9 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
             pp_filenames = filenames[start_ind:]
         else :
             pp_filenames = filenames[start_ind:end_ind+1]
-        print 'pp_filenames', pp_filenames
+    else :
+        pp_filenames = filenames
+    print 'pp_filenames', pp_filenames
 
     for nb_day in xrange(len(pp_filenames)):
         print 'write_output for', pp_filenames[nb_day]
@@ -77,7 +79,7 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
         ofp.writeFile(str(suffix), pp_filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
-        ofp.deletePickles()
+#        ofp.deletePickles()
         dict_pickles = ofp.dict_pickles
         track_id = ofp.track_id
         id = ofp.id
