@@ -196,7 +196,11 @@ class TimeConnectedClusters:
                     old_clusters = self.cluster_connect[track_id][self.t_index - 1].get('clusters')
                 else :
                     old_clusters = []
+#                print 'range(num_tracks)', range(num_tracks)
+#                if track_id>=107:
+#                    print 'track_id, len(old_clusters)', track_id, len(old_clusters)
                 for old_cl in old_clusters:
+#                   print 'old_cl', old_cl
                     old_el = old_cl.ellipse
                     old_transf = old_el.ij2AxesTransf[0, :]
                     old_centre = old_el.centre
@@ -404,18 +408,20 @@ class TimeConnectedClusters:
             if self.t_index in self.cluster_connect[track_id] and \
                     self.t_index -1 in self.cluster_connect[track_id] :
                 # compare area
-                if self.cluster_connect[track_id][self.t_index-1]['area'] > 490 and \
-                        (self.cluster_connect[track_id][self.t_index]['area'] < \
-#               if (self.cluster_connect[track_id][self.t_index]['area'] < \
+               if (self.cluster_connect[track_id][self.t_index]['area'] < \
                         (1-frac) * self.cluster_connect[track_id][self.t_index - 1]['area']):
                     # create new track with track at t_index and delete it at t_index -1
                     print 'self.cluster_connect[track_id][self.t_index-1][area]', \
                             self.cluster_connect[track_id][self.t_index-1]['area']
                     print 'self.cluster_connect[track_id][self.t_index][area]', \
                             self.cluster_connect[track_id][self.t_index]['area']
-                    self.cluster_connect.append({self.t_index: {'area': \
-                            self.cluster_connect[track_id][self.t_index]['area'], 'clusters': \
-                            self.cluster_connect[track_id][self.t_index]['clusters']}})
+#                    self.cluster_connect.append({self.t_index: {'area': \
+#                            self.cluster_connect[track_id][self.t_index]['area'], 'clusters': \
+#                            self.cluster_connect[track_id][self.t_index]['clusters']}})
+                    for small_cluster in self.cluster_connect[track_id][self.t_index]['clusters']:
+                        small_area = small_cluster.getNumberOfCells()
+                        self.cluster_connect.append({self.t_index: {'area': small_area, \
+                                                      'clusters': [small_cluster]}})
                     del self.cluster_connect[track_id][self.t_index]
 
 
