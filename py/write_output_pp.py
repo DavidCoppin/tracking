@@ -21,6 +21,7 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
     """
     restart = False
     restart_file = None
+
     # set defaults if no restart post-processing or first time doing post-processing
     id = 0
     track_id ={}
@@ -44,11 +45,10 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
     if restart_dir is not None:
         restart_file = os.path.join(restart_dir, "info_pp.pkl")
         if os.path.exists(restart_file):
+
             # restart the post_processing where it left off
             f = open(restart_file)
             restart_data = cPickle.load(f)
-
-            # unpack
             firstname = restart_data['filename']
             track_id = restart_data['track_id']
             id = restart_data['id']
@@ -74,12 +74,11 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
         if len(files)==0:
             print 'no files in writeOutputPP'
         files2 = files.sort()
-        print 'files', files, len(files)
         ofp.extractTracks(files)
         ofp.writeFile(str(suffix), pp_filenames[nb_day], lat_lon)
 
         # Delete pickle that will not be used anymore
-#        ofp.deletePickles()
+        ofp.deletePickles()
         dict_pickles = ofp.dict_pickles
         track_id = ofp.track_id
         id = ofp.id

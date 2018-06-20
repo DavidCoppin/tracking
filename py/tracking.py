@@ -20,19 +20,18 @@ from datetime import datetime,timedelta as td
 
 def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, restart_dir,
              restart_interval, harvestPeriod):
-    # are we restarting
+
+    # check if restart exists
     restart = False
     restart_file = None
     pickle_index = 0
     if restart_dir is not None:
         restart_file = os.path.join(restart_dir, "clusters_restart_%s.pkl" % suffix)
         if os.path.exists(restart_file):
-            # restart the simulation where it left off
             restart = True
             print "Loading restart file: %s" % restart_file
 
             # load restart file
-#            with open(restart_file) as fh:
             with gzip.GzipFile(restart_file) as fh:
                 restart_data = cPickle.load(fh)
 
@@ -51,8 +50,8 @@ def tracking(fyear, lyear, minmax_lons, minmax_lats, suffix, restart_dir,
 
             print "Restarting from: %s" % fyear
 
-            # we need to delete any pickle files that were written after this restart file was written,
-            # otherwise they will be duplicated as we compute them again
+            # we need to delete any pickle files that were written after this restart file
+            # was written, otherwise they will be duplicated as we compute them again
             config_full = configparser.ConfigParser()
             config_full.read('config.cfg')
             C = config_full['clusters']
@@ -201,6 +200,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
                 lon2 = f.variables['lon'][:minmax_lons[1]]
                 lon = np.concatenate((lon1, lon2))
         f.close()
+
         # Begin tracking
         i_minmax = (0, len(lat))
         j_minmax = (0, len(lon))
@@ -220,14 +220,12 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
                 tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
                                   max_cells, t_life*timesteps, pickle_index, dead_only=True)
-#            if t==2:
-#                sys.exit()
+
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
 
-        # store restart file?
+        # store restart file
         if restart_interval is not None and (nb_day + 1) % restart_interval == 0:
-            # create object for dumping to file
             restart_data = {
                 'tcc': tcc,
                 'minmax_lons': minmax_lons,
@@ -245,7 +243,6 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
 
             # create the restart file
             print "Writing restart file:", restart_file
-#            with open(restart_file, "wb") as fh:
             with gzip.GzipFile(restart_file, "wb", 1) as fh:
                 cPickle.dump(restart_data, fh)
 
@@ -253,8 +250,8 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             if tmpRestart:
                 os.remove(restart_file + '.tmp')
 
-            # increment pickle_index, so we know which pickle files were written after the restart file
-            # we will have to delete these when restarting, otherwise they will be duplicated
+            # increment pickle_index, so we know which pickle files were written after the restart
+            # we will delete these when restarting, otherwise they will be duplicated
             pickle_index += 1
 
         # save filenames for post-processing:
@@ -264,9 +261,6 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     print "final harvest (pickle index is %d)" % pickle_index
     tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
                       max_cells, t_life*timesteps, pickle_index, dead_only=False)
-
-#    # Save filenames for post-processing:
-#    createTxt(str(targetdir)+'filenames.txt', list_filename)
 
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
