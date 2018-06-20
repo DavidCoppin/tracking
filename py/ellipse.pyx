@@ -1,5 +1,3 @@
-#cython: profile=False
-
 import os
 import numpy as np
 cimport numpy as np
@@ -63,7 +61,7 @@ class Ellipse:
         # compute the total area
         area = len(cells)
 
-	    # extend the axis to match the cluster's area
+        # extend the axis to match the cluster's area
         const = math.sqrt(area /(math.pi * self.a * self.b))
         a *= const
         b *= const
@@ -71,9 +69,6 @@ class Ellipse:
         self.b *= const
 
         # add halo to the axes if need be
-        #self.aExt = max(min_ellipse_axis, self.a)
-        #self.bExt = max(min_ellipse_axis, self.b)
-        # smooth transition
         amin = min_ellipse_axis
         self.aExt = self.a + amin*math.exp(-a/amin)
         self.bExt = self.b + amin*math.exp(-b/amin)
@@ -81,7 +76,11 @@ class Ellipse:
 
     def createEllipse(self, centre, a, b, angle):
         """
-        create a shapely ellipse
+        Create a shapely ellipse
+        @param centre: centre of ellipse
+        @param a: principal axis length
+        @param b: second axis length
+        @param angle: angle of ellipse
         """
         circ = Point(centre).buffer(1)
         ell = affinity.scale(circ, int(a), int(b))
@@ -92,9 +91,9 @@ class Ellipse:
     def getPolyline(self, numSegments=32, a=None, b=None):
         """
         Return the ellipse as a segmented line
-        @param numSegments number of segments
-        @param a principal axis length, default to self.a
-        @param b second axis length, defaults to self.b
+        @param numSegments: number of segments
+        @param a: principal axis length, default to self.a
+        @param b: second axis length, defaults to self.b
         @return iPts, jPts arrays
         """
         if not a:
@@ -107,6 +106,7 @@ class Ellipse:
             th = i * dt
             x = a * math.cos(th)
             y = b * math.sin(th)
+
             # rotate back to i,j coordinates
             ij = self.axes2ijTransf.dot([x, y])
             ij += self.centre
@@ -118,7 +118,7 @@ class Ellipse:
     def getPolylineExt(self, numSegments=32):
         """
         Return the extended ellipse as a segmented line
-        @param numSegments number of segments
+        @param numSegments: number of segments
         @return iPts, jPts arrays
         """
         return self.getPolyline(numSegments=numSegments, a=self.aExt, b=self.bExt)
@@ -144,7 +144,7 @@ class Ellipse:
     def isPointInside(self, point):
         """
         Check if point is inside ellipse
-        @param point point in j, j index space
+        @param point: point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
         eps = 1.e-12
@@ -155,7 +155,7 @@ class Ellipse:
     def isPointInsideExt(self, point):
         """
         Check if point is inside extended ellipse
-        @param point point in j, j index space
+        @param point: point in j, j index space
         @return True if inside, False if outside or on the boundary
         """
         transf = self.ij2AxesTransf[0,:]
@@ -165,8 +165,8 @@ class Ellipse:
     def isEllipseInsideOf(self, otherEllipse, frac):
         """
         Check if fraction of this cluster is inside otherCluster
-        @param otherEllipse
-        @param frac fraction of min area of self and otherCluster
+        @param otherEllipse: ellipse of the other cluster
+        @param frac: fraction of minimum overlap between self and otherCluster
         """
         ellipse_1 = self.createEllipse(self.centre, self.a, self.b, self.angle)
         if ellipse_1.is_valid == False:
@@ -182,19 +182,17 @@ class Ellipse:
             ellipse2 = ellipse_2
         if ellipse2.is_empty:
             return False
-#       print 'ellipse1.is_valid', ellipse1.is_valid
-#        print 'ellipse1.buffer(0)', ellipse1.buffer(0), ellipse1.buffer(0).is_valid
-#       print 'ellipse2.is_valid', ellipse2.is_valid
         intersect = ellipse1.intersection(ellipse2)
         min_area = min(ellipse1.area, ellipse2.area)
-#        print 'intersect.area, intersect.area/min_area', intersect.area, intersect.area/min_area
         return intersect.area/min_area >= frac
 
 
     def show(self, points=[], cells={}, show=True):
         """
         Plots the ellipse
-        @param points set of points to be shown as inside (stars) or outside (x)
+        @param points: set of points to be shown as inside (stars) or outside (x)
+        @param cells: list of cells to be shown
+        @param show: show the points and ellipses if True
         """
         from matplotlib import pylab
         import matplotlib
@@ -237,26 +235,25 @@ class Ellipse:
 
 ## it is faster to pass in the values instead of the arrays
 ## the rotation matrix has the form [[tr00, tr01], [-tr01, tr00]]
-## it's important that this function be inlined with the calling function 
-## for performanc
+## it's important that this function be inlined with the calling function for performance
 ## only need the top row of the rotation matrix if we uyse symetry
 cdef bint _isPointInside(double a, double b, double tr00, double tr01,
                          double centreX, double centreY, double pointX, double pointY):
     """
     Check if a point is inside ellipse
-    @param a x radius of ellipse in rotated coordinates
-    @param b y radius of ellipse in rotated coordinates
-    @param tr00 element of rotation matrix
-    @param tr01 element of rotation matrix
-    @param centreX x coordinate of centre
-    @param centreY y coordinate of centre
-    @param pointX x cpoordinat of point
-    @param pointY y coordinate of point
+    @param a: x radius of ellipse in rotated coordinates
+    @param b: y radius of ellipse in rotated coordinates
+    @param tr00: element of rotation matrix
+    @param tr01: element of rotation matrix
+    @param centreX: x coordinate of centre
+    @param centreY: y coordinate of centre
+    @param pointX: x cpoordinat of point
+    @param pointY: y coordinate of point
     @return True if point is inside, False otherwise
     """
-
     pointX -= centreX
     pointY -= centreY
+
     # rotate the coordinates to align them to the principal axes
     # and normalize
     cdef double ptXPrime = (+tr00 * pointX + tr01 * pointY) / a

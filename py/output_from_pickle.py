@@ -1,6 +1,6 @@
 '''
 @description: A Class that selects the pickles needed for the output, extract tracks from
-              the pickles and put them with a unique in a 3D array that will be used as
+              the pickles and put them with a unique ID in a 3D array that will be used as
               output and as a mask on precipitation, and write the final output
 '''
 
@@ -121,8 +121,6 @@ class OutputFromPickle:
                     self.dict_pickles[i]=tracks
             else:
                 tracks = self.dict_pickles[i]
-#            with gzip.GzipFile(i) as gzf:
-#                tracks = cPickle.load(gzf)
 
             # Set default track Id = 0 for all tracks if first time that file is read
             if len(self.track_id) == 0:
@@ -141,6 +139,7 @@ class OutputFromPickle:
                 else :
                     new_id = self.id + 1
                     self.id = self.id + 1
+
                 # Fill in clusters with new_id
                 for k in keys:
                     if k >= self.ini and k < self.end:
@@ -198,7 +197,7 @@ class OutputFromPickle:
     def getLatLon(self, file):
         """
         @param file: pickle file
-        @return latitude and longitude to place area into global file
+        @return latitude and longitude to fit area into global file
         """
         for i in self.list_prefix:
             if i in file:
@@ -226,16 +225,14 @@ class OutputFromPickle:
         for nb in range(len(self.filenames)):
             num = [int(s) for s in self.filenames[nb].split('_') if s.isdigit()]
             if num[1] < self.end :
-#                print 'delete self.filenames[nb]', self.filenames[nb]
                 os.remove(self.filenames[nb])
                 self.deleteTrackId(self.filenames[nb])
                 del self.dict_pickles[self.filenames[nb]]
-#                print 'len(self.dict_pickles)', len(self.dict_pickles)
-#                print 'self.dict_pickles.keys()', self.dict_pickles.keys()
 
 
     def deleteTrackId(self, filename):
         """
+        @param filename: file name
         Delete key/value associated to a filename in track_id
         """
         self.track_id.pop(filename)
@@ -246,6 +243,7 @@ class OutputFromPickle:
         Write data to netcdf file
         @param suffix: suffix for output
         @param old_filename: name of cmorph file corresponding
+        @param list_lat_lon: list given lat and lon for output file
         """
         new_filename = str(self.outputdir)+'tracking'+str(old_filename[-18:-7])+'_'\
                         +str(suffix)+'.nc'
@@ -336,8 +334,6 @@ class OutputFromPickle:
         Save informations to be able to restart post-processing correctly
         """
         f = open(str(restart_file), 'w')
-#        print 'saving filename,  self.track_id, self.id',\
-#                filename,  self.track_id, self.id
         info = {'filename': filename, 'track_id': self.track_id, 'id': self.id}
         cPickle.dump(info, f)
 

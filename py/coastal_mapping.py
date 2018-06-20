@@ -26,7 +26,7 @@ class CoastalMapping:
         @param max_size: maximal size of island that should be filled
         @return mask of the two coastal areas
         """
-        # Load parameters and land-sea mask
+        # load parameters and land-sea mask
         self.reso = reso
         self.min_size = min_size
         self.max_size = max_size
@@ -46,22 +46,22 @@ class CoastalMapping:
             slm = slm_short.squeeze()
         new_slm = np.flipud(slm)
 
-        # Create the coastline and fill islands
+        # create the coastline and fill islands
         slm_fill = self.fillIslands(new_slm.copy())
         land_fill = (1-new_slm)+slm_fill
         land_fill[np.where(land_fill>=1)] = 1
 
-        # Remove islands whose area is smaller than min_size
+        # remove islands whose area is smaller than min_size
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
         mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
 
-        # Get the caostal area via inverse Box-counting
+        # get the caostal area via inverse Box-counting
         self.lArea = self.createCoastalArea(mask_coast,lzone,1)
         self.sArea = self.createCoastalArea(mask_coast,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
 
-        # Fill in hole in mask
+        # fill in hole in mask
         slat_box = lat_slice.stop - 550
         elat_box = lat_slice.stop - 450
         slon_box = 1900 - lon_slice.start
@@ -126,15 +126,15 @@ class CoastalMapping:
         for index,cnt in enumerate(cnts):
             cimg = np.zeros_like(land)
 
-            # Draw contours of cluster
+            # draw contours of cluster
             cv2.drawContours(cimg, cnts, index, color=255, thickness=-1)
 
-            # Calculate the area covered by the contour km**2
+            # calculate the area covered by the contour km**2
             Area = self.reso**2*cv2.contourArea(cnt)
             if Area > self.min_size:
                 cv2.drawContours(tmpary,[cnt],-1,1,-1)
 
-        # Fill in sides of region
+        # fill in sides of region
         new_mask=1-tmpary
         new_mask[0,:] = slm[0,:]
         new_mask[:,0] = slm[:,0]
@@ -154,7 +154,7 @@ class CoastalMapping:
         nY,nX = data.shape
         new_data = np.zeros((nY,nX))
 
-        #Create circle mask around each coastal point
+        # create circle mask around each coastal point
         for i in xrange(nY):
             for j in xrange(nX):
                 if data[i,j] == val:

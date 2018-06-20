@@ -23,10 +23,10 @@ class FeatureExtractor:
     def __init__(self, data, thresh_low, thresh_high, mask, frac):
         """
         Extract clusters from an image data
-        @param data
-        @param thresh_low
-        @param thresh_high
-        @param mask
+        @param data: precipitation data
+        @param thresh_low: low threshold for precipitation
+        @param thresh_high: high threshold for precipitation
+        @param mask: mask used to remove precipitation far away from coasts
         @param frac: overlap threshold for mask
         @return list of clusters
         """
