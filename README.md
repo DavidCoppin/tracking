@@ -40,7 +40,7 @@ module load OpenCV/3.4.0-gimkl-2017a-Python-2.7.13
 ```
 module load Anaconda2/5.0.1-GCC-4.8.5
 source activate my_conda
-python tracking_pickle_nopp.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png
+python tracking.py -d1 2010-02-19 -d2 2010-02-20 -lons 1700:2200 -lats 200:500 -suffix png
 
 # To run post-processing after that
 python write_output_pp.py 
@@ -52,7 +52,7 @@ Note: The starting date (-d1), the ending date (-d2) and the configuration have 
 
 To generate a graphical representation of execution time spent in each function
 ```
-python -m cProfile -o output.pstats tracking_pickle_nopp.py [options]
+python -m cProfile -o output.pstats tracking.py [options]
 gprof2dot --colour-nodes-by-selftime -f pstats output.pstats | dot -Tpng -o output.png
 ```
  
