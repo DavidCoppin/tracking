@@ -4,7 +4,7 @@ Created on March 28, 2018
 @institution: Department of Physics, University of Auckland
 
 @description: A Class that extracts the clusters from the original data
-              using watershed algorithm from opencv
+              using watershed algorithm from skimage.morphology
               Uses two different thresholds, the highest to estimate the convective cores,
               the lowest to keep the enveloppe of lower intensity around these cores.
               If the lower threshold is zero, we keep all the data

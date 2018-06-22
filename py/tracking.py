@@ -178,7 +178,8 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
         # Store once and for all info: lat, lon for post-processing
         if nb_day == 0:
             lat = f.variables['lat'][minmax_lats[0]:minmax_lats[1]]
-            if os.path.isfile(str(targetdir)+'lon_tot.txt'):
+            if os.path.isfile(str(targetdir)+'lon_tot_'+str(suffix)+'.txt') and \
+                os.path.isfile(str(targetdir)+'lon_tot.txt'):
                 pass
             else:
                 # Store for zone
