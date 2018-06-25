@@ -259,13 +259,13 @@ def testAngle():
 
 
 if __name__ == '__main__':
-#    test1()
-#    testHorizLine()
-#    testDipole()
-#    testRectangle()
-#    testRectangleSlanted()
-#    testRandom()
-#    testPlusEqual()
-#    testTimes()
+    test1()
+    testHorizLine()
+    testDipole()
+    testRectangle()
+    testRectangleSlanted()
+    testRandom()
+    testPlusEqual()
+    testTimes()
     testInsideEllipse()
-#    testAngle()
+    testAngle()
