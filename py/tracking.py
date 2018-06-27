@@ -125,7 +125,8 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     print 'min_size, max_size', min_size, max_size
     max_cells = C.getint('max_cells', 4500)
     t_life = C.getint('t_life', 5)
-    print 'max_cells, t_life', max_cells, t_life
+    t_life_lim = C.getint('t_life_lim', 2)
+    print 'max_cells, t_life, t_life_lim', max_cells, t_life, t_life_lim
     frac_decrease = C.getfloat('frac_decrease', 0.9)
     print 'frac_decrease', frac_decrease
     save = C.getboolean('save')
@@ -219,8 +220,9 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
 
             # Harvest the dead tracks and write to file
             if harvestPeriod and (t + 1) % harvestPeriod == 0:
-                tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                                  max_cells, t_life*timesteps, pickle_index, dead_only=True)
+                tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), \
+                                   frac_mask, max_cells, t_life*timesteps, t_life_lim*timesteps, \
+                                   minmax_lats, pickle_index, dead_only=True)
 
         os.remove(newfilename)
         del all_data, data, clusters, data_unzip
@@ -260,8 +262,9 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
 
     # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
-    tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask,
-                      max_cells, t_life*timesteps, pickle_index, dead_only=False)
+    tcc.harvestTracks(targetdir+suffix, i_minmax, j_minmax, np.flipud(cm.sArea), frac_mask, \
+                       max_cells, t_life*timesteps, t_life_lim*timesteps, minmax_lats, \
+                       pickle_index, dead_only=False)
 
     if save:
         tcc.save('cmorph.pckl_'+str(suffix))
@@ -274,7 +277,7 @@ if __name__ == '__main__':
     parser.add_argument('-d2', dest='date2', default='2010-02-21', help='End date YYYY-MM-DD')
     parser.add_argument('-lons', dest='lons', default='1700:2200', help='Min and max longitude \
                            indices LONMIN,LONMAX')
-    parser.add_argument('-lats', dest='lats', default='200:500', help='Min and max latitude \
+    parser.add_argument('-lats', dest='lats', default='0:827', help='Min and max latitude \
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
     parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10,

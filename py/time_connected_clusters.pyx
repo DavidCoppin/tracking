@@ -462,28 +462,57 @@ class TimeConnectedClusters:
         return t_inds[0], t_inds[-1]
 
 
-    def checkNoSynoptic(self, max_cells, length_time, track_id):
+    def checkTouchLim(self, ind_lim, track_id):
+        """
+        Check if track touches the limit in latitude at any time
+        @param ind_lim: indices for limits in latitude
+        @param track_id: track Id
+        @return True is track touches limit
+        """
+        touch_lim = False
+        for t_index in self.cluster_connect[track_id]:
+            for cl in self.cluster_connect[track_id][t_index].get('clusters'):
+                i_index, j_index, mat = cl.toArray()
+                if i_index[0] == ind_lim[0]-ind_lim[0] or i_index[-1] == ind_lim[1]-ind_lim[0]-1 :
+                    touch_lim = True
+                    return touch_lim
+        return touch_lim
+
+
+    def checkNoSynoptic(self, max_cells, length_time, length_time_lim, ind_lim, track_id):
         """
         Check if a track is synoptic: last longer than length_time and is bigger than
         max_cells at some point
         @param max_cells: threshold in size for synoptic track
         @param length_time: threshold in time
+        @param ind_lim: indices for limits in latitude
         @param track_id: track Id
         @return True is track is not synoptic (which we want to keep)
         """
         no_synoptic = True
         length = len(self.cluster_connect[track_id])
-        if length < length_time:
-            pass
-        else :
+
+        # check if track touches the limit in latitude
+        touch_lim = self.checkTouchLim(ind_lim, track_id)
+        if not touch_lim:
+            if length < length_time:
+                pass
+            else :
+                max_area = self.getMaxTrackArea(track_id)
+                if max_area >= max_cells :
+                    no_synoptic = False
+        else:
             max_area = self.getMaxTrackArea(track_id)
-            if max_area >= max_cells :
+            if length >= length_time_lim or max_area >= max_cells :
                 no_synoptic = False
+            else:
+                pass
+
         return no_synoptic
 
 
     def harvestTracks(self, prefix, i_minmax, j_minmax, mask, frac, max_cells, \
-                       length_time, pickle_index, dead_only=False):
+                       length_time, length_time_lim, ind_lim, pickle_index, dead_only=False):
         """
         Harvest tracks and remove from list
         @param prefix: prefix to be prepended to the file name
@@ -494,6 +523,8 @@ class TimeConnectedClusters:
                       the track is kept
         @param max_cells: threshold in size for synoptic track
         @param length_time: threshold in time for synoptic track
+        @param length_time: threshold in time for synoptic track that touches the side in latitude
+        @param ind_lim : indices of limits for latitude
         @pickle_index: index used on pickle to identify which ones are written after restart
         @param dead_only: only harvest tracks that are no longer alive, otherwise
                            harvest all the tracks
@@ -512,7 +543,8 @@ class TimeConnectedClusters:
                 # keep only tracks that are above islands at some time
                 # and that are not synoptic
                 if not dead_only or (self.checkTrackOverMask(mask, frac, track_id) \
-                         and self.checkNoSynoptic(max_cells, length_time, track_id)):
+                         and self.checkNoSynoptic(max_cells, length_time, length_time_lim, \
+                                                   ind_lim, track_id)):
                     good_tracks_to_harvest.append(track_id)
 
         # write the tracks to file
