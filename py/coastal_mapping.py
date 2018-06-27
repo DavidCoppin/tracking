@@ -53,12 +53,13 @@ class CoastalMapping:
 
         # remove islands whose area is smaller than min_size
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
+
         mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
 
         # get the caostal area via inverse Box-counting
-        self.lArea = self.createCoastalArea(mask_coast,lzone,1)
-        self.sArea = self.createCoastalArea(mask_coast,szone,1)
+        self.lArea = self.createCoastalArea(mask,lzone,1)
+        self.sArea = self.createCoastalArea(mask,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
 
         # fill in hole in mask
@@ -119,7 +120,7 @@ class CoastalMapping:
         @return new_mask: the new land-sea mask (without islands smaller than min_size)
         """
         Tmp = land.astype(np.uint8)
-        result = cv2.findContours(Tmp,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+        result = cv2.findContours(Tmp,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         cnts = result[-2]
         tmpary = np.zeros(land.shape)
         new_mask = np.zeros(land.shape)
@@ -130,7 +131,7 @@ class CoastalMapping:
             cv2.drawContours(cimg, cnts, index, color=255, thickness=-1)
 
             # calculate the area covered by the contour km**2
-            Area = self.reso**2*cv2.contourArea(cnt)
+            Area = max(self.reso**2*cv2.contourArea(cnt), self.reso*self.reso)
             if Area > self.min_size:
                 cv2.drawContours(tmpary,[cnt],-1,1,-1)
 
