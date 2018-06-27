@@ -224,7 +224,10 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
                                    frac_mask, max_cells, t_life*timesteps, t_life_lim*timesteps, \
                                    minmax_lats, pickle_index, dead_only=True)
 
-        os.remove(newfilename)
+        try:
+            os.remove(newfilename)
+        except OSError:
+            pass
         del all_data, data, clusters, data_unzip
 
         # store restart file
