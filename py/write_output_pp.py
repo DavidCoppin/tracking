@@ -28,7 +28,7 @@ def writeOutputPP(lastname, inputdir, outputdir, list_prefix, suffix, restart_di
     dict_pickles = {}
     offset = 0
     start_ind = 0
-    filenames = readTxt(str(inputdir)+'filenames.txt')
+    filenames = readTxt(str(inputdir)+'filenames_'+str(list_prefix[0])+'.txt')
     print 'filenames', filenames
     if len(list_prefix)==1:
         lat_tot = readTxt(str(inputdir)+'lat_tot_'+str(list_prefix[0])+'.txt')

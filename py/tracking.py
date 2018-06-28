@@ -261,7 +261,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             pickle_index += 1
 
         # save filenames for post-processing:
-        createTxt(str(targetdir)+'filenames.txt', list_filename)
+        createTxt(str(targetdir)+'filenames_'+str(suffix)+'.txt', list_filename)
 
     # final harvest (all tracks)
     print "final harvest (pickle index is %d)" % pickle_index
