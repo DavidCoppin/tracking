@@ -140,6 +140,11 @@ class OutputFromPickle:
                     new_id = self.id + 1
                     self.id = self.id + 1
 
+                # To avoid very large numbers in output, set up reasonable limit for id
+                if self.id > 10000:
+                    self.id = 1
+                    new_id = self.id
+
                 # Fill in clusters with new_id
                 for k in keys:
                     if k >= self.ini and k < self.end:
