@@ -18,13 +18,13 @@
 
 ## Four final areas
 # Indian_ocean + Maritime Continent
-#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:827 -suffix io-cm -harvest 24
+python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:827 -suffix io-cm -harvest 24
 # Pacific ocean
-python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 2647:3216 -lats 0:827 -suffix pacific -harvest 24
+#python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 2647:3216 -lats 0:827 -suffix pacific -harvest 24
 # Americas
 #python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 3216:4577 -lats 0:827 -suffix america -harvest 24
 # Africa
 #python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:827 -suffix africa -harvest 24
 
-#python tracking.py -d1 2011-12-16 -d2 2011-12-16 -lons 1300:2600 -lats 0:827 -suffix debug \
+#python tracking.py -d1 2011-12-16 -d2 2011-12-16 -lons 0:4948 -lats 0:827 -suffix debug \
                     -harvest 24 #-restart_dir restart -restart_interval 1

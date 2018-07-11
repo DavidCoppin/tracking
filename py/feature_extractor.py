@@ -64,6 +64,12 @@ class FeatureExtractor:
 
     def getIndicesSparse(self, data):
         M = self.compute_M(data)
+#        print 'M', M
+#        for row in M:
+#            print 'row', row
+#            print 'row.data, data.shape', row.data, data.shape
+#            print 'np.unravel_index(row.self.data, self.data.shape)', \
+#                    np.unravel_index(row.self.data, self.data.shape)
         return [np.unravel_index(row.data, data.shape) for row in M]
 
 
@@ -81,10 +87,15 @@ class FeatureExtractor:
         new_label = np.zeros_like(self.labels)
         nb = 1
         inds = self.getIndicesSparse(self.labels)
+        print 'range(1, len(inds))', range(1, len(inds))
 
         # Get all the clusters except inds[0] = background
         for num in range(1, len(inds)):
             num_elems = len(inds[num])
+            print 'num', num
+            print 'num_elems, inds[num]', num_elems, inds[num]
+            check = np.nonzero(np.where(self.labels==num))
+            print 'check', check
             if self.mask[inds[num]].sum() >= self.frac * num_elems:
                 new_label[inds[num]] = nb
                 nb += 1

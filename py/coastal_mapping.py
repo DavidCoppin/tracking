@@ -54,12 +54,13 @@ class CoastalMapping:
         # remove islands whose area is smaller than min_size
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
 
-        mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
+        mask_coast = self.findCoastline(slm_nosmall,smooth_radius=1)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
+        new_mask = self.correctBorder(mask)
 
         # get the caostal area via inverse Box-counting
-        self.lArea = self.createCoastalArea(mask,lzone,1)
-        self.sArea = self.createCoastalArea(mask,szone,1)
+        self.lArea = self.createCoastalArea(new_mask,lzone,1)
+        self.sArea = self.createCoastalArea(new_mask,szone,1)
         self.sArea[np.where(slm_fill>=1)] = 1
 
         # fill in hole in mask
@@ -137,11 +138,23 @@ class CoastalMapping:
 
         # fill in sides of region
         new_mask=1-tmpary
-        new_mask[0,:] = slm[0,:]
-        new_mask[:,0] = slm[:,0]
-        new_mask[:,-1] = slm[:,-1]
-        new_mask[-1,:] = slm[-1,:]
+#        new_mask[0,:] = slm[0,:]
+#        new_mask[:,0] = slm[:,0]
+#        new_mask[:,-1] = slm[:,-1]
+#        new_mask[-1,:] = slm[-1,:]
         return new_mask
+
+
+    def correctBorder(self,mask):
+        """
+        Remove where continent intercepts with limit
+        @param mask: mask to correct
+        """
+        mask[0:2,:] = 0
+        mask[:,0:2] = 0
+        mask[:,-2:] = 0
+        mask[-2:,:] = 0
+        return mask
 
 
     def createCoastalArea(self,data,radius,val):
