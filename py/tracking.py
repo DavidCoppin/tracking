@@ -215,9 +215,6 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
             clusters = FeatureExtractor(data, thresh_low=min_prec, thresh_high=max_prec, \
                            mask=np.flipud(cm.lArea), frac=frac_mask).getClusters(min_axis)
 
-#            print 'clusters', clusters
-            sys.exit()
-
             # Check time connectivity between clusters
             tcc.addTime(clusters, frac_ellipse, frac_decrease)
 

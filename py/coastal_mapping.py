@@ -54,7 +54,7 @@ class CoastalMapping:
         # remove islands whose area is smaller than min_size
         slm_nosmall = self.eraseIslands(land_fill,new_slm)
 
-        mask_coast = self.findCoastline(slm_nosmall,smooth_radius=1)
+        mask_coast = self.findCoastline(slm_nosmall,smooth_radius=2)
         mask = np.where(((slm_fill+mask_coast)/2.) >= 0.5, 1, 0)
         new_mask = self.correctBorder(mask)
 
@@ -136,12 +136,7 @@ class CoastalMapping:
             if Area > self.min_size:
                 cv2.drawContours(tmpary,[cnt],-1,1,-1)
 
-        # fill in sides of region
         new_mask=1-tmpary
-#        new_mask[0,:] = slm[0,:]
-#        new_mask[:,0] = slm[:,0]
-#        new_mask[:,-1] = slm[:,-1]
-#        new_mask[-1,:] = slm[-1,:]
         return new_mask
 
 
