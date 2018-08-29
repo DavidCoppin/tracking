@@ -7,7 +7,7 @@ Requirements are:
  * python 2.7
  * scipy 0.19.1
  * netCDF4 1.3.1
- * scikit-image 0.12.3
+ * scikit-image 0.12.3 (we found that 0.13.x produces different results and has a memory leak)
  * nc_time-axis 1.0.2
  * opencv 2.4.11 or opencv3
  * configparser
