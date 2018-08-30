@@ -14,7 +14,12 @@ Created on March 28, 2018
 import skimage
 skimage_version = [int(v) for v in skimage.__version__.split('.')]
 if skimage_version[0] != 0 or skimage_version[1] != 12 or skimage_version[2] != 3:
-    raise ImportError, 'ERROR: Wrong skimage version, need 0.12.3 but got {}'.format(skimage.__version__)
+    fmt = '''
+ERROR: Wrong skimage version, need 0.12.3 but got {}. 
+Consider running "pip install --user --force-reinstall scikit-image==0.12.3"
+to install skimage 0.12.3.
+'''
+    raise ImportError, fmt.format(skimage.__version__)
 
 import numpy as np
 from scipy import ndimage
