@@ -349,7 +349,7 @@ class TimeConnectedClusters:
         """
         # create union of tracks to merge and tag the merged tracks for removal
         delete_elem = set()
-        print 'new_track_ids_to_fuse', new_track_ids_to_fuse
+        print 'new_track_ids_to_fuse part 1', new_track_ids_to_fuse
         n = len(new_track_ids_to_fuse)
         for i in range(n):
             li = new_track_ids_to_fuse[i]
@@ -369,6 +369,7 @@ class TimeConnectedClusters:
 
         # fuse
         delete_track_ids = []
+        print 'new_track_ids_to_fuse part 2', new_track_ids_to_fuse
         for ids_to_fuse in new_track_ids_to_fuse:
             delete_track_ids += self.fuse(ids_to_fuse)
 
