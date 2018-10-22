@@ -367,6 +367,14 @@ class TimeConnectedClusters:
         for i in delete_elem:
             del new_track_ids_to_fuse[i]
 
+        # in case several sets remaining that share indices, remove from s the intersection
+        # of s with any preceding set
+        sunion = set()
+        for s in new_track_ids_to_fuse:
+            s -= s.intersection(sunion)
+            sunion = sunion.union(s)
+        new_track_ids_to_fuse = [x for x in new_track_ids_to_fuse if x]
+
         # fuse
         delete_track_ids = []
         print 'new_track_ids_to_fuse part 2', new_track_ids_to_fuse
