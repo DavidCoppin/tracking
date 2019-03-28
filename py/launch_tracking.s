@@ -27,4 +27,4 @@ python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 335:2717 -lats 0:827 -suf
 #python tracking.py -d1 1999-01-01 -d2 1999-01-03 -lons 4497:335 -lats 0:827 -suffix africa -harvest 24
 
 #python tracking.py -d1 2011-12-16 -d2 2011-12-16 -lons 0:4948 -lats 0:827 -suffix debug \
-                    -harvest 24 #-restart_dir restart -restart_interval 1
+#                    -harvest 24 #-restart_dir restart -restart_interval 1

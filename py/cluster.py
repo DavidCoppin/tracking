@@ -1,3 +1,10 @@
+'''
+Created in May 2018
+@author: David Coppin
+@institution: Department of Physics, University of Auckland
+
+@description: A Class that do all the operations related to clusters
+'''
 import numpy
 import math
 from ellipse import Ellipse
@@ -74,8 +81,8 @@ class Cluster:
 
     def getCentre(self):
         """
-        Get the centre 
-        @return array 
+        Get the centre
+        @return array
         """
         return self.ellipse.getCentre()
 
@@ -127,6 +134,7 @@ class Cluster:
         jVar[:] = jCoords
         nbVar[:, :] = ijValues
         nc.close()
+
 
     def toArray(self, bounds=[]):
         """

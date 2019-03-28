@@ -1,4 +1,8 @@
 '''
+Created in May 2018
+@author: David Coppin
+@institution: Department of Physics, University of Auckland
+
 @description: Method leading the post-processing of pickles into global output
 '''
 

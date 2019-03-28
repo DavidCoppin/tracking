@@ -144,6 +144,7 @@ def _tracking_main(tcc, list_filename, fyear, lyear, minmax_lons, minmax_lats,
     # Create the two coastal masks
     cm = CoastalMapping(lsm, np.int(reso), lat_slice, lon_slice, np.int(szone), \
                          np.int(lzone), np.int(min_size), np.int(max_size))
+    sys.exit()
 
     # difference between start and end dates
     delta = lyear - fyear
@@ -278,12 +279,12 @@ if __name__ == '__main__':
     parser.add_argument('-w', action='store_true', help='Print copyright')
     parser.add_argument('-d1', dest='date1', default='2010-02-19', help='Start date YYYY-MM-DD')
     parser.add_argument('-d2', dest='date2', default='2010-02-21', help='End date YYYY-MM-DD')
-    parser.add_argument('-lons', dest='lons', default='1700:2200', help='Min and max longitude \
+    parser.add_argument('-lons', dest='lons', default='0:4948', help='Min and max longitude \
                            indices LONMIN,LONMAX')
     parser.add_argument('-lats', dest='lats', default='0:827', help='Min and max latitude \
                            indices LATMIN,LATMAX')
     parser.add_argument('-suffix', dest='suffix', default='', help='Suffix for output')
-    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=10,
+    parser.add_argument('-harvest', dest='harvestPeriod', type=int, default=48,
                          help='Number of time steps before dead tracks area saved to disk (0 \
                                 for no harvest)')
     parser.add_argument('-restart_dir', default=None, help="Directory for storing and loading \

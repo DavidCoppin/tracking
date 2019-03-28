@@ -1,3 +1,10 @@
+'''
+Created in May 2018
+@author: David Coppin
+@institution: Department of Physics, University of Auckland
+
+@description: A Class that do al the operations related to the ellipses
+'''
 import os
 import numpy as np
 cimport numpy as np
