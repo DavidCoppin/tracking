@@ -1,7 +1,7 @@
 Tracking algorithm for coastal precipitating systems
 ----------------------------------------------------
 
-This repository contains source-code for the tracking of coastal rainfall precipitation. A few lines of this code are inspired from the code used in "Global Detection and Analysis of Coastline-Associated Rainfall Using an Objective Pattern Recognition Technique" by Bergemann et al., 2015, available at https://journals.ametsoc.org/doi/10.1175/JCLI-D-15-0098.1`
+This repository contains source-code for the tracking of coastal rainfall precipitation. A few lines of this code are inspired from the code used in "Global Detection and Analysis of Coastline-Associated Rainfall Using an Objective Pattern Recognition Technique" by Bergemann et al., 2015, available at https://journals.ametsoc.org/doi/10.1175/JCLI-D-15-0098.1
 
 For more details, see the scientific publication.
 `Detecting and tracking coastal precipitation in the tropics: methods and insights into multi-scale variability of tropical precipitation`
